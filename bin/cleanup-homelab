@@ -1,0 +1,152 @@
+#!/bin/bash
+# Cleanup orphaned MOTD templates
+# by J.Bakers
+
+CONFIG_FILE="$HOME/.ssh/config"
+MOTD_DIR="$HOME/.config/server-motd"
+
+# Kleuren
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Functie om orphaned templates te vinden
+find_orphaned_templates() {
+    local orphaned=()
+    
+    if [[ ! -d "$MOTD_DIR" ]]; then
+        echo -e "${RED}Error: MOTD directory not found: $MOTD_DIR${NC}"
+        exit 1
+    fi
+    
+    # Haal alle hosts uit SSH config
+    local active_hosts=$(grep "^Host " "$CONFIG_FILE" | awk '{print $2}' | grep -v '\*' | sort -u)
+    
+    # Loop door alle MOTD templates
+    for template in "$MOTD_DIR"/*.sh; do
+        if [[ ! -f "$template" ]]; then
+            continue
+        fi
+        
+        local hostname=$(basename "$template" .sh)
+        
+        # Check of deze host nog in SSH config staat
+        if ! echo "$active_hosts" | grep -q "^${hostname}$"; then
+            orphaned+=("$hostname")
+        fi
+    done
+    
+    echo "${orphaned[@]}"
+}
+
+# Toon help
+show_help() {
+    cat << 'HELP'
+Usage: cleanup-homelab [OPTIONS]
+
+Cleanup orphaned MOTD templates (templates for hosts no longer in SSH config)
+
+Options:
+  --orphaned    Show list of orphaned templates
+  --remove      Remove all orphaned templates
+  --help        Show this help message
+
+Examples:
+  cleanup-homelab              # Interactive mode
+  cleanup-homelab --orphaned   # List orphaned templates
+  cleanup-homelab --remove     # Remove all orphaned templates
+
+HELP
+}
+
+# Parse argumenten
+case "${1}" in
+    --help|-h)
+        show_help
+        exit 0
+        ;;
+    --orphaned)
+        MODE="list"
+        ;;
+    --remove)
+        MODE="remove"
+        ;;
+    "")
+        MODE="interactive"
+        ;;
+    *)
+        echo -e "${RED}Unknown option: $1${NC}"
+        echo "Use --help for usage information"
+        exit 1
+        ;;
+esac
+
+echo -e "${BLUE}=================================================${NC}"
+echo -e "${BLUE}         Homelab Cleanup Utility${NC}"
+echo -e "${BLUE}=================================================${NC}"
+echo ""
+
+# Vind orphaned templates
+orphaned=($(find_orphaned_templates))
+
+if [[ ${#orphaned[@]} -eq 0 ]]; then
+    echo -e "${GREEN}✓ No orphaned templates found!${NC}"
+    echo "All MOTD templates match active SSH hosts."
+    exit 0
+fi
+
+# List mode
+if [[ "$MODE" == "list" ]]; then
+    echo -e "${YELLOW}Found ${#orphaned[@]} orphaned template(s):${NC}"
+    for host in "${orphaned[@]}"; do
+        echo "  • $host"
+    done
+    exit 0
+fi
+
+# Remove mode
+if [[ "$MODE" == "remove" ]]; then
+    echo -e "${YELLOW}Removing ${#orphaned[@]} orphaned template(s)...${NC}"
+    echo ""
+    
+    for host in "${orphaned[@]}"; do
+        template_file="$MOTD_DIR/${host}.sh"
+        if rm -f "$template_file"; then
+            echo -e "${GREEN}✓ Removed: ${host}.sh${NC}"
+        else
+            echo -e "${RED}✗ Failed to remove: ${host}.sh${NC}"
+        fi
+    done
+    
+    echo ""
+    echo -e "${GREEN}✓ Cleanup complete!${NC}"
+    exit 0
+fi
+
+# Interactive mode
+echo -e "${YELLOW}Found ${#orphaned[@]} orphaned template(s):${NC}"
+echo ""
+for host in "${orphaned[@]}"; do
+    echo "  • $host"
+done
+echo ""
+
+read -p "Remove these orphaned templates? (y/n): " confirm
+
+if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+    echo ""
+    for host in "${orphaned[@]}"; do
+        template_file="$MOTD_DIR/${host}.sh"
+        if rm -f "$template_file"; then
+            echo -e "${GREEN}✓ Removed: ${host}.sh${NC}"
+        else
+            echo -e "${RED}✗ Failed to remove: ${host}.sh${NC}"
+        fi
+    done
+    echo ""
+    echo -e "${GREEN}✓ Cleanup complete!${NC}"
+else
+    echo -e "${YELLOW}Cleanup cancelled.${NC}"
+fi

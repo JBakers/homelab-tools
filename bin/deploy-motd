@@ -1,0 +1,138 @@
+#!/bin/bash
+# Deploy custom MOTD banners to all servers
+# by J.Bakers
+
+CONFIG_FILE="$HOME/.ssh/config"
+MOTD_DIR="$HOME/.config/server-motd"
+
+# Kleuren
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;36m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}=================================================${NC}"
+echo -e "${BLUE}         MOTD Deployment Script${NC}"
+echo -e "${BLUE}=================================================${NC}"
+echo ""
+
+# Controleer of MOTD directory bestaat
+if [[ ! -d "$MOTD_DIR" ]]; then
+    echo -e "${RED}Fout: MOTD directory niet gevonden: $MOTD_DIR${NC}"
+    exit 1
+fi
+
+# Functie om MOTD te deployen naar een host
+deploy_to_host() {
+    local hostname=$1
+    local motd_script=""
+
+    # Skip Home Assistant (gebruikt addon)
+    if [[ "$hostname" == "ha" ]]; then
+        echo -e "${YELLOW}  ⊘ Home Assistant overgeslagen (gebruikt addon)${NC}"
+        return 0
+    fi
+
+    # Zoek automatisch naar een template voor deze host
+    # Eerst exacte match proberen
+    if [[ -f "$MOTD_DIR/${hostname}.sh" ]]; then
+        motd_script="${hostname}.sh"
+    # Dan wildcards proberen (bijv. test* → test.sh)
+    elif [[ "$hostname" == test* ]] && [[ -f "$MOTD_DIR/test.sh" ]]; then
+        motd_script="test.sh"
+    elif [[ "$hostname" == pihole* ]] && [[ -f "$MOTD_DIR/pihole.sh" ]]; then
+        motd_script="pihole.sh"
+    # Anders generic template
+    elif [[ -f "$MOTD_DIR/generic.sh" ]]; then
+        motd_script="generic.sh"
+    else
+        echo -e "${YELLOW}  ⊘ Geen MOTD template voor $hostname${NC}"
+        echo -e "${YELLOW}     Tip: gebruik 'generate-motd $hostname' om er een te maken${NC}"
+        return 0
+    fi
+
+    local motd_file="$MOTD_DIR/$motd_script"
+
+    if [[ ! -f "$motd_file" ]]; then
+        echo -e "${YELLOW}  ⊘ Template niet gevonden: $motd_script${NC}"
+        return 1
+    fi
+
+    # Deploy de MOTD naar de server
+    echo -e "  → Deploying $motd_script als dynamisch script..."
+
+    # Stuur het script naar de server en installeer het dynamisch
+    if cat "$motd_file" | ssh -F "$CONFIG_FILE" "$hostname" "
+        # Maak backup van oude MOTD als die bestaat
+        if [ -f /etc/motd ]; then
+            sudo cp /etc/motd /etc/motd.bak 2>/dev/null || true
+        fi
+
+        # Leeg de statische MOTD
+        echo '' | sudo tee /etc/motd > /dev/null
+
+        # Maak de update-motd.d directory als die niet bestaat
+        sudo mkdir -p /etc/update-motd.d
+
+        # Schakel standaard MOTD scripts uit (Debian/Ubuntu)
+        if [ -d /etc/update-motd.d ]; then
+            sudo chmod -x /etc/update-motd.d/* 2>/dev/null || true
+        fi
+
+        # Installeer ons dynamische script
+        cat > /tmp/99-custom-motd
+        sudo mv /tmp/99-custom-motd /etc/update-motd.d/99-custom-motd
+        sudo chmod +x /etc/update-motd.d/99-custom-motd
+
+
+        # Configureer PAM om update-motd te gebruiken (als het nog niet is)
+        if [ -f /etc/pam.d/sshd ]; then
+            if ! grep -q 'pam_motd.so' /etc/pam.d/sshd; then
+                echo 'session optional pam_motd.so motd=/run/motd.dynamic' | sudo tee -a /etc/pam.d/sshd > /dev/null
+            fi
+        fi
+    " 2>/dev/null; then
+        echo -e "${GREEN}  ✓ Dynamische MOTD succesvol geïnstalleerd op $hostname${NC}"
+        return 0
+    else
+        echo -e "${RED}  ✗ Fout bij installeren MOTD op $hostname${NC}"
+        return 1
+    fi
+}
+
+# Haal alle hosts op uit SSH config
+hosts=$(grep "^Host " "$CONFIG_FILE" | awk '{print $2}' | grep -v '\*' | sort -u)
+
+echo "Deploying dynamische MOTDs naar servers..."
+echo ""
+
+success_count=0
+fail_count=0
+skip_count=0
+
+# Deploy naar elke host
+for hostname in $hosts; do
+    echo -e "${BLUE}--- $hostname ---${NC}"
+
+    if deploy_to_host "$hostname"; then
+        ((success_count++))
+    else
+        exit_code=$?
+        if [ $exit_code -eq 0 ]; then
+            ((skip_count++))
+        else
+            ((fail_count++))
+        fi
+    fi
+
+    echo ""
+done
+
+echo -e "${BLUE}=================================================${NC}"
+echo -e "${GREEN}✓ Succesvol: $success_count${NC}"
+echo -e "${RED}✗ Mislukt:   $fail_count${NC}"
+echo -e "${YELLOW}⊘ Overgeslagen: $skip_count${NC}"
+echo -e "${BLUE}=================================================${NC}"
+echo ""
+echo -e "${YELLOW}Tip: Log nu opnieuw in op een server om de dynamische MOTD te testen!${NC}"

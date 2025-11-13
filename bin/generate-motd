@@ -1,0 +1,169 @@
+#!/bin/bash
+# Generate MOTD templates for SSH hosts
+# by J.Bakers
+
+CONFIG_FILE="$HOME/.ssh/config"
+MOTD_DIR="$HOME/.config/server-motd"
+
+# Kleuren
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;36m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}=================================================${NC}"
+echo -e "${BLUE}         MOTD Template Generator${NC}"
+echo -e "${BLUE}=================================================${NC}"
+echo ""
+
+# Functie om ASCII art te genereren
+generate_ascii_art() {
+    local text="$1"
+
+    # Probeer eerst figlet
+    if command -v figlet &> /dev/null; then
+        figlet -f standard "$text" 2>/dev/null
+    else
+        # Fallback: simpele ASCII
+        echo "   === $text ==="
+    fi
+}
+
+# Functie om MOTD template te maken
+create_motd_template() {
+    local hostname="$1"
+    local service_name="$2"
+    local description="$3"
+    local show_webui="$4"
+    local webui_port="$5"
+
+    local template_file="$MOTD_DIR/${hostname}.sh"
+
+    cat > "$template_file" << EOF
+#!/bin/bash
+# ${service_name} MOTD
+
+cat << 'ASCIIEOF'
+$(generate_ascii_art "$service_name")
+
+     ${description}
+       by J.Bakers
+
+ASCIIEOF
+
+echo "=========================================="
+echo "System Information:"
+echo "  Hostname:    \$(hostname)"
+echo "  IP Address:  \$(hostname -I | awk '{print \$1}')"
+echo "  Uptime:      \$(uptime -p)"
+EOF
+
+    # Voeg Web UI toe als aangegeven
+    if [[ "$show_webui" == "yes" && -n "$webui_port" ]]; then
+        cat >> "$template_file" << EOF
+echo "  Web UI:      http://\$(hostname -I | awk '{print \$1}'):${webui_port}"
+EOF
+    fi
+
+    cat >> "$template_file" << 'EOF'
+echo "=========================================="
+echo ""
+EOF
+
+    chmod +x "$template_file"
+    echo -e "${GREEN}✓ Template aangemaakt: ${template_file}${NC}"
+}
+
+# Check of er een specifiek hostname is opgegeven
+if [[ -n "$1" ]]; then
+    SPECIFIC_HOST="$1"
+    echo -e "${BLUE}Genereren van MOTD voor: ${SPECIFIC_HOST}${NC}"
+    echo ""
+
+    # Check of de host bestaat in SSH config
+    if ! grep -q "^Host ${SPECIFIC_HOST}$" "$CONFIG_FILE"; then
+        echo -e "${RED}Fout: Host '${SPECIFIC_HOST}' niet gevonden in SSH config${NC}"
+        exit 1
+    fi
+
+    # Check of er al een template bestaat
+    if [[ -f "$MOTD_DIR/${SPECIFIC_HOST}.sh" ]]; then
+        echo -e "${YELLOW}Er bestaat al een template voor ${SPECIFIC_HOST}${NC}"
+        read -p "Overschrijven? (y/n): " overwrite
+        if [[ "$overwrite" != "y" ]]; then
+            echo "Geannuleerd."
+            exit 0
+        fi
+    fi
+
+    # Vraag om input
+    echo -e "${YELLOW}Vragen over ${SPECIFIC_HOST}:${NC}"
+    read -p "Service naam (bijv. 'Jellyfin', 'Grafana'): " service_name
+    read -p "Korte beschrijving (bijv. 'Media Server', 'Monitoring'): " description
+    read -p "Heeft het een Web UI? (y/n): " has_webui
+
+    webui_port=""
+    if [[ "$has_webui" == "y" ]]; then
+        read -p "Web UI poort (bijv. 8096): " webui_port
+    fi
+
+    create_motd_template "$SPECIFIC_HOST" "$service_name" "$description" "$has_webui" "$webui_port"
+
+    echo ""
+    echo -e "${GREEN}Klaar! Je kunt nu deployen met: deploy-motd${NC}"
+
+else
+    # Scan mode: vind alle hosts zonder template
+    echo "Scannen naar hosts zonder MOTD template..."
+    echo ""
+
+    hosts=$(grep "^Host " "$CONFIG_FILE" | awk '{print $2}' | grep -v '\*' | sort -u)
+
+    missing_count=0
+    missing_hosts=()
+
+    for hostname in $hosts; do
+        if [[ ! -f "$MOTD_DIR/${hostname}.sh" ]]; then
+            missing_hosts+=("$hostname")
+            ((missing_count++))
+        fi
+    done
+
+    if [[ $missing_count -eq 0 ]]; then
+        echo -e "${GREEN}✓ Alle hosts hebben een MOTD template!${NC}"
+        exit 0
+    fi
+
+    echo -e "${YELLOW}Gevonden ${missing_count} host(s) zonder template:${NC}"
+    for host in "${missing_hosts[@]}"; do
+        echo "  • $host"
+    done
+    echo ""
+
+    read -p "Wil je templates genereren voor deze hosts? (y/n): " generate_all
+
+    if [[ "$generate_all" == "y" ]]; then
+        for hostname in "${missing_hosts[@]}"; do
+            echo ""
+            echo -e "${BLUE}=== Configureren: ${hostname} ===${NC}"
+
+            read -p "Service naam: " service_name
+            read -p "Beschrijving: " description
+            read -p "Web UI? (y/n): " has_webui
+
+            webui_port=""
+            if [[ "$has_webui" == "y" ]]; then
+                read -p "Web UI poort: " webui_port
+            fi
+
+            create_motd_template "$hostname" "$service_name" "$description" "$has_webui" "$webui_port"
+        done
+
+        echo ""
+        echo -e "${GREEN}✓ Alle templates aangemaakt!${NC}"
+        echo -e "${GREEN}Deploy ze met: deploy-motd${NC}"
+    else
+        echo "Tip: gebruik 'generate-motd <hostname>' voor individuele hosts"
+    fi
+fi

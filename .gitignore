@@ -1,0 +1,14 @@
+# SSH keys en gevoelige data
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# Backup bestanden
+*.bak
+*.backup
+*~
+
+# SSH config met echte IPs/hostnames
+config/ssh-config
+!config/ssh-config.example

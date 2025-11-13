@@ -1,0 +1,44 @@
+#!/bin/bash
+# Functie: Kopieer-Sleutels V7.0 (Linux versie)
+# Pad naar je SSH configuratie en publieke sleutel
+
+CONFIG_FILE="$HOME/.ssh/config"
+PUBLIC_KEY_FILE="$HOME/.ssh/id_ed25519.pub"
+
+# Controleer of de bestanden bestaan
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo -e "\033[0;31mFout: SSH configuratiebestand niet gevonden op $CONFIG_FILE\033[0m"
+    exit 1
+fi
+
+if [[ ! -f "$PUBLIC_KEY_FILE" ]]; then
+    echo -e "\033[0;31mFout: Publieke sleutel niet gevonden op $PUBLIC_KEY_FILE\033[0m"
+    echo "Genereer eerst een sleutel met 'ssh-keygen -t ed25519'"
+    exit 1
+fi
+
+echo "Lezen van hosts uit: $CONFIG_FILE"
+
+# Lees de hostnamen uit het bestand
+hosts=$(grep "^Host " "$CONFIG_FILE" | awk '{print $2}' | grep -v '\*' | sort -u)
+
+echo "Gevonden hosts: $(echo $hosts | tr '\n' ', ' | sed 's/, $//')"
+echo ""
+
+# Loop door elke gevonden host en kopieer de sleutel
+for hostname in $hosts; do
+    echo "--- Bezig met $hostname ---"
+
+    # Kopieer de sleutel
+    if cat "$PUBLIC_KEY_FILE" | ssh -F "$CONFIG_FILE" "$hostname" "mkdir -p ~/.ssh; chmod 700 ~/.ssh; cat >> ~/.ssh/authorized_keys; chmod 600 ~/.ssh/authorized_keys" 2>/dev/null; then
+        echo -e "\033[0;32m✅ Sleutel succesvol gekopieerd naar $hostname\033[0m"
+    else
+        exit_code=$?
+        echo -e "\033[0;31m❌ Fout bij het kopiëren van de sleutel naar $hostname (Exit Code: $exit_code)\033[0m"
+        echo -e "\033[0;33mDetails: Controleer de verbinding en inloggegevens\033[0m"
+    fi
+
+    echo ""
+done
+
+echo "Script voltooid."

@@ -1,0 +1,25 @@
+#!/bin/bash
+# Homelab helper - overview of available commands
+cat << 'HELP'
+========================================
+     Homelab Management Commands
+========================================
+SSH Management:
+  sshlist       - View all your servers
+  ssh-edit      - Edit SSH config
+  ssh <host>    - Direct login (e.g. 'ssh proxmox')
+
+Security:
+  copykey       - Copy SSH keys to all servers
+
+MOTD Management:
+  generate-motd  - Generate MOTD templates for new servers
+  deploy-motd    - Deploy welcome screens to servers
+
+Homelab Cleanup:
+  cleanup-homelab              # Interactive cleanup
+  cleanup-homelab --orphaned   # Show orphaned templates
+  cleanup-homelab --remove     # Remove all orphaned templates
+
+========================================
+HELP

@@ -1,0 +1,181 @@
+# ===============================================
+# =       SSH Configuratie Homelab V6.0         =
+# ===============================================
+
+Host test1
+    HostName 192.168.1.250
+    Port 2221
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host test2
+    HostName 192.168.1.250
+    Port 2222
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host test99
+    HostName 192.168.1.250
+    Port 2229
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+# --- Systeem & Infrastructuur ---
+
+
+Host proxmox
+    HostName 192.168.1.250
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host pbs
+    HostName 192.168.1.150
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host frigate
+    HostName 192.168.1.30
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host docker-debian
+    HostName 192.168.1.12
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+# --- Netwerk Diensten ---
+Host pihole1
+    HostName 192.168.1.56
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host pihole2
+    HostName 192.168.1.57
+    User pi
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host kuma
+    HostName 192.168.1.25
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+# --- Domotica & IoT ---
+Host ha
+    HostName 192.168.1.66
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host zigbee2mqtt
+    HostName 192.168.1.10
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host emqx
+    HostName 192.168.1.11
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+# --- Media Servers ---
+Host plex
+    HostName 192.168.1.133
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host prowlarr
+    HostName 192.168.1.135
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host overseerr
+    HostName 192.168.1.68
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host tautulli
+    HostName 192.168.1.43
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host radarr
+    HostName 192.168.1.131
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host sonarr
+    HostName 192.168.1.132
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host lidarr
+    HostName 192.168.1.154
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host sabnzbd
+    HostName 192.168.1.130
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+# --- Overig ---
+Host powernukkitx
+    HostName 192.168.1.175
+    User minecraft
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host pocketmine
+    HostName 192.168.1.174
+    User root
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10
+
+Host allsky
+    HostName 192.168.1.136
+    User allsky
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 120
+    ConnectTimeout 10

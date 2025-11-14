@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+
 # Cleanup orphaned MOTD templates
 # by J.Bakers
 

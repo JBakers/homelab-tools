@@ -1,8 +1,9 @@
 #!/bin/bash
+set -euo pipefail
 
 # Deploy MOTD to remote server
 # Author: J.Bakers
-# Version: 3.0
+# Version: 3.1.0
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -64,6 +65,13 @@ if [[ -z "$SERVICE" ]]; then
     echo -e "  Gebruik: ${GREEN}deploy-motd <service-naam>${RESET}"
     echo -e "  Voorbeeld: ${GREEN}deploy-motd jellyfin${RESET}"
     echo -e "  Of: ${CYAN}deploy-motd --help${RESET} voor meer informatie"
+    exit 1
+fi
+
+# Validate service name to prevent command injection
+if [[ ! "$SERVICE" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+    echo -e "${RED}✗ Fout: Ongeldige service naam${RESET}"
+    echo -e "  Alleen letters, cijfers, punten, underscores en streepjes zijn toegestaan"
     exit 1
 fi
 

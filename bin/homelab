@@ -1,8 +1,9 @@
 #!/bin/bash
+set -euo pipefail
 
 # Homelab Management Menu
 # Author: J.Bakers
-# Version: 2.0
+# Version: 3.1.0
 
 # Kleuren (zelfde stijl als MOTD)
 CYAN='\033[0;36m'
@@ -17,7 +18,7 @@ RESET='\033[0m'
 # Help functie (kort overzicht)
 show_help() {
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v3.0              ║"
+    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v3.1.0              ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "${BOLD}${BLUE}AVAILABLE COMMANDS:${RESET}"
@@ -99,7 +100,7 @@ show_detailed_help() {
 show_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v2.0              ║"
+    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v3.1.0              ║"
     echo -e "║                  by J.Bakers                           ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""

@@ -1,4 +1,4 @@
-# 🏠 Homelab Management Tools v3.1
+# 🏠 Homelab Management Tools v3.1.0
 
 Professional command-line tools for managing your homelab with stylish, colorful interfaces and intelligent automation.
 
@@ -63,7 +63,7 @@ homelab
 This displays:
 ```
 ╔════════════════════════════════════════════════════════════╗
-║           🏠 HOMELAB MANAGEMENT TOOLS v2.0              ║
+║           🏠 HOMELAB MANAGEMENT TOOLS v3.1.0            ║
 ║                    by J.Bakers                           ║
 ╚════════════════════════════════════════════════════════════╝
 

@@ -1,8 +1,9 @@
 #!/bin/bash
+set -euo pipefail
 
 # Generate MOTD template for homelab services
 # Author: J.Bakers
-# Version: 3.0
+# Version: 3.1.0
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -68,6 +69,14 @@ if [[ -z "$SERVICE" ]]; then
     echo -e "  Gebruik: ${GREEN}generate-motd <service-naam>${RESET}"
     echo -e "  Voorbeeld: ${GREEN}generate-motd jellyfin${RESET}"
     echo -e "  Of: ${CYAN}generate-motd --help${RESET} voor meer informatie"
+    exit 1
+fi
+
+# Validate service name to prevent command injection
+if [[ ! "$SERVICE" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+    echo -e "${RED}✗ Fout: Ongeldige service naam${RESET}"
+    echo -e "  Alleen letters, cijfers, punten, underscores en streepjes zijn toegestaan"
+    echo -e "  Voorbeeld: ${GREEN}generate-motd jellyfin${RESET}"
     exit 1
 fi
 
@@ -433,14 +442,16 @@ case "$SERVICE" in
         # Capitalize eerste letter voor onbekende services
         service_name="$(echo "$SERVICE" | sed 's/\b\(.\)/\u\1/g')"
         description="Server"
+
+        # Preserve numbers in service name for unknown services (e.g., myservice2 → Myservice 2)
+        # Only for default case - known services handle numbers in their case statements
+        if [[ "$SERVICE" =~ ([0-9]+)$ ]]; then
+            num="${BASH_REMATCH[1]}"
+            # Remove number from service_name and add it back with space
+            service_name="${service_name%$num} $num"
+        fi
         ;;
 esac
-
-# Preserve numbers in service name (e.g., pihole2 → Pi-hole 2, test1 → Test 1)
-if [[ "$SERVICE" =~ ([0-9]+)$ ]]; then
-    num="${BASH_REMATCH[1]}"
-    service_name="$service_name $num"
-fi
 
 echo -e "${GREEN}✓${RESET} Auto-detected: ${CYAN}$service_name - $description${RESET}"
 if [[ "$has_webui" == "y" ]]; then

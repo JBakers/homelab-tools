@@ -142,6 +142,14 @@ else
         fi
     else
         echo -e "${RED}✗ Kan niet kopiëren naar remote host${RESET}"
+        echo ""
+        read -p "$(echo -e ${YELLOW}Debug connection? \(y/N\):${RESET} )" debug
+        if [[ "$debug" =~ ^[Yy]$ ]]; then
+            echo ""
+            echo -e "${CYAN}=== SSH Connection Debug ===${RESET}"
+            echo -e "${YELLOW}Testing connection...${RESET}"
+            ssh -v "$SERVICE" "echo 2>&1" 2>&1 | tail -20
+        fi
         exit 1
     fi
 fi
@@ -149,9 +157,37 @@ fi
 # Maak executable
 echo -e "${YELLOW}→${RESET} Configureer permissions..."
 if [[ -n "$use_sudo" ]]; then
-    ssh "$SERVICE" "sudo chmod +x /etc/profile.d/00-motd.sh"
+    if ! ssh "$SERVICE" "sudo chmod +x /etc/profile.d/00-motd.sh" 2>/dev/null; then
+        echo -e "${RED}✗ Kan permissions niet instellen${RESET}"
+        echo ""
+        read -p "$(echo -e ${YELLOW}Debug? \(y/N\):${RESET} )" debug
+        if [[ "$debug" =~ ^[Yy]$ ]]; then
+            echo ""
+            echo -e "${CYAN}=== Permission Debug ===${RESET}"
+            ssh "$SERVICE" "ls -la /etc/profile.d/00-motd.sh 2>&1"
+            echo ""
+            echo -e "${YELLOW}Try manual fix:${RESET}"
+            echo -e "  ${CYAN}ssh $SERVICE${RESET}"
+            echo -e "  ${CYAN}sudo chmod +x /etc/profile.d/00-motd.sh${RESET}"
+        fi
+        exit 1
+    fi
 else
-    ssh "$SERVICE" "chmod +x /etc/profile.d/00-motd.sh"
+    if ! ssh "$SERVICE" "chmod +x /etc/profile.d/00-motd.sh" 2>/dev/null; then
+        echo -e "${RED}✗ Kan permissions niet instellen${RESET}"
+        echo ""
+        read -p "$(echo -e ${YELLOW}Debug? \(y/N\):${RESET} )" debug
+        if [[ "$debug" =~ ^[Yy]$ ]]; then
+            echo ""
+            echo -e "${CYAN}=== Permission Debug ===${RESET}"
+            ssh "$SERVICE" "ls -la /etc/profile.d/00-motd.sh 2>&1"
+            echo ""
+            echo -e "${YELLOW}Try manual fix:${RESET}"
+            echo -e "  ${CYAN}ssh $SERVICE${RESET}"
+            echo -e "  ${CYAN}chmod +x /etc/profile.d/00-motd.sh${RESET}"
+        fi
+        exit 1
+    fi
 fi
 echo -e "${GREEN}✓${RESET} Permissions ingesteld"
 

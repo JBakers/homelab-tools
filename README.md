@@ -227,11 +227,13 @@ tar -czf templates-backup.tar.gz ~/.local/share/homelab-tools/templates/
 
 ## 📜 License
 
-Made by J.Bakers
+MIT License - Made by J.Bakers
 
 ## 🤝 Contributing
 
 Feel free to submit issues and enhancement requests!
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## 📚 Documentation
 

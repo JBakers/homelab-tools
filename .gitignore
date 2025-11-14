@@ -12,3 +12,14 @@ id_ed25519*
 # SSH config met echte IPs/hostnames
 config/ssh-config
 !config/ssh-config.example
+
+# Personal MOTD templates (keep examples only)
+config/server-motd/*.sh
+!config/server-motd/generic.sh
+!config/server-motd/test.sh
+
+# User-specific hosts file
+config/hosts.txt
+
+# Generated templates directory
+templates/

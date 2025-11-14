@@ -1,0 +1,163 @@
+#!/bin/bash
+
+# Deploy MOTD to remote server
+# Author: J.Bakers
+# Version: 3.0
+
+# Kleuren
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+TEMPLATES_DIR="$HOME/homelab-tools/templates"
+
+show_help() {
+    echo -e "${BOLD}${CYAN}deploy-motd - Deploy MOTD to container${RESET}"
+    echo ""
+    echo -e "${BOLD}USAGE:${RESET}"
+    echo "  deploy-motd <service-name>"
+    echo ""
+    echo -e "${BOLD}DESCRIPTION:${RESET}"
+    echo "  Deploys an MOTD template to the corresponding container."
+    echo "  The script:"
+    echo "  1. Checks if the template exists"
+    echo "  2. Copies the template to /etc/profile.d/ on the container"
+    echo "  3. Tests the connection"
+    echo "  4. Makes the template executable"
+    echo ""
+    echo -e "${BOLD}REQUIREMENTS:${RESET}"
+    echo "  - SSH access to the container"
+    echo "  - Same hostname as service name OR"
+    echo "  - SSH config entry for the service name"
+    echo ""
+    echo -e "${BOLD}EXAMPLE:${RESET}"
+    echo -e "  ${GREEN}deploy-motd jellyfin${RESET}"
+    echo ""
+    echo "  This deploys to:"
+    echo "    ssh jellyfin"
+    echo ""
+    echo -e "${BOLD}SSH CONFIG:${RESET}"
+    echo "  Make sure you have an entry in ~/.ssh/config:"
+    echo ""
+    echo "  Host jellyfin"
+    echo "    HostName 192.168.178.25"
+    echo "    User root"
+    echo ""
+    echo -e "${BOLD}NOTE:${RESET}"
+    echo "  After deployment, the MOTD is automatically shown on"
+    echo "  every new SSH session with current information."
+    echo ""
+}
+
+if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+SERVICE=$1
+
+if [[ -z "$SERVICE" ]]; then
+    echo -e "${RED}✗ Fout: Geen service naam opgegeven${RESET}"
+    echo -e "  Gebruik: ${GREEN}deploy-motd <service-naam>${RESET}"
+    echo -e "  Voorbeeld: ${GREEN}deploy-motd jellyfin${RESET}"
+    echo -e "  Of: ${CYAN}deploy-motd --help${RESET} voor meer informatie"
+    exit 1
+fi
+
+TEMPLATE_FILE="$TEMPLATES_DIR/$SERVICE.sh"
+
+if [[ ! -f "$TEMPLATE_FILE" ]]; then
+    echo -e "${RED}✗ Fout: Template niet gevonden${RESET}"
+    echo -e "  Verwacht: ${CYAN}$TEMPLATE_FILE${RESET}"
+    echo -e ""
+    echo -e "  Genereer eerst een template:"
+    echo -e "  ${GREEN}generate-motd $SERVICE${RESET}"
+    exit 1
+fi
+
+echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+echo -e "║         🚀 MOTD Deploy                                ║"
+echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+echo ""
+echo -e "${BOLD}Service: ${GREEN}$SERVICE${RESET}"
+echo -e "Template: ${CYAN}$TEMPLATE_FILE${RESET}"
+echo ""
+
+# Test SSH connectie
+echo -e "${YELLOW}→${RESET} Test SSH connectie..."
+if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$SERVICE" "echo 2>&1" &>/dev/null; then
+    echo -e "${RED}✗ Kan niet verbinden met $SERVICE${RESET}"
+    echo -e ""
+    echo -e "  Controleer:"
+    echo -e "  1. SSH config: ${CYAN}~/.ssh/config${RESET}"
+    echo -e "  2. SSH keys zijn geconfigureerd"
+    echo -e "  3. Container is online"
+    echo -e ""
+    echo -e "  Voorbeeld SSH config entry:"
+    echo -e "  ${CYAN}Host $SERVICE${RESET}"
+    echo -e "  ${CYAN}  HostName 192.168.178.xx${RESET}"
+    echo -e "  ${CYAN}  User root${RESET}"
+    exit 1
+fi
+echo -e "${GREEN}✓${RESET} SSH connectie OK"
+
+# Cleanup oude MOTD bestanden
+echo -e "${YELLOW}→${RESET} Cleanup oude MOTD..."
+ssh "$SERVICE" "rm -f /etc/motd /etc/update-motd.d/* 2>/dev/null || sudo rm -f /etc/motd /etc/update-motd.d/* 2>/dev/null"
+echo -e "${GREEN}✓${RESET} Oude MOTD verwijderd"
+
+# Maak profile.d directory aan als die niet bestaat
+echo -e "${YELLOW}→${RESET} Controleer /etc/profile.d/..."
+ssh "$SERVICE" "mkdir -p /etc/profile.d 2>/dev/null || sudo mkdir -p /etc/profile.d 2>/dev/null"
+
+# Deploy nieuwe MOTD
+echo -e "${YELLOW}→${RESET} Deploy nieuwe MOTD..."
+
+# Probeer eerst zonder sudo
+if scp "$TEMPLATE_FILE" "$SERVICE:/etc/profile.d/00-motd.sh" 2>/dev/null; then
+    echo -e "${GREEN}✓${RESET} Template gekopieerd"
+    use_sudo=""
+else
+    # Als dat faalt, kopieer naar /tmp en verplaats met sudo
+    echo -e "${YELLOW}  →${RESET} Geen directe toegang, gebruik sudo..."
+    if scp "$TEMPLATE_FILE" "$SERVICE:/tmp/00-motd.sh" 2>/dev/null; then
+        ssh "$SERVICE" "sudo mv /tmp/00-motd.sh /etc/profile.d/00-motd.sh" 2>/dev/null
+        if [[ $? -eq 0 ]]; then
+            echo -e "${GREEN}✓${RESET} Template gekopieerd (via sudo)"
+            use_sudo="sudo"
+        else
+            echo -e "${RED}✗ Fout bij kopiëren van template${RESET}"
+            echo -e ""
+            echo -e "  ${YELLOW}Mogelijke oorzaken:${RESET}"
+            echo -e "  - User heeft geen sudo rechten"
+            echo -e "  - /etc/profile.d/ bestaat niet en kan niet aangemaakt worden"
+            echo -e ""
+            echo -e "  ${YELLOW}Handmatige fix:${RESET}"
+            echo -e "  ${CYAN}ssh $SERVICE${RESET}"
+            echo -e "  ${CYAN}sudo mkdir -p /etc/profile.d${RESET}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}✗ Kan niet kopiëren naar remote host${RESET}"
+        exit 1
+    fi
+fi
+
+# Maak executable
+echo -e "${YELLOW}→${RESET} Configureer permissions..."
+if [[ -n "$use_sudo" ]]; then
+    ssh "$SERVICE" "sudo chmod +x /etc/profile.d/00-motd.sh"
+else
+    ssh "$SERVICE" "chmod +x /etc/profile.d/00-motd.sh"
+fi
+echo -e "${GREEN}✓${RESET} Permissions ingesteld"
+
+echo ""
+echo -e "${GREEN}✓ Deployment succesvol!${RESET}"
+echo ""
+echo -e "${YELLOW}Test de MOTD:${RESET}"
+echo -e "  ${GREEN}ssh $SERVICE${RESET}"
+echo ""

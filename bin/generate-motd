@@ -1,0 +1,648 @@
+#!/bin/bash
+
+# Generate MOTD template for homelab services
+# Author: J.Bakers
+# Version: 3.0
+
+# Kleuren
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+TEMPLATES_DIR="$HOME/homelab-tools/templates"
+CONFIG_FILE="$HOME/homelab-tools/.config"
+
+# Load config
+if [[ -f "$CONFIG_FILE" ]]; then
+    source "$CONFIG_FILE"
+else
+    # Defaults
+    DOMAIN_SUFFIX=""
+    IP_METHOD="ip"
+fi
+
+show_help() {
+    echo -e "${BOLD}${CYAN}generate-motd - Generate MOTD template${RESET}"
+    echo ""
+    echo -e "${BOLD}USAGE:${RESET}"
+    echo "  generate-motd <service-name>"
+    echo ""
+    echo -e "${BOLD}DESCRIPTION:${RESET}"
+    echo "  Generates a dynamic MOTD template for a homelab service."
+    echo "  Template is saved in ~/homelab-tools/templates/"
+    echo ""
+    echo -e "${BOLD}INTERACTIVE:${RESET}"
+    echo "  The script will ask for:"
+    echo "  - Service name (e.g., Jellyfin, Home Assistant)"
+    echo "  - Description (e.g., Media Server)"
+    echo "  - Whether there's a Web UI (y/n)"
+    echo "  - Port number (if Web UI)"
+    echo ""
+    echo -e "${BOLD}EXAMPLE:${RESET}"
+    echo -e "  ${GREEN}generate-motd jellyfin${RESET}"
+    echo ""
+    echo "  The script will then ask:"
+    echo "    Service name: Jellyfin"
+    echo "    Description: Media Server"
+    echo "    Web UI? (y/n): y"
+    echo "    Port: 8096"
+    echo ""
+    echo -e "${BOLD}NOTE:${RESET}"
+    echo -e "  The MOTD is ${YELLOW}dynamically${RESET} generated on each login, so"
+    echo "  information like uptime and versions are always current."
+    echo ""
+}
+
+if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+SERVICE=$1
+
+if [[ -z "$SERVICE" ]]; then
+    echo -e "${RED}✗ Fout: Geen service naam opgegeven${RESET}"
+    echo -e "  Gebruik: ${GREEN}generate-motd <service-naam>${RESET}"
+    echo -e "  Voorbeeld: ${GREEN}generate-motd jellyfin${RESET}"
+    echo -e "  Of: ${CYAN}generate-motd --help${RESET} voor meer informatie"
+    exit 1
+fi
+
+mkdir -p "$TEMPLATES_DIR"
+
+echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+echo -e "║         📝 MOTD Generator                             ║"
+echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+echo ""
+echo -e "${BOLD}Service: ${GREEN}$SERVICE${RESET}"
+echo ""
+
+# Smart defaults op basis van hostname
+service_name=""
+description=""
+has_webui="n"
+webui_port=""
+
+case "$SERVICE" in
+    # Media Servers
+    jellyfin*)
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        service_name="Jellyfin${number:+ $number}"
+        description="Media Server"
+        has_webui="y"
+        webui_port="8096"
+        ;;
+    plex*)
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        service_name="Plex${number:+ $number}"
+        description="Media Server"
+        has_webui="y"
+        webui_port="32400/web"
+        ;;
+    emby*)
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        service_name="Emby${number:+ $number}"
+        description="Media Server"
+        has_webui="y"
+        webui_port="8096"
+        ;;
+    
+    # *arr Stack
+    sonarr)
+        service_name="Sonarr"
+        description="TV Series Management"
+        has_webui="y"
+        webui_port="8989"
+        ;;
+    radarr)
+        service_name="Radarr"
+        description="Movie Management"
+        has_webui="y"
+        webui_port="7878"
+        ;;
+    lidarr)
+        service_name="Lidarr"
+        description="Music Management"
+        has_webui="y"
+        webui_port="8686"
+        ;;
+    readarr)
+        service_name="Readarr"
+        description="Book Management"
+        has_webui="y"
+        webui_port="8787"
+        ;;
+    prowlarr)
+        service_name="Prowlarr"
+        description="Indexer Manager"
+        has_webui="y"
+        webui_port="9696"
+        ;;
+    bazarr)
+        service_name="Bazarr"
+        description="Subtitle Management"
+        has_webui="y"
+        webui_port="6767"
+        ;;
+    
+    # Download Clients
+    sabnzbd)
+        service_name="SABnzbd"
+        description="Usenet Downloader"
+        has_webui="y"
+        webui_port="8080"
+        ;;
+    nzbget)
+        service_name="NZBGet"
+        description="Usenet Downloader"
+        has_webui="y"
+        webui_port="6789"
+        ;;
+    transmission)
+        service_name="Transmission"
+        description="Torrent Client"
+        has_webui="y"
+        webui_port="9091"
+        ;;
+    qbittorrent)
+        service_name="qBittorrent"
+        description="Torrent Client"
+        has_webui="y"
+        webui_port="8080"
+        ;;
+    deluge)
+        service_name="Deluge"
+        description="Torrent Client"
+        has_webui="y"
+        webui_port="8112"
+        ;;
+    
+    # Request Management
+    overseerr)
+        service_name="Overseerr"
+        description="Request Management"
+        has_webui="y"
+        webui_port="5055"
+        ;;
+    ombi)
+        service_name="Ombi"
+        description="Request Management"
+        has_webui="y"
+        webui_port="3579"
+        ;;
+    
+    # Network & DNS
+    pihole*|pi-hole*)
+        # Extract number if present (pihole2 -> 2)
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        if [[ -n "$number" ]]; then
+            service_name="Pi-hole $number"
+        else
+            service_name="Pi-hole"
+        fi
+        description="Network-wide Ad Blocking"
+        has_webui="y"
+        webui_port="80/admin"
+        ;;
+    adguard*)
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        if [[ -n "$number" ]]; then
+            service_name="AdGuard Home $number"
+        else
+            service_name="AdGuard Home"
+        fi
+        description="Network-wide Ad Blocking"
+        has_webui="y"
+        webui_port="3000"
+        ;;
+    unbound)
+        service_name="Unbound"
+        description="DNS Resolver"
+        has_webui="n"
+        ;;
+    
+    # Virtualization & Containers
+    portainer)
+        service_name="Portainer"
+        description="Docker Management"
+        has_webui="y"
+        webui_port="9000"
+        ;;
+    proxmox)
+        service_name="Proxmox"
+        description="Virtualization Platform"
+        has_webui="y"
+        webui_port="8006"
+        ;;
+    pbs)
+        service_name="PBS"
+        description="Proxmox Backup Server"
+        has_webui="y"
+        webui_port="8007"
+        ;;
+    yacht)
+        service_name="Yacht"
+        description="Docker Management"
+        has_webui="y"
+        webui_port="8000"
+        ;;
+    
+    # Home Automation
+    homeassistant|hass|ha)
+        service_name="Home Assistant"
+        description="Home Automation"
+        has_webui="y"
+        webui_port="8123"
+        ;;
+    nodered|node-red)
+        service_name="Node-RED"
+        description="Flow Programming"
+        has_webui="y"
+        webui_port="1880"
+        ;;
+    zigbee2mqtt|z2m)
+        service_name="Zigbee2MQTT"
+        description="Zigbee to MQTT Bridge"
+        has_webui="y"
+        webui_port="8080"
+        ;;
+    mosquitto|mqtt)
+        service_name="Mosquitto"
+        description="MQTT Broker"
+        has_webui="n"
+        ;;
+    esphome)
+        service_name="ESPHome"
+        description="ESP Device Management"
+        has_webui="y"
+        webui_port="6052"
+        ;;
+    
+    # Monitoring & Analytics
+    frigate)
+        service_name="Frigate"
+        description="NVR with AI Detection"
+        has_webui="y"
+        webui_port="5000"
+        ;;
+    kuma|uptime*)
+        service_name="Uptime Kuma"
+        description="Status Monitoring"
+        has_webui="y"
+        webui_port="3001"
+        ;;
+    grafana)
+        service_name="Grafana"
+        description="Analytics & Monitoring"
+        has_webui="y"
+        webui_port="3000"
+        ;;
+    prometheus)
+        service_name="Prometheus"
+        description="Metrics Collection"
+        has_webui="y"
+        webui_port="9090"
+        ;;
+    influxdb)
+        service_name="InfluxDB"
+        description="Time Series Database"
+        has_webui="y"
+        webui_port="8086"
+        ;;
+    tautulli)
+        service_name="Tautulli"
+        description="Plex Monitoring"
+        has_webui="y"
+        webui_port="8181"
+        ;;
+    netdata)
+        service_name="Netdata"
+        description="Real-time Monitoring"
+        has_webui="y"
+        webui_port="19999"
+        ;;
+    glances)
+        service_name="Glances"
+        description="System Monitoring"
+        has_webui="y"
+        webui_port="61208"
+        ;;
+    
+    # VPN & Network Tools
+    wireguard|wg)
+        service_name="WireGuard"
+        description="VPN Server"
+        has_webui="n"
+        ;;
+    openvpn)
+        service_name="OpenVPN"
+        description="VPN Server"
+        has_webui="n"
+        ;;
+    nginx*)
+        service_name="Nginx"
+        description="Reverse Proxy"
+        has_webui="n"
+        ;;
+    traefik)
+        service_name="Traefik"
+        description="Reverse Proxy"
+        has_webui="y"
+        webui_port="8080"
+        ;;
+    
+    # File Management & Sync
+    nextcloud)
+        service_name="Nextcloud"
+        description="File Sync & Share"
+        has_webui="y"
+        webui_port="443"
+        ;;
+    syncthing)
+        service_name="Syncthing"
+        description="File Synchronization"
+        has_webui="y"
+        webui_port="8384"
+        ;;
+    filebrowser)
+        service_name="File Browser"
+        description="Web File Manager"
+        has_webui="y"
+        webui_port="8080"
+        ;;
+    
+    # Gaming
+    minecraft|mc)
+        service_name="Minecraft"
+        description="Game Server"
+        has_webui="n"
+        ;;
+    pocketmine|pmmp)
+        service_name="PocketMine"
+        description="Minecraft PE Server"
+        has_webui="n"
+        ;;
+    powernukkitx|pnx)
+        service_name="PowerNukkitX"
+        description="Minecraft BE Server"
+        has_webui="n"
+        ;;
+    
+    # Cameras & Security
+    motioneye)
+        service_name="motionEye"
+        description="Video Surveillance"
+        has_webui="y"
+        webui_port="8765"
+        ;;
+    zoneminder)
+        service_name="ZoneMinder"
+        description="Video Surveillance"
+        has_webui="y"
+        webui_port="80"
+        ;;
+    
+    # Misc Services
+    allsky)
+        service_name="AllSky"
+        description="All-Sky Camera"
+        has_webui="y"
+        webui_port="80"
+        ;;
+    emqx)
+        service_name="EMQX"
+        description="MQTT Broker"
+        has_webui="y"
+        webui_port="18083"
+        ;;
+    docker*)
+        service_name="Docker"
+        description="Container Host"
+        has_webui="n"
+        ;;
+    test*|demo*)
+        service_name="Test"
+        description="Test Server"
+        has_webui="n"
+        ;;
+    
+    *)
+        # Capitalize eerste letter voor onbekende services
+        service_name="$(echo "$SERVICE" | sed 's/\b\(.\)/\u\1/g')"
+        description="Server"
+        ;;
+esac
+
+echo -e "${GREEN}✓${RESET} Auto-detected: ${CYAN}$service_name - $description${RESET}"
+if [[ "$has_webui" == "y" ]]; then
+    echo -e "${GREEN}✓${RESET} Web UI: ${CYAN}$webui_port${RESET}"
+fi
+echo ""
+
+# Vraag bevestiging of override (default = n = direct doorgaan)
+read -p "$(echo -e ${YELLOW}Customize? \(y/N\):${RESET} )" customize
+customize=${customize:-n}
+
+if [[ "$customize" == "y" ]] || [[ "$customize" == "Y" ]]; then
+    read -p "$(echo -e ${CYAN}Service name \(for ASCII art\) [${service_name}]:${RESET} )" custom_name
+    [[ -n "$custom_name" ]] && service_name="$custom_name"
+    
+    read -p "$(echo -e ${CYAN}Description [${description}]:${RESET} )" custom_desc
+    [[ -n "$custom_desc" ]] && description="$custom_desc"
+    
+    read -p "$(echo -e ${CYAN}Web UI? \(y/n\) [${has_webui}]:${RESET} )" custom_webui
+    [[ -n "$custom_webui" ]] && has_webui="$custom_webui"
+    
+    if [[ "$has_webui" == "y" ]]; then
+        read -p "$(echo -e ${CYAN}Port or URL [${webui_port}]:${RESET} )" custom_port
+        [[ -n "$custom_port" ]] && webui_port="$custom_port"
+    fi
+fi
+
+echo ""
+echo -e "${YELLOW}→${RESET} Generating rainbow ASCII art..."
+
+# Genereer ASCII art LOKAAL met toilet en gay filter
+rainbow_art=""
+if command -v toilet &> /dev/null; then
+    # Gebruik toilet met future font en gay filter voor rainbow
+    rainbow_art=$(toilet -f future -F gay "$service_name" 2>/dev/null)
+    if [[ -z "$rainbow_art" ]]; then
+        # Fallback naar standard font
+        rainbow_art=$(toilet -f standard -F gay "$service_name" 2>/dev/null)
+    fi
+    if [[ -n "$rainbow_art" ]]; then
+        echo -e "${GREEN}✓${RESET} Rainbow ASCII art generated with toilet"
+    else
+        # Laatste fallback: zonder gay filter
+        rainbow_art=$(toilet -f future "$service_name" 2>/dev/null)
+        echo -e "${YELLOW}⚠${RESET} Using toilet without colors"
+    fi
+elif command -v figlet &> /dev/null; then
+    # Fallback naar figlet MET centrering
+    rainbow_art=$(figlet -c "$service_name" 2>/dev/null)
+    echo -e "${YELLOW}⚠${RESET} Using figlet (no colors). Install toilet for rainbow: ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
+else
+    # Laatste fallback: gewone text (gecentreerd)
+    rainbow_art=$(printf "%40s\n" "=== $service_name ===")
+    echo -e "${YELLOW}⚠${RESET} Warning: Neither toilet nor figlet found"
+    echo -e "  Install toilet for rainbow ASCII: ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
+fi
+
+# Bepaal welke versie commando's nodig zijn
+version_check=""
+case "$SERVICE" in
+    pihole)
+        version_check="PIHOLE_VERSION=\$(sudo pihole -v 2>/dev/null | grep 'Pi-hole' | awk '{print \$3}')"
+        ;;
+    docker|portainer|jellyfin|sonarr|radarr|prowlarr|plex)
+        version_check="DOCKER_VERSION=\$(docker --version 2>/dev/null | awk '{print \$3}' | tr -d ',')"
+        ;;
+    homeassistant|hass)
+        version_check="HASS_VERSION=\$(docker exec homeassistant cat /config/.HA_VERSION 2>/dev/null)"
+        ;;
+esac
+
+# Genereer de template - start met header
+cat > "$TEMPLATES_DIR/$SERVICE.sh" << 'TEMPLATE_START'
+#!/bin/bash
+# MOTD
+# Kleuren
+CYAN='\033[0;96m'
+GREEN='\033[0;92m'
+YELLOW='\033[0;93m'
+BLUE='\033[0;94m'
+MAGENTA='\033[0;95m'
+RED='\033[0;91m'
+BOLD='\033[1m'
+UNDERLINE='\033[4m'
+NC='\033[0m'
+
+# Get current information
+HOSTNAME=$(hostname)
+
+# Try hostname -I first (simple), fallback to ip route (reliable in containers)
+IP_ADDRESS=$(hostname -I 2>/dev/null | awk '{print $1}')
+if [[ -z "$IP_ADDRESS" ]]; then
+    IP_ADDRESS=$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7}')
+fi
+if [[ -z "$IP_ADDRESS" ]]; then
+    IP_ADDRESS="N/A"
+fi
+
+UPTIME=$(uptime -p | sed 's/up //')
+
+VERSION_CHECK_PLACEHOLDER
+
+# Rainbow ASCII Art (met lichte indent)
+echo ""
+while IFS= read -r line; do
+    printf "     %s\n" "$line"
+done << 'ASCII_ART'
+TEMPLATE_START
+
+# Voeg de ASCII art toe als een heredoc blok (behoudt alle ANSI codes)
+echo "$rainbow_art" >> "$TEMPLATES_DIR/$SERVICE.sh"
+
+# Sluit de ASCII art heredoc af en ga verder met de template
+cat >> "$TEMPLATES_DIR/$SERVICE.sh" << 'TEMPLATE_MIDDLE'
+ASCII_ART
+echo ""
+echo -e "        ${CYAN}DESCRIPTION_PLACEHOLDER${NC}"
+echo -e "           ${MAGENTA}by J.Bakers${NC}"
+echo ""
+echo -e "${BLUE}==========================================${NC}"
+printf "%7s" ""
+echo -e "${GREEN}${BOLD}${UNDERLINE}📊 System Information:${NC}"
+echo ""
+echo -e "  ${YELLOW}🖥️  Hostname:${NC}    $HOSTNAME"
+echo -e "  ${YELLOW}🌐 IP Address:${NC}  $IP_ADDRESS"
+echo -e "  ${YELLOW}⏱️  Uptime:${NC}      $UPTIME"
+TEMPLATE_MIDDLE
+
+# Voeg versie checks toe indien van toepassing
+if [[ -n "$version_check" ]]; then
+    cat >> "$TEMPLATES_DIR/$SERVICE.sh" << VERSION_SECTION
+$version_check
+VERSION_SECTION
+else
+    # Verwijder placeholder als er geen version check is
+    sed -i '/VERSION_CHECK_PLACEHOLDER/d' "$TEMPLATES_DIR/$SERVICE.sh"
+fi
+
+# Voeg versie display toe
+cat >> "$TEMPLATES_DIR/$SERVICE.sh" << 'VERSION_DISPLAY'
+# Version info (if available)
+if [[ -n "$PIHOLE_VERSION" ]]; then
+    echo -e "  ${YELLOW}🛡️  Pi-hole:${NC}     $PIHOLE_VERSION"
+fi
+if [[ -n "$DOCKER_VERSION" ]]; then
+    echo -e "  ${YELLOW}🐋 Docker:${NC}      $DOCKER_VERSION"
+fi
+if [[ -n "$HASS_VERSION" ]]; then
+    echo -e "  ${YELLOW}🏠 Home Assistant:${NC} $HASS_VERSION"
+fi
+VERSION_DISPLAY
+
+# Vervang description placeholder
+sed -i "s/DESCRIPTION_PLACEHOLDER/$description/g" "$TEMPLATES_DIR/$SERVICE.sh"
+
+# Web UI toevoegen als nodig
+if [[ -n "$webui_port" ]]; then
+    # Check of het een URL of poort is
+    if [[ "$webui_port" =~ ^https?:// ]]; then
+        web_url="$webui_port"
+    else
+        # Gebruik hostname met domein suffix
+        hostname_var="\$(hostname -s)"
+        
+        # Bepaal protocol (proxmox en PBS gebruiken https)
+        if [[ "$SERVICE" =~ ^(proxmox|pbs) ]]; then
+            protocol="https"
+        else
+            protocol="http"
+        fi
+        
+        web_url="${protocol}://${hostname_var}${DOMAIN_SUFFIX}:${webui_port}"
+    fi
+    
+    cat >> "$TEMPLATES_DIR/$SERVICE.sh" << WEBUI_SECTION
+echo -e "  \${YELLOW}🔗 Web UI:\${NC}      \${CYAN}$web_url\${NC}"
+WEBUI_SECTION
+fi
+
+# Sluit af
+cat >> "$TEMPLATES_DIR/$SERVICE.sh" << 'TEMPLATE_END'
+echo ""
+echo -e "${BLUE}==========================================${NC}"
+echo ""
+TEMPLATE_END
+
+chmod +x "$TEMPLATES_DIR/$SERVICE.sh"
+
+echo ""
+echo -e "${GREEN}✓ Template successfully created!${RESET}"
+echo -e "  Location: ${CYAN}$TEMPLATES_DIR/$SERVICE.sh${RESET}"
+echo ""
+
+# Vraag of meteen deployen (default = y)
+read -p "$(echo -e ${YELLOW}Deploy now? \(Y/n\):${RESET} )" deploy_now
+deploy_now=${deploy_now:-y}
+
+if [[ "$deploy_now" == "y" ]] || [[ "$deploy_now" == "Y" ]]; then
+    echo ""
+    if command -v deploy-motd &> /dev/null; then
+        deploy-motd "$SERVICE"
+    else
+        echo -e "${RED}✗ deploy-motd command not found${RESET}"
+        echo -e "  Run manually: ${GREEN}deploy-motd $SERVICE${RESET}"
+    fi
+else
+    echo ""
+    echo -e "${YELLOW}Next step:${RESET}"
+    echo -e "  ${GREEN}deploy-motd $SERVICE${RESET}"
+    echo ""
+fi

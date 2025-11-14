@@ -12,7 +12,7 @@ BLUE='\033[0;34m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
-TEMPLATES_DIR="$HOME/homelab-tools/templates"
+TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 
 show_help() {
     echo -e "${BOLD}${CYAN}list-templates - View all MOTD templates${RESET}"

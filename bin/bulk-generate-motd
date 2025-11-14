@@ -14,19 +14,24 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 SSH_CONFIG="$HOME/.ssh/config"
-TEMPLATES_DIR="$HOME/homelab-tools/templates"
+TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 
 show_help() {
     echo -e "${BOLD}${CYAN}bulk-generate-motd - Generate MOTDs for all hosts${RESET}"
     echo ""
-    echo -e "${BOLD}USAGE:${RESET}"
+    echo -e "${BOLD}${CYAN}USAGE:${RESET}"
     echo "  bulk-generate-motd"
+    echo "  bulk-generate-motd --all    # Auto-generate all hosts"
     echo ""
-    echo -e "${BOLD}DESCRIPTION:${RESET}"
+    echo -e "${BOLD}${CYAN}DESCRIPTION:${RESET}"
     echo "  Reads all hosts from ~/.ssh/config and generates MOTD"
     echo "  templates for each one interactively or with defaults."
     echo ""
-    echo -e "${BOLD}MODES:${RESET}"
+    echo -e "${BOLD}${CYAN}OPTIONS:${RESET}"
+    echo "  --all, -a    Auto-generate ALL hosts with auto-detection"
+    echo "               Skips all prompts, overwrites existing templates"
+    echo ""
+    echo -e "${BOLD}${CYAN}MODES:${RESET}"
     echo "  The script will ask for each host whether to:"
     echo "  - Skip it (if MOTD already exists)"
     echo "  - Use defaults (service name = hostname, no web UI)"
@@ -47,10 +52,21 @@ if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
     exit 0
 fi
 
+# Check for --all flag
+AUTO_ALL=false
+if [[ "$1" == "--all" ]] || [[ "$1" == "-a" ]]; then
+    AUTO_ALL=true
+fi
+
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
 echo -e "║       📝 Bulk MOTD Generator                          ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
+
+if [[ "$AUTO_ALL" == true ]]; then
+    echo -e "${GREEN}🚀 AUTO MODE:${RESET} Generating all hosts with auto-detection"
+    echo ""
+fi
 
 # Check SSH config
 if [[ ! -f "$SSH_CONFIG" ]]; then
@@ -90,6 +106,30 @@ for hostname in $hosts; do
     
     echo -e "${BOLD}${BLUE}Host: ${CYAN}$hostname${RESET}"
     
+    # In AUTO_ALL mode: skip prompts, just generate
+    if [[ "$AUTO_ALL" == true ]]; then
+        echo -e "  ${YELLOW}→${RESET} Auto-generating with detection..."
+        
+        # Skip if exists unless we're in overwrite-all mode
+        if [[ -f "$template_file" ]]; then
+            echo -e "  ${YELLOW}⚠${RESET} Template exists, overwriting..."
+        fi
+        
+        # Generate with auto-detection
+        echo -e "n\ny\n" | generate-motd "$hostname" &>/dev/null
+        
+        if [[ -f "$template_file" ]]; then
+            echo -e "  ${GREEN}✓${RESET} Generated successfully"
+            ((generated++))
+        else
+            echo -e "  ${RED}✗${RESET} Generation failed"
+            ((failed++))
+        fi
+        echo ""
+        continue
+    fi
+    
+    # Normal interactive mode
     # Check of template al bestaat
     if [[ -f "$template_file" ]]; then
         echo -e "  ${YELLOW}⚠${RESET} Template already exists"

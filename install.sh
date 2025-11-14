@@ -72,7 +72,7 @@ echo ""
 
 # 4. Maak templates directory
 echo -e "${YELLOW}[4/5]${RESET} Initialiseer templates..."
-mkdir -p "$INSTALL_DIR/templates"
+mkdir -p "$HOME/.local/share/homelab-tools/templates"
 echo -e "${GREEN}  ✓${RESET} Templates directory aangemaakt"
 echo ""
 

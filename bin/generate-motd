@@ -12,7 +12,7 @@ RED='\033[0;31m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
-TEMPLATES_DIR="$HOME/homelab-tools/templates"
+TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 CONFIG_FILE="$HOME/homelab-tools/config.sh"
 
 # Load config

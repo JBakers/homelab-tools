@@ -13,7 +13,7 @@ Professional command-line tools for managing your homelab with stylish, colorful
 - 🔑 **SSH Key Distribution** - Distribute SSH keys to all servers
 - 🧹 **Host Key Management** - Clean up old host keys easily with interactive menu
 - 📄 **Template Management** - Overview of all your MOTD templates
-- 💡 **Extensive Help** - Every command has `--help` documentation
+- 💡 **Extensive  Help** - Every command has `--help` documentation
 
 ## 📦 Installation
 
@@ -33,7 +33,7 @@ cd homelab-tools
 The installer will:
 - Copy files to `~/homelab-tools/`
 - Add to your PATH
-- Create templates directory
+- Create templates directory at `~/.local/share/homelab-tools/templates/`
 - Set executable permissions
 
 ### Manual Installation
@@ -55,7 +55,7 @@ homelab
 
 ### Interactive Menu
 
-Start the colored menu:
+Start the coloured menu:
 ```bash
 homelab
 ```
@@ -102,7 +102,7 @@ cleanup-keys 192.168.178.30
 copykey
 ```
 
-### Help for Each Command
+### Help  for Each Command
 
 ```bash
 homelab help
@@ -137,7 +137,7 @@ ssh frigate
 
 - `bash` - Bourne Again Shell
 - `ssh` - SSH client
-- `toilet` - For ASCII art in MOTDs (optional, recommended)
+- `toilet` - For ASCII art in MOTDs (optional but recommended)
 
 Install on Debian/Ubuntu:
 ```bash
@@ -155,16 +155,17 @@ homelab-tools/
 │   ├── cleanup-keys       # SSH key cleanup
 │   ├── list-templates     # Template overview
 │   └── copykey            # SSH key distributor
-├── templates/             # Generated MOTD templates
-│   └── .gitkeep
 ├── install.sh            # Installation script
+├── uninstall.sh          # Uninstallation script
 ├── QUICKSTART.md         # Quick start guide
 └── README.md             # This file
 ```
 
+Note: Templates are stored in `~/.local/share/homelab-tools/templates/` (not in this directory)
+
 ## 🎨 Color Customization
 
-The tools use these color codes (editable in each script):
+The tools use these color codes (editible in each script):
 
 ```bash
 CYAN='\033[0;36m'     # Cyan
@@ -210,7 +211,7 @@ Then use: `ssh frigate`
 
 **Re-deploy**: You can reuse templates, just run `deploy-motd <service>` again
 
-**Edit template**: Edit `~/homelab-tools/templates/<service>.sh` and redeploy
+**Edit template**: Edit `~/.local/share/homelab-tools/templates/<service>.sh` and redeploy
 
 **Bulk deploy**:
 ```bash
@@ -221,7 +222,7 @@ done
 
 **Backup templates**:
 ```bash
-tar -czf templates-backup.tar.gz templates/
+tar -czf templates-backup.tar.gz ~/.local/share/homelab-tools/templates/
 ```
 
 ## 📜 License

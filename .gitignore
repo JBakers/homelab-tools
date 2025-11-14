@@ -1,8 +1,14 @@
-# Generated MOTD templates (user-specific)
-templates/*.sh
-
-# Keep templates directory structure
+# Generated MOTD templates (user-specific, contains hostnames/IPs)
+templates/
 !templates/.gitkeep
+
+# User configuration (contains domain names)
+config.sh
+
+# Conversation logs / development notes
+conversation*.md
+notes*.md
+todo*.md
 
 # Test files (for local testing only)
 test.sh
@@ -18,6 +24,9 @@ test-*.sh
 
 # Editor files
 .vscode/
+.idea/
+*.swp
+*.swo
 *.swp
 *.swo
 

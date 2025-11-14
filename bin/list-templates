@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# List all MOTD templates
+# Author: J.Bakers
+# Version: 3.0
+
+# Kleuren
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+TEMPLATES_DIR="$HOME/homelab-tools/templates"
+
+show_help() {
+    echo -e "${BOLD}${CYAN}list-templates - View all MOTD templates${RESET}"
+    echo ""
+    echo -e "${BOLD}USAGE:${RESET}"
+    echo "  list-templates"
+    echo ""
+    echo -e "${BOLD}DESCRIPTION:${RESET}"
+    echo "  Shows an overview of all generated MOTD templates"
+    echo "  in ~/homelab-tools/templates/"
+    echo ""
+    echo -e "${BOLD}OUTPUT:${RESET}"
+    echo "  For each template shows:"
+    echo "  - Template name"
+    echo "  - Last modified"
+    echo "  - File size"
+    echo ""
+    echo -e "${BOLD}EXAMPLE OUTPUT:${RESET}"
+    echo "  📄 Templates in: ~/homelab-tools/templates"
+    echo ""
+    echo "  jellyfin.sh      2025-11-14 10:30    2.1 KB"
+    echo "  pihole.sh        2025-11-14 09:15    2.3 KB"
+    echo "  homeassistant.sh 2025-11-13 18:45    2.0 KB"
+    echo ""
+}
+
+if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+echo -e "║         📋 MOTD Templates                             ║"
+echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+echo ""
+
+if [[ ! -d "$TEMPLATES_DIR" ]]; then
+    echo -e "${YELLOW}⚠ Templates directory bestaat niet${RESET}"
+    echo -e "  Verwacht: ${CYAN}$TEMPLATES_DIR${RESET}"
+    echo ""
+    echo -e "  Genereer eerst een template:"
+    echo -e "  ${GREEN}generate-motd <service>${RESET}"
+    exit 0
+fi
+
+# Tel aantal templates
+template_count=$(find "$TEMPLATES_DIR" -maxdepth 1 -name "*.sh" -type f 2>/dev/null | wc -l)
+
+if [[ $template_count -eq 0 ]]; then
+    echo -e "${YELLOW}⚠ Geen templates gevonden${RESET}"
+    echo -e "  Directory: ${CYAN}$TEMPLATES_DIR${RESET}"
+    echo ""
+    echo -e "  Genereer een template:"
+    echo -e "  ${GREEN}generate-motd <service>${RESET}"
+    exit 0
+fi
+
+echo -e "${BOLD}Locatie:${RESET} ${CYAN}$TEMPLATES_DIR${RESET}"
+echo -e "${BOLD}Aantal:${RESET}  ${GREEN}$template_count${RESET} template(s)"
+echo ""
+echo -e "${BOLD}${BLUE}Template                Laatst gewijzigd         Grootte${RESET}"
+echo -e "${BOLD}${BLUE}────────────────────────────────────────────────────────────${RESET}"
+
+# List templates
+find "$TEMPLATES_DIR" -maxdepth 1 -name "*.sh" -type f | sort | while read -r template; do
+    name=$(basename "$template")
+    modified=$(stat -c '%y' "$template" 2>/dev/null | cut -d' ' -f1,2 | cut -d: -f1-2)
+    size=$(du -h "$template" | cut -f1)
+    
+    # Pad de naam voor mooie uitlijning
+    printf "${GREEN}%-24s${RESET}${CYAN}%s${RESET}  ${YELLOW}%6s${RESET}\n" "$name" "$modified" "$size"
+done
+
+echo ""
+echo -e "${YELLOW}Tip:${RESET} Bekijk een template met:"
+echo -e "  ${GREEN}cat $TEMPLATES_DIR/<naam>.sh${RESET}"
+echo ""

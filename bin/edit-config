@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# Edit homelab tools configuration
+# Author: J.Bakers
+# Version: 3.0
+
+# Kleuren
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+CONFIG_FILE="$HOME/homelab-tools/.config"
+
+echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+echo -e "║         ⚙️  Homelab Configuration                     ║"
+echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+echo ""
+
+# Load current config
+if [[ -f "$CONFIG_FILE" ]]; then
+    source "$CONFIG_FILE"
+    echo -e "${GREEN}✓${RESET} Current configuration:"
+    echo -e "  Domain suffix: ${CYAN}${DOMAIN_SUFFIX}${RESET}"
+    echo -e "  IP method:     ${CYAN}${IP_METHOD}${RESET}"
+    echo ""
+else
+    echo -e "${YELLOW}⚠${RESET} No configuration file found"
+    echo -e "  Creating default configuration..."
+    DOMAIN_SUFFIX=".home"
+    IP_METHOD="ip"
+fi
+
+# Ask for new values
+echo -e "${BOLD}Update configuration:${RESET}"
+echo ""
+
+echo -e "Domain suffix ${CYAN}(current: $DOMAIN_SUFFIX)${RESET}"
+echo -e "  Examples: .home, .local, .lan, or leave empty for no domain"
+read -p "  New value [press Enter to keep]: " new_domain
+new_domain=${new_domain:-$DOMAIN_SUFFIX}
+
+# Validate domain starts with dot if not empty
+if [[ -n "$new_domain" ]] && [[ ! "$new_domain" =~ ^\. ]]; then
+    echo -e "${RED}✗ Error: Domain suffix must start with a dot (e.g., .home)${RESET}"
+    echo -e "  Or leave empty for no domain"
+    exit 1
+fi
+
+echo ""
+echo -e "IP detection method ${CYAN}(current: $IP_METHOD)${RESET}"
+echo -e "  hostname - Uses 'hostname -I' (may fail in containers)"
+echo -e "  ip       - Uses 'ip route get' (more reliable)"
+read -p "  New value (hostname/ip) [press Enter to keep]: " new_ip_method
+new_ip_method=${new_ip_method:-$IP_METHOD}
+
+# Validate IP method
+if [[ "$new_ip_method" != "hostname" ]] && [[ "$new_ip_method" != "ip" ]]; then
+    echo -e "${RED}✗ Error: IP method must be 'hostname' or 'ip'${RESET}"
+    exit 1
+fi
+
+# Save configuration
+cat > "$CONFIG_FILE" << EOF
+# Homelab Tools Configuration
+# Author: J.Bakers
+# Version: 3.0
+
+# Domain suffix voor je homelab
+# Wordt gebruikt voor Web UI URLs
+DOMAIN_SUFFIX="$new_domain"
+
+# IP detectie methode
+# Opties: "hostname" of "ip"
+IP_METHOD="$new_ip_method"
+EOF
+
+echo ""
+echo -e "${GREEN}✓${RESET} Configuration saved!"
+echo ""
+echo -e "${BOLD}New settings:${RESET}"
+echo -e "  Domain suffix: ${CYAN}$new_domain${RESET}"
+echo -e "  IP method:     ${CYAN}$new_ip_method${RESET}"
+echo ""
+echo -e "${YELLOW}Note:${RESET} Regenerate MOTDs to apply new domain suffix:"
+echo -e "  ${GREEN}generate-motd <service>${RESET}"
+echo ""

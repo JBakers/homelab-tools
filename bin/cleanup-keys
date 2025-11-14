@@ -1,0 +1,162 @@
+#!/bin/bash
+
+# Cleanup host keys for homelab hosts
+# Clean up old SSH host keys
+# Author: J.Bakers
+# Version: 3.0
+
+# Kleuren
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+show_help() {
+    echo -e "${BOLD}${CYAN}cleanup-keys - Remove old host keys${RESET}"
+    echo ""
+    echo -e "${BOLD}USAGE:${RESET}"
+    echo "  cleanup-keys <hostname-or-ip>"
+    echo ""
+    echo -e "${BOLD}DESCRIPTION:${RESET}"
+    echo "  Removes old SSH host keys from ~/.ssh/known_hosts."
+    echo "  Useful when you've reinstalled a container and SSH"
+    echo "  complains about \"WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED\"."
+    echo ""
+    echo -e "${BOLD}EXAMPLES:${RESET}"
+    echo -e "  ${GREEN}cleanup-keys jellyfin${RESET}"
+    echo "      Remove keys for hostname 'jellyfin'"
+    echo ""
+    echo -e "  ${GREEN}cleanup-keys 192.168.1.30${RESET}"
+    echo "      Remove keys for IP address"
+    echo ""
+    echo -e "${BOLD}WORKFLOW:${RESET}"
+    echo "  1. Container reinstalled"
+    echo "  2. SSH gives warning about changed host key"
+    echo -e "  3. Run: ${GREEN}cleanup-keys <hostname>${RESET}"
+    echo "  4. Try connecting again"
+    echo ""
+    echo -e "${BOLD}NOTE:${RESET}"
+    echo "  This is safe when you've reinstalled the container yourself."
+    echo "  For unexpected key changes, investigate the cause first"
+    echo "  before removing the keys."
+    echo ""
+}
+
+if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+HOST=$1
+
+echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+echo -e "║         🧹 Cleanup Host Keys                          ║"
+echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+echo ""
+
+# Check of known_hosts bestaat
+if [[ ! -f ~/.ssh/known_hosts ]]; then
+    echo -e "${YELLOW}⚠ Geen known_hosts bestand gevonden${RESET}"
+    echo -e "  (Dit is normaal als je nog nooit SSH hebt gebruikt)"
+    exit 0
+fi
+
+# Als geen host opgegeven, scan alle hosts uit host list
+if [[ -z "$HOST" ]]; then
+    SSH_CONFIG="$HOME/.ssh/config"
+    
+    if [[ ! -f "$SSH_CONFIG" ]]; then
+        echo -e "${RED}✗ Geen host list gevonden${RESET}"
+        echo -e "  Gebruik: ${GREEN}cleanup-keys <hostname-of-ip>${RESET}"
+        exit 1
+    fi
+    
+    # Haal alle hosts op
+    hosts=$(grep "^Host " "$SSH_CONFIG" | awk '{print $2}' | grep -v '\*' | sort -u)
+    
+    if [[ -z "$hosts" ]]; then
+        echo -e "${YELLOW}⚠ Geen hosts gevonden in host list${RESET}"
+        exit 0
+    fi
+    
+    echo -e "${BOLD}Beschikbare hosts:${RESET}"
+    echo ""
+    
+    # Toon alle hosts
+    i=1
+    declare -a host_array
+    while IFS= read -r host; do
+        host_array[$i]="$host"
+        echo -e "  ${CYAN}$i)${RESET} $host"
+        ((i++))
+    done <<< "$hosts"
+    
+    echo ""
+    echo -e "  ${CYAN}a)${RESET} All hosts"
+    echo -e "  ${CYAN}q)${RESET} Quit"
+    echo ""
+    
+    read -p "Cleanup keys voor welke host(s)? " choice
+    
+    if [[ "$choice" == "q" ]]; then
+        echo "Cancelled."
+        exit 0
+    fi
+    
+    if [[ "$choice" == "a" ]]; then
+        # Cleanup alle hosts
+        echo ""
+        echo -e "${YELLOW}→${RESET} Cleaning up all hosts..."
+        echo ""
+        
+        cleaned=0
+        for host in "${host_array[@]}"; do
+            [[ -z "$host" ]] && continue
+            echo -e "  ${CYAN}$host${RESET}..."
+            ssh-keygen -R "$host" &>/dev/null
+            if [[ $? -eq 0 ]]; then
+                echo -e "    ${GREEN}✓${RESET} Cleaned"
+                ((cleaned++))
+            else
+                echo -e "    ${YELLOW}⚠${RESET} No keys found"
+            fi
+        done
+        
+        echo ""
+        echo -e "${GREEN}✓ Cleanup voltooid!${RESET}"
+        echo -e "  $cleaned host(s) cleaned"
+        exit 0
+    fi
+    
+    # Cleanup specifieke host
+    if [[ "$choice" =~ ^[0-9]+$ ]] && [[ $choice -ge 1 ]] && [[ $choice -lt $i ]]; then
+        HOST="${host_array[$choice]}"
+    else
+        echo -e "${RED}✗ Ongeldige keuze${RESET}"
+        exit 1
+    fi
+fi
+
+echo -e "${BOLD}Host: ${GREEN}$HOST${RESET}"
+echo ""
+
+# Verwijder keys
+echo -e "${YELLOW}→${RESET} Verwijder oude host keys..."
+ssh-keygen -R "$HOST" &>/dev/null
+
+if [[ $? -eq 0 ]]; then
+    echo -e "${GREEN}✓${RESET} Keys verwijderd voor: ${CYAN}$HOST${RESET}"
+else
+    echo -e "${YELLOW}⚠${RESET} Geen keys gevonden voor: ${CYAN}$HOST${RESET}"
+    echo -e "  (Dit is OK, betekent dat er geen oude keys waren)"
+fi
+
+echo ""
+echo -e "${GREEN}✓ Cleanup voltooid!${RESET}"
+echo ""
+echo -e "${YELLOW}Volgende stap:${RESET}"
+echo -e "  Test de SSH connectie:"
+echo -e "  ${GREEN}ssh $HOST${RESET}"
+echo ""

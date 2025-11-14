@@ -1,0 +1,242 @@
+#!/bin/bash
+
+# Homelab Management Menu
+# Author: J.Bakers
+# Version: 2.0
+
+# Kleuren (zelfde stijl als MOTD)
+CYAN='\033[0;36m'
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+# Help functie (kort overzicht)
+show_help() {
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v3.0              ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "${BOLD}${BLUE}AVAILABLE COMMANDS:${RESET}"
+    echo ""
+    echo -e "  ${YELLOW}generate-motd${RESET}         Generate MOTD for a service"
+    echo -e "  ${YELLOW}bulk-generate-motd${RESET}    Generate MOTDs for all hosts"
+    echo -e "  ${YELLOW}deploy-motd${RESET}           Deploy MOTD to container"
+    echo -e "  ${YELLOW}cleanup-keys${RESET}          Remove old SSH keys"
+    echo -e "  ${YELLOW}list-templates${RESET}        Show all MOTD templates"
+    echo -e "  ${YELLOW}edit-ssh${RESET}              Edit SSH configuration"
+    echo -e "  ${YELLOW}copykey${RESET}               Distribute SSH keys"
+    echo ""
+    echo -e "${BOLD}${BLUE}USAGE:${RESET}"
+    echo -e "  ${GREEN}homelab${RESET}               Show interactive menu"
+    echo -e "  ${GREEN}homelab help${RESET}          Show detailed help"
+    echo -e "  ${GREEN}<command> --help${RESET}     Show help for specific command"
+    echo ""
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+}
+
+# Gedetailleerde help
+show_detailed_help() {
+    echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗"
+    echo -e "║        🏠 HOMELAB TOOLS - DETAILED HELP                 ║"
+    echo -e "╚════════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "${BOLD}${BLUE}MOTD (Message of the Day) SYSTEM:${RESET}"
+    echo -e "────────────────────────────────────────"
+    echo -e "Creates beautiful, dynamic login screens for your servers with:"
+    echo -e "  • Rainbow ASCII art (using toilet)"
+    echo -e "  • System information (hostname, IP, uptime)"
+    echo -e "  • Service-specific info (Docker, Pi-hole, etc.)"
+    echo -e "  • Clickable Web UI links"
+    echo ""
+    echo -e "${BOLD}${YELLOW}Workflow:${RESET}"
+    echo -e "  1. ${GREEN}generate-motd <hostname>${RESET}  → Create template"
+    echo -e "  2. ${GREEN}deploy-motd <hostname>${RESET}    → Deploy to host"
+    echo -e "  3. ${GREEN}ssh <hostname>${RESET}            → See your beautiful MOTD!"
+    echo ""
+    echo -e "The MOTD is generated dynamically at each login,"
+    echo -e "so information like uptime is always current."
+    echo ""
+    echo -e "${BOLD}${BLUE}HOST MANAGEMENT:${RESET}"
+    echo -e "────────────────────────────────────────"
+    echo -e "Your hosts are configured in ~/.ssh/config"
+    echo -e "All homelab tools use this for host access."
+    echo ""
+    echo -e "  ${GREEN}edit-hosts${RESET}     Edit your host configuration"
+    echo -e "  ${GREEN}copykey${RESET}        Distribute SSH keys to all hosts"
+    echo ""
+    echo -e "${BOLD}${BLUE}REQUIREMENTS:${RESET}"
+    echo -e "────────────────────────────────────────"
+    echo -e "  • toilet (for ASCII art): ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
+    echo -e "  • figlet (fallback): ${GREEN}sudo apt install figlet${RESET}"
+    echo ""
+    echo -e "${BOLD}${BLUE}EXAMPLES:${RESET}"
+    echo -e "────────────────────────────────────────"
+    echo -e "  ${GREEN}bulk-generate-motd${RESET}"
+    echo -e "    → Scan host list and generate MOTDs for all hosts"
+    echo ""
+    echo -e "  ${GREEN}generate-motd jellyfin${RESET}"
+    echo -e "    → Create template for Jellyfin server"
+    echo ""
+    echo -e "  ${GREEN}deploy-motd jellyfin${RESET}"
+    echo -e "    → Deploy MOTD to Jellyfin server"
+    echo ""
+    echo -e "  ${GREEN}cleanup-keys 192.168.1.30${RESET}"
+    echo -e "    → Remove old SSH keys for this IP"
+    echo ""
+    echo -e "${BOLD}${BLUE}MORE INFO:${RESET}"
+    echo -e "────────────────────────────────────────"
+    echo -e "  GitHub: https://github.com/JBakers/homelab-tools"
+    echo -e "  Each command: ${GREEN}<command> --help${RESET}"
+    echo ""
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+}
+
+# Toon het hoofd menu
+show_menu() {
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v2.0              ║"
+    echo -e "║                  by J.Bakers                           ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "${BOLD}${BLUE}Available commands:${RESET}"
+    echo ""
+    echo -e "${BOLD}${CYAN}  MOTD Management:${RESET}"
+    echo -e "  ${YELLOW}1${RESET}) ${GREEN}generate-motd${RESET}      - Generate a new MOTD"
+    echo -e "  ${YELLOW}2${RESET}) ${GREEN}bulk-generate-motd${RESET} - Generate MOTDs for all hosts"
+    echo -e "  ${YELLOW}3${RESET}) ${GREEN}deploy-motd${RESET}        - Deploy MOTD to host"
+    echo -e "  ${YELLOW}4${RESET}) ${GREEN}list-templates${RESET}     - View all templates"
+    echo ""
+    echo -e "${BOLD}${CYAN}  Configuration:${RESET}"
+    echo -e "  ${YELLOW}5${RESET}) ${GREEN}edit-hosts${RESET}         - Edit host configuration"
+    echo -e "  ${YELLOW}6${RESET}) ${GREEN}edit-config${RESET}        - Edit homelab settings"
+    echo ""
+    echo -e "${BOLD}${CYAN}  SSH Management:${RESET}"
+    echo -e "  ${YELLOW}7${RESET}) ${GREEN}cleanup-keys${RESET}       - Remove old host keys"
+    echo -e "  ${YELLOW}8${RESET}) ${GREEN}copykey${RESET}            - Distribute SSH keys"
+    echo ""
+    echo -e "  ${YELLOW}h${RESET}) ${MAGENTA}help${RESET}               - Detailed help"
+    echo -e "  ${YELLOW}q${RESET}) ${RED}quit${RESET}               - Exit"
+    echo ""
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+}
+
+# Als --help of help wordt meegegeven
+if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+    show_help
+    exit 0
+elif [[ "$1" == "help" ]]; then
+    show_detailed_help
+    exit 0
+fi
+
+# Interactief menu
+while true; do
+    show_menu
+    echo -ne "${BOLD}${GREEN}Choice:${RESET} "
+    read -r choice
+    
+    case $choice in
+        1)
+            echo ""
+            read -p "$(echo -e ${CYAN}Service name:${RESET} )" service
+            if [[ -n "$service" ]]; then
+                generate-motd "$service"
+            else
+                echo -e "${RED}✗ No service name provided${RESET}"
+            fi
+            echo ""
+            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            ;;
+        2)
+            echo ""
+            bulk-generate-motd
+            echo ""
+            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            ;;
+        3)
+            echo ""
+            read -p "$(echo -e ${CYAN}Service name:${RESET} )" service
+            if [[ -n "$service" ]]; then
+                deploy-motd "$service"
+            else
+                echo -e "${RED}✗ No service name provided${RESET}"
+            fi
+            echo ""
+            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            ;;
+        4)
+            echo ""
+            list-templates
+            echo ""
+            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            ;;
+        5)
+            echo ""
+            edit-hosts
+            echo ""
+            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            ;;
+        6)
+            echo ""
+            edit-config
+            echo ""
+            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            ;;
+        7)
+            echo ""
+            read -p "$(echo -e ${CYAN}IP address or hostname:${RESET} )" host
+            if [[ -n "$host" ]]; then
+                cleanup-keys "$host"
+            else
+                echo -e "${RED}✗ No host provided${RESET}"
+            fi
+            echo ""
+            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            ;;
+        8)
+            echo ""
+            copykey
+            echo ""
+            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            ;;
+        iddqd|IDDQD)
+            clear
+            echo ""
+            echo -e "${RED}${BOLD}"
+            cat << 'DOOMGUY'
+
+            ██████╗  ██████╗  ██████╗ ███╗   ███╗
+            ██╔══██╗██╔═══██╗██╔═══██╗████╗ ████║
+            ██║  ██║██║   ██║██║   ██║██╔████╔██║
+            ██║  ██║██║   ██║██║   ██║██║╚██╔╝██║
+            ██████╔╝╚██████╔╝╚██████╔╝██║ ╚═╝ ██║
+            ╚═════╝  ╚═════╝  ╚═════╝ ╚═╝     ╚═╝
+            
+DOOMGUY
+            echo -e "${RESET}"
+            echo -e "${GREEN}              🎮 ${BOLD}GOD MODE ACTIVATED${RESET}${GREEN} 🎮${RESET}"
+            echo ""
+            echo -e "${YELLOW}         Degreelessness Mode: ${BOLD}INVINCIBLE${RESET}"
+            echo ""
+            sleep 2
+            ;;
+        h|H)
+            show_help
+            echo ""
+            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            ;;
+        q|Q|quit|exit)
+            echo -e "${GREEN}✓ Goodbye!${RESET}"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}✗ Invalid choice${RESET}"
+            sleep 1
+            ;;
+    esac
+done

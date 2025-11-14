@@ -1,0 +1,24 @@
+# Generated MOTD templates (user-specific)
+templates/*.sh
+
+# Keep templates directory structure
+!templates/.gitkeep
+
+# Test files (for local testing only)
+test.sh
+test-*.sh
+
+# Backup files
+*.backup.*
+*.bak
+*~
+
+# macOS
+.DS_Store
+
+# Editor files
+.vscode/
+*.swp
+*.swo
+
+GESPREK.md

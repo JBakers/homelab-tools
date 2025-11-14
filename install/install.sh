@@ -76,6 +76,11 @@ if [[ "$INSTALL_SCRIPTS" == true ]]; then
             echo -e "${YELLOW}  ⊘ $script niet gevonden${NC}"
         fi
     done
+    
+    # Set permissions voor alle geïnstalleerde scripts met find
+    if [ -d ~/.local/bin ]; then
+        find ~/.local/bin -type f \( -name "homelab" -o -name "*-motd" -o -name "copykey" -o -name "cleanup-*" \) -exec chmod +x {} \; 2>/dev/null || true
+    fi
 fi
 
 # Installeer config

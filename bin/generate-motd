@@ -13,7 +13,7 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 TEMPLATES_DIR="$HOME/homelab-tools/templates"
-CONFIG_FILE="$HOME/homelab-tools/.config"
+CONFIG_FILE="$HOME/homelab-tools/config.sh"
 
 # Load config
 if [[ -f "$CONFIG_FILE" ]]; then

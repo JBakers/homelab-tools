@@ -82,7 +82,7 @@ echo -e "${BOLD}${CYAN}           ⚙️  HOMELAB CONFIGURATIE                  
 echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 echo ""
 
-CONFIG_FILE="$INSTALL_DIR/.config"
+CONFIG_FILE="$INSTALL_DIR/config.sh"
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
     echo -e "${YELLOW}→${RESET} Configureer domein instellingen..."

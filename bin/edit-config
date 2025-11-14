@@ -12,7 +12,7 @@ RED='\033[0;31m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
-CONFIG_FILE="$HOME/homelab-tools/.config"
+CONFIG_FILE="$HOME/homelab-tools/config.sh"
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
 echo -e "║         ⚙️  Homelab Configuration                     ║"

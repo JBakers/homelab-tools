@@ -17,6 +17,25 @@ echo -e "║         🗑️  HOMELAB TOOLS - UNINSTALL                 ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
+# Safety check - don't uninstall from development directory
+if [[ -d ".git" ]] && [[ -f "uninstall.sh" ]]; then
+    echo -e "${RED}✗ ERROR: You're running uninstall from the development directory!${RESET}"
+    echo ""
+    echo -e "  This will delete your entire project, including:"
+    echo -e "  • All source code"
+    echo -e "  • Git history"
+    echo -e "  • Uncommitted changes"
+    echo ""
+    echo -e "${YELLOW}To uninstall safely:${RESET}"
+    echo -e "  1. ${CYAN}cd ~${RESET}  (change to home directory)"
+    echo -e "  2. ${CYAN}./homelab-tools/uninstall.sh${RESET}"
+    echo ""
+    echo -e "Or if you want to keep development folder:"
+    echo -e "  • Just remove scripts: ${CYAN}rm ~/.local/bin/{homelab,generate-motd,deploy-motd,cleanup-keys,list-templates,edit-hosts,edit-config,copykey,bulk-generate-motd}${RESET}"
+    echo ""
+    exit 1
+fi
+
 echo -e "${YELLOW}⚠  WARNING:${RESET} This will remove Homelab Tools from your system."
 echo ""
 echo -e "${BOLD}What will be removed:${RESET}"

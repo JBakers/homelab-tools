@@ -22,8 +22,8 @@ Professional command-line tools for managing your homelab with stylish, colorful
 ```bash
 # 1. Clone or download to your home directory
 cd ~
-git clone <your-repo-url> homelab-tools
-# OR: scp -r /path/to/homelab-tools/ <your-server>:~/
+git clone https://github.com/JBakers/homelab-tools
+
 
 # 2. Run the installation script
 cd homelab-tools

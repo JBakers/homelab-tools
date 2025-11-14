@@ -5,9 +5,10 @@ templates/
 # User configuration (contains domain names)
 config.sh
 
-# Conversation logs / development notes
+# Development artifacts
 conversation*.md
 notes*.md
+test-motd.sh
 todo*.md
 
 # Test files (for local testing only)

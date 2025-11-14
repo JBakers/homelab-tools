@@ -1,4 +1,4 @@
-# 🏠 Homelab Management Tools v3.0
+# 🏠 Homelab Management Tools v3.1
 
 Professional command-line tools for managing your homelab with stylish, colorful interfaces and intelligent automation.
 

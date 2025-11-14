@@ -436,6 +436,12 @@ case "$SERVICE" in
         ;;
 esac
 
+# Preserve numbers in service name (e.g., pihole2 → Pi-hole 2, test1 → Test 1)
+if [[ "$SERVICE" =~ ([0-9]+)$ ]]; then
+    num="${BASH_REMATCH[1]}"
+    service_name="$service_name $num"
+fi
+
 echo -e "${GREEN}✓${RESET} Auto-detected: ${CYAN}$service_name - $description${RESET}"
 if [[ "$has_webui" == "y" ]]; then
     echo -e "${GREEN}✓${RESET} Web UI: ${CYAN}$webui_port${RESET}"

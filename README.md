@@ -1,120 +1,111 @@
-# Homelab Management Tools
+# Homelab Tools
 
-A collection of scripts to easily manage your homelab infrastructure.
+A collection of Bash scripts for homelab management and automation.
 
 ## Installation
+
 ```bash
-cd homelab-tools/install
+cd install
 ./install.sh
 ```
 
-Choose your installation type:
-- **Full installation**: Scripts + config templates
-- **Scripts only**: Without MOTD templates (if you already have config)
-- **Update**: Update scripts only
-
-## Commands
-
-### `homelab`
-Shows an overview of all available commands.
-
-### `generate-motd [hostname]`
-Generates MOTD (Message of the Day) templates for your servers.
-
-**Examples:**
+Add to your `~/.bashrc` or `~/.zshrc`:
 ```bash
-generate-motd              # Scan all hosts without templates
-generate-motd frigate      # Create template for specific host
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-### `deploy-motd`
-Deploy MOTD templates to all your servers. The MOTD is generated **dynamically** at each login, ensuring information like uptime is always current.
+## Available Commands
 
-### `copykey`
-Copies your SSH keys to all servers in your SSH config.
+- `homelab` - Show overview of all available tools
+- `generate-motd <hostname>` - Generate MOTD template for a host
+- `deploy-motd` - Deploy MOTD banners to servers
+- `copykey` - Distribute SSH keys to all servers
+- `cleanup-homelab` - Clean up orphaned MOTD templates
 
-### `cleanup-homelab`
-Cleans up orphaned MOTD templates (templates for servers no longer in your SSH config).
+## Configuration
 
-**Options:**
+Configuration files are stored in `~/.config/homelab-tools/`:
+- `server-motd/` - MOTD templates per service type
+- `hosts.txt` - List of homelab hosts (one per line)
+
+## SSH Configuration
+
+See `config/ssh-config.example` for an example SSH configuration.
+
+## Usage
+
+### MOTD Management
+
 ```bash
-cleanup-homelab              # Interactive mode
-cleanup-homelab --orphaned   # Show list of orphaned templates
-cleanup-homelab --remove     # Remove all orphaned templates
+# Generate MOTD for a server
+generate-motd plex
+
+# Deploy to all servers
+deploy-motd
 ```
 
-## Directory Structure
+### SSH Key Distribution
+
+```bash
+# Copy SSH keys to all servers in your SSH config
+copykey
 ```
-homelab-tools/
-├── bin/              # All executable scripts
-├── config/           # Configuration templates
-│   ├── server-motd/  # MOTD templates per server
-│   └── ssh-config.example
-├── install/          # Installation scripts
-└── README.md
+
+### Cleanup
+
+```bash
+# Scan and remove templates for servers no longer in SSH config
+cleanup-homelab
+
+# Show orphaned templates only
+cleanup-homelab --orphaned
+
+# Remove all orphaned templates without prompt
+cleanup-homelab --remove
 ```
+
+## MOTD Templates
+
+The project includes pre-defined templates for:
+
+- **Media Servers**: Plex, Radarr, Sonarr, Lidarr, Tautulli, Overseerr
+- **Download Tools**: SABnzbd, Prowlarr
+- **Infrastructure**: Proxmox, PBS (Backup Server), Docker Debian
+- **Network**: Pi-hole, Uptime Kuma
+- **IoT/Home Automation**: Zigbee2MQTT, EMQX
+- **Security/Monitoring**: Frigate NVR
+- **Gaming**: Minecraft, PocketMine, PowerNukkitX
+- **Other**: AllSky Camera, Generic template
 
 ## Requirements
 
-- `bash`
-- `ssh`
-- `figlet` (for nice ASCII art in MOTD)
+- `ssh` - SSH client
+- `figlet` - For ASCII art in MOTD templates (optional)
 
-Install on Debian/Ubuntu:
+Install with:
 ```bash
-sudo apt install figlet
+sudo apt install ssh figlet
 ```
 
-## SSH Config
+## Project Structure
 
-Your SSH config (`~/.ssh/config`) must contain hosts. Example:
 ```
-Host proxmox
-    HostName 192.168.1.100
-    User root
-
-Host frigate
-    HostName 192.168.1.30
-    User root
-```
-
-## Backup & Sync
-
-This repository is already version controlled with Git. To keep it synced:
-
-**Update from GitHub:**
-```bash
-cd ~/homelab-tools
-git pull
+homelab-tools/
+├── bin/                    # Executable scripts
+│   ├── homelab            # Main command/help
+│   ├── generate-motd      # MOTD generator
+│   ├── deploy-motd        # MOTD deployment
+│   ├── copykey            # SSH key distributor
+│   └── cleanup-homelab    # Cleanup utility
+├── config/                # Configuration files
+│   ├── ssh-config.example # Example SSH config
+│   ├── hosts.txt.example  # Example hosts list
+│   └── server-motd/       # MOTD templates per service
+├── install/               # Installation scripts
+│   └── install.sh        # Installer
+└── README.md             # This file
 ```
 
-**Make changes and push:**
-```bash
-cd ~/homelab-tools
-# Make your changes...
-git add .
-git commit -m "Description of changes"
-git push
-```
+## License
 
-**Clone on another machine:**
-```bash
-git clone git@github.com:JBakers/homelab-tools.git
-cd homelab-tools/install
-./install.sh
-```
-
-**Export as archive (for machines without git):**
-```bash
-cd ~/homelab-tools
-./export.sh
-# Copy the generated .tar.gz file to another machine
-```
-
-## Author
-
-J.Bakers
-
-## Version
-
-1.0 - November 2025
+Made by J.Bakers

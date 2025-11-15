@@ -186,7 +186,7 @@ echo ""
 
 # Summary
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║           ✅ VERSION BUMP COMPLETE                    ║"
+echo -e "║           ✅ VERSION BUMP COMPLETE                   ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 echo -e "${BOLD}Released:${RESET} ${GREEN}v$NEW_VERSION${RESET}"

@@ -106,8 +106,8 @@ for hostname in $hosts; do
         fi
         
         # Generate with auto-detection (clean MOTD = style 1)
-        # Answers: style=1 (clean), customize=n, deploy=y
-        echo -e "1\nn\ny\n" | generate-motd "$hostname" &>/dev/null
+        # Answers: customize=n, style=1 (clean), deploy=n (bulk deploys later)
+        echo -e "n\n1\nn\n" | generate-motd "$hostname" &>/dev/null
         
         if [[ -f "$template_file" ]]; then
             echo -e "  ${GREEN}✓${RESET} Generated successfully"
@@ -161,8 +161,8 @@ for hostname in $hosts; do
             echo -e "  ${YELLOW}→${RESET} Generating with auto-detection (clean MOTD)..."
 
             # Call generate-motd met auto-detection
-            # Answers: style=1 (clean), customize=n, deploy=y
-            echo -e "1\nn\ny\n" | generate-motd "$hostname" &>/dev/null
+            # Answers: customize=n, style=1 (clean), deploy=n (bulk deploys later)
+            echo -e "n\n1\nn\n" | generate-motd "$hostname" &>/dev/null
             
             if [[ -f "$template_file" ]]; then
                 echo -e "  ${GREEN}✓${RESET} Generated successfully"

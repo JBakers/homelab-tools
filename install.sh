@@ -14,7 +14,7 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗"
-echo -e "║         🏠 HOMELAB TOOLS - INSTALLATIE                  ║"
+echo -e "║         🏠 HOMELAB TOOLS - INSTALLATIE                ║"
 echo -e "╚════════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
@@ -256,7 +256,7 @@ fi
 
 # Voltooiing
 echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗"
-echo -e "║           ✅ INSTALLATIE VOLTOOID                       ║"
+echo -e "║           ✅ INSTALLATIE VOLTOOID                      ║"
 echo -e "╚════════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 echo -e "${GREEN}✓ Homelab Tools zijn geïnstalleerd!${RESET}"

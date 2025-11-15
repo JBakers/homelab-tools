@@ -14,7 +14,7 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         🗑️  HOMELAB TOOLS - UNINSTALL                 ║"
+echo -e "║         🗑️  HOMELAB TOOLS - UNINSTALL               ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
@@ -108,6 +108,10 @@ if [[ -d "$TEMPLATES_DIR" ]]; then
         else
             echo -e "${YELLOW}  →${RESET} Skip backup"
         fi
+
+        # Verwijder templates directory
+        rm -rf "$TEMPLATES_DIR"
+        echo -e "${GREEN}  ✓${RESET} Templates directory verwijderd"
     else
         echo -e "${GREEN}  ✓${RESET} Geen templates gevonden"
     fi
@@ -147,7 +151,7 @@ echo ""
 
 # Summary
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║           ✅ UNINSTALL VOLTOOID                       ║"
+echo -e "║           ✅ UNINSTALL VOLTOOID                      ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 echo -e "${GREEN}✓ Homelab Tools succesvol verwijderd!${RESET}"

@@ -18,7 +18,7 @@ RESET='\033[0m'
 # Help functie (kort overzicht)
 show_help() {
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 Homelab Management Tools v3.3.0              ║"
+    echo -e "║         🏠 Homelab Management Tools v3.3.0            ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "${BOLD}${BLUE}Available commands:${RESET}"
@@ -42,7 +42,7 @@ show_help() {
 # Gedetailleerde help
 show_detailed_help() {
     echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗"
-    echo -e "║        🏠 Homelab Tools - Detailed Help                 ║"
+    echo -e "║        🏠 Homelab Tools - Detailed Help               ║"
     echo -e "╚════════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "${BOLD}${BLUE}MOTD (Message of the Day) system:${RESET}"
@@ -116,7 +116,7 @@ show_menu() {
 show_motd_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         📝 MOTD Tools                                  ║"
+    echo -e "║         📝 MOTD Tools                                 ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "  ${YELLOW}1${RESET}) ${GREEN}Generate MOTD${RESET}           - Create template for one host"
@@ -132,7 +132,7 @@ show_motd_menu() {
 show_config_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         ⚙️  Configuration                               ║"
+    echo -e "║         ⚙️  Configuration                             ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "  ${YELLOW}1${RESET}) ${GREEN}Edit Hosts${RESET}              - Manage host list (~/.ssh/config)"
@@ -147,7 +147,7 @@ show_config_menu() {
 show_ssh_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🔑 SSH Tools                                    ║"
+    echo -e "║         🔑 SSH Tools                                  ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "  ${YELLOW}1${RESET}) ${GREEN}Copy SSH Key${RESET}            - Distribute key to hosts"

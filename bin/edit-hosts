@@ -46,7 +46,7 @@ if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
 fi
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         ⚙️  Host Configuration Editor                  ║"
+echo -e "║         ⚙️  Host Configuration Editor              ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
@@ -78,9 +78,7 @@ echo -e "${BOLD}File:${RESET} ${CYAN}$SSH_CONFIG${RESET}"
 echo ""
 
 # Bepaal editor (nano default, tenzij EDITOR expliciet is ingesteld)
-if [[ -z "$EDITOR" ]]; then
-    EDITOR="nano"
-fi
+EDITOR="${EDITOR:-nano}"
 
 echo -e "${YELLOW}→${RESET} Opening in ${GREEN}$EDITOR${RESET}..."
 echo ""

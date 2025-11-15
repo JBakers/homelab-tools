@@ -711,8 +711,9 @@ if [[ -n "$HASS_VERSION" ]]; then
 fi
 VERSION_DISPLAY
 
-# Vervang description placeholder
-sed -i "s/DESCRIPTION_PLACEHOLDER/$description/g" "$TEMPLATES_DIR/$SERVICE.sh"
+# Vervang description placeholder (escape special characters for sed)
+description_escaped=$(echo "$description" | sed 's/[\/&]/\\&/g')
+sed -i "s/DESCRIPTION_PLACEHOLDER/$description_escaped/g" "$TEMPLATES_DIR/$SERVICE.sh"
 
 # Web UI toevoegen als nodig
 if [[ -n "$webui_port" ]]; then

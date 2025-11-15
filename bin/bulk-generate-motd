@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Bulk generate MOTD templates for all hosts
 # Author: J.Bakers
-# Version: 3.2.0
+# Version: 3.4.0
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -105,8 +105,9 @@ for hostname in $hosts; do
             echo -e "  ${YELLOW}⚠${RESET} Template exists, overwriting..."
         fi
         
-        # Generate with auto-detection
-        echo -e "n\ny\n" | generate-motd "$hostname" &>/dev/null
+        # Generate with auto-detection (clean MOTD = style 1)
+        # Answers: style=1 (clean), customize=n, deploy=y
+        echo -e "1\nn\ny\n" | generate-motd "$hostname" &>/dev/null
         
         if [[ -f "$template_file" ]]; then
             echo -e "  ${GREEN}✓${RESET} Generated successfully"
@@ -140,20 +141,28 @@ for hostname in $hosts; do
     
     # Vraag hoe te genereren
     echo -e "  Generate MOTD for ${CYAN}$hostname${RESET}?"
-    echo -e "    ${GREEN}y${RESET}) Yes, use auto-detection"
-    echo -e "    ${GREEN}i${RESET}) Interactive (ask for details)"
+    echo -e "    ${GREEN}y${RESET}) Yes, use auto-detection (clean MOTD)"
+    echo -e "    ${GREEN}i${RESET}) Interactive (choose style, details)"
+    echo -e "    ${GREEN}a${RESET}) Yes to all remaining (clean MOTDs)"
     echo -e "    ${GREEN}n${RESET}) Skip"
-    read -p "  Choice (Y/i/n): " choice
+    read -p "  Choice (Y/i/a/n): " choice
     choice=${choice:-y}
+
+    # Handle "yes to all" - switch to AUTO_ALL mode
+    if [[ "$choice" =~ ^[Aa]$ ]]; then
+        AUTO_ALL=true
+        echo -e "  ${GREEN}✓${RESET} Switching to auto-mode for remaining hosts"
+        choice="y"
+    fi
     
     case "$choice" in
         y|Y)
             # Gebruik auto-detection en defaults
-            echo -e "  ${YELLOW}→${RESET} Generating with auto-detection..."
-            
-            # Call generate-motd met alleen hostname - laat auto-detection werken
-            # Feed alleen de customize en deploy prompts met defaults
-            echo -e "n\ny\n" | generate-motd "$hostname" &>/dev/null
+            echo -e "  ${YELLOW}→${RESET} Generating with auto-detection (clean MOTD)..."
+
+            # Call generate-motd met auto-detection
+            # Answers: style=1 (clean), customize=n, deploy=y
+            echo -e "1\nn\ny\n" | generate-motd "$hostname" &>/dev/null
             
             if [[ -f "$template_file" ]]; then
                 echo -e "  ${GREEN}✓${RESET} Generated successfully"

@@ -7,7 +7,7 @@ set -euo pipefail
 
 # Cleanup old SSH host keys
 # Author: J.Bakers
-# Version: 3.2.0
+# Version: 3.4.0
 
 # Kleuren
 CYAN='\033[0;36m'

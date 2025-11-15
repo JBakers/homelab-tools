@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Homelab Management Menu
 # Author: J.Bakers
-# Version: 3.2.0
+# Version: 3.4.0
 
 # Kleuren (zelfde stijl als MOTD)
 CYAN='\033[0;36m'
@@ -18,20 +18,20 @@ RESET='\033[0m'
 # Help functie (kort overzicht)
 show_help() {
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v3.2.0              ║"
+    echo -e "║         🏠 Homelab Management Tools v3.3.0              ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-    echo -e "${BOLD}${BLUE}AVAILABLE COMMANDS:${RESET}"
+    echo -e "${BOLD}${BLUE}Available commands:${RESET}"
     echo ""
     echo -e "  ${YELLOW}generate-motd${RESET}         Generate MOTD for a service"
     echo -e "  ${YELLOW}bulk-generate-motd${RESET}    Generate MOTDs for all hosts"
     echo -e "  ${YELLOW}deploy-motd${RESET}           Deploy MOTD to container"
     echo -e "  ${YELLOW}cleanup-keys${RESET}          Remove old SSH keys"
     echo -e "  ${YELLOW}list-templates${RESET}        Show all MOTD templates"
-    echo -e "  ${YELLOW}edit-ssh${RESET}              Edit SSH configuration"
+    echo -e "  ${YELLOW}edit-hosts${RESET}            Edit SSH configuration"
     echo -e "  ${YELLOW}copykey${RESET}               Distribute SSH keys"
     echo ""
-    echo -e "${BOLD}${BLUE}USAGE:${RESET}"
+    echo -e "${BOLD}${BLUE}Usage:${RESET}"
     echo -e "  ${GREEN}homelab${RESET}               Show interactive menu"
     echo -e "  ${GREEN}homelab help${RESET}          Show detailed help"
     echo -e "  ${GREEN}<command> --help${RESET}     Show help for specific command"
@@ -42,10 +42,10 @@ show_help() {
 # Gedetailleerde help
 show_detailed_help() {
     echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗"
-    echo -e "║        🏠 HOMELAB TOOLS - DETAILED HELP                 ║"
+    echo -e "║        🏠 Homelab Tools - Detailed Help                 ║"
     echo -e "╚════════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-    echo -e "${BOLD}${BLUE}MOTD (Message of the Day) SYSTEM:${RESET}"
+    echo -e "${BOLD}${BLUE}MOTD (Message of the Day) system:${RESET}"
     echo -e "────────────────────────────────────────"
     echo -e "Creates beautiful, dynamic login screens for your servers with:"
     echo -e "  • Rainbow ASCII art (using toilet)"
@@ -61,7 +61,7 @@ show_detailed_help() {
     echo -e "The MOTD is generated dynamically at each login,"
     echo -e "so information like uptime is always current."
     echo ""
-    echo -e "${BOLD}${BLUE}HOST MANAGEMENT:${RESET}"
+    echo -e "${BOLD}${BLUE}Host management:${RESET}"
     echo -e "────────────────────────────────────────"
     echo -e "Your hosts are configured in ~/.ssh/config"
     echo -e "All homelab tools use this for host access."
@@ -69,12 +69,12 @@ show_detailed_help() {
     echo -e "  ${GREEN}edit-hosts${RESET}     Edit your host configuration"
     echo -e "  ${GREEN}copykey${RESET}        Distribute SSH keys to all hosts"
     echo ""
-    echo -e "${BOLD}${BLUE}REQUIREMENTS:${RESET}"
+    echo -e "${BOLD}${BLUE}Requirements:${RESET}"
     echo -e "────────────────────────────────────────"
     echo -e "  • toilet (for ASCII art): ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
     echo -e "  • figlet (fallback): ${GREEN}sudo apt install figlet${RESET}"
     echo ""
-    echo -e "${BOLD}${BLUE}EXAMPLES:${RESET}"
+    echo -e "${BOLD}${BLUE}Examples:${RESET}"
     echo -e "────────────────────────────────────────"
     echo -e "  ${GREEN}bulk-generate-motd${RESET}"
     echo -e "    → Scan host list and generate MOTDs for all hosts"
@@ -88,7 +88,7 @@ show_detailed_help() {
     echo -e "  ${GREEN}cleanup-keys 192.168.178.30${RESET}"
     echo -e "    → Remove old SSH keys for this IP"
     echo ""
-    echo -e "${BOLD}${BLUE}MORE INFO:${RESET}"
+    echo -e "${BOLD}${BLUE}More info:${RESET}"
     echo -e "────────────────────────────────────────"
     echo -e "  GitHub: https://github.com/JBakers/homelab-tools"
     echo -e "  Each command: ${GREEN}<command> --help${RESET}"
@@ -100,19 +100,15 @@ show_detailed_help() {
 show_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v3.2.0            ║"
+    echo -e "║         🏠 Homelab Management Tools v3.3.0            ║"
     echo -e "║                  by J.Bakers                           ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-    echo -e "${BOLD}${BLUE}What would you like to do?${RESET}"
+    echo -e "  ${YELLOW}1${RESET}) ${GREEN}📝 MOTD Tools${RESET}        - Generate/deploy/list MOTDs"
+    echo -e "  ${YELLOW}2${RESET}) ${GREEN}⚙️  Configuration${RESET}     - Edit hosts & settings"
+    echo -e "  ${YELLOW}3${RESET}) ${GREEN}🔑 SSH Management${RESET}    - Keys & cleanup"
     echo ""
-    echo -e "  ${YELLOW}1${RESET}) ${GREEN}MOTD Management${RESET}     - Create and deploy login screens"
-    echo -e "  ${YELLOW}2${RESET}) ${GREEN}Configuration${RESET}       - Edit hosts and settings"
-    echo -e "  ${YELLOW}3${RESET}) ${GREEN}SSH Tools${RESET}           - Manage keys and access"
-    echo ""
-    echo -e "  ${YELLOW}h${RESET}) ${MAGENTA}Help${RESET}                - Show detailed help"
-    echo -e "  ${YELLOW}q${RESET}) ${RED}Quit${RESET}                - Exit"
-    echo ""
+    echo -e "  ${YELLOW}h${RESET}) ${MAGENTA}Help${RESET}    ${YELLOW}q${RESET}) ${RED}Quit${RESET}"
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 }
 
@@ -120,7 +116,7 @@ show_menu() {
 show_motd_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         📋 MOTD MANAGEMENT                             ║"
+    echo -e "║         📝 MOTD Tools                                  ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "  ${YELLOW}1${RESET}) ${GREEN}Generate MOTD${RESET}           - Create template for one host"
@@ -128,8 +124,7 @@ show_motd_menu() {
     echo -e "  ${YELLOW}3${RESET}) ${GREEN}Deploy MOTD${RESET}             - Upload to host"
     echo -e "  ${YELLOW}4${RESET}) ${GREEN}List Templates${RESET}          - View all templates"
     echo ""
-    echo -e "  ${YELLOW}b${RESET}) ${MAGENTA}Back${RESET}                    - Return to main menu"
-    echo ""
+    echo -e "  ${YELLOW}b${RESET}) ${MAGENTA}Back${RESET}"
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 }
 
@@ -137,7 +132,7 @@ show_motd_menu() {
 show_config_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         ⚙️  CONFIGURATION                               ║"
+    echo -e "║         ⚙️  Configuration                               ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "  ${YELLOW}1${RESET}) ${GREEN}Edit Hosts${RESET}              - Manage host list (~/.ssh/config)"
@@ -152,7 +147,7 @@ show_config_menu() {
 show_ssh_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🔑 SSH TOOLS                                    ║"
+    echo -e "║         🔑 SSH Tools                                    ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "  ${YELLOW}1${RESET}) ${GREEN}Copy SSH Key${RESET}            - Distribute key to hosts"
@@ -176,7 +171,8 @@ fi
 while true; do
     show_menu
     echo -ne "${BOLD}${GREEN}Choice:${RESET} "
-    read -r choice
+    read -n1 -s choice
+    echo ""  # Newline na input
     
     case $choice in
         1)
@@ -184,19 +180,24 @@ while true; do
             while true; do
                 show_motd_menu
                 echo -ne "${BOLD}${GREEN}Choice:${RESET} "
-                read -r submenu
+                read -n1 -s submenu
+                echo ""  # Newline na input
                 
                 case $submenu in
                     1)
                         echo ""
-                        read -p "$(echo -e ${CYAN}Service name:${RESET} )" service
-                        if [[ -n "$service" ]]; then
+                        read -p "$(echo -e ${CYAN}Service name \(or 'b' for back\):${RESET} )" service
+                        if [[ "$service" == "b" ]] || [[ "$service" == "B" ]]; then
+                            continue
+                        elif [[ -n "$service" ]]; then
                             generate-motd "$service"
+                            echo ""
+                            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
                         else
                             echo -e "${RED}✗ No service name provided${RESET}"
+                            echo ""
+                            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
                         fi
-                        echo ""
-                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
                         ;;
                     2)
                         echo ""
@@ -206,14 +207,18 @@ while true; do
                         ;;
                     3)
                         echo ""
-                        read -p "$(echo -e ${CYAN}Service name:${RESET} )" service
-                        if [[ -n "$service" ]]; then
+                        read -p "$(echo -e ${CYAN}Service name \(or 'b' for back\):${RESET} )" service
+                        if [[ "$service" == "b" ]] || [[ "$service" == "B" ]]; then
+                            continue
+                        elif [[ -n "$service" ]]; then
                             deploy-motd "$service"
+                            echo ""
+                            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
                         else
                             echo -e "${RED}✗ No service name provided${RESET}"
+                            echo ""
+                            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
                         fi
-                        echo ""
-                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
                         ;;
                     4)
                         echo ""
@@ -236,7 +241,8 @@ while true; do
             while true; do
                 show_config_menu
                 echo -ne "${BOLD}${GREEN}Choice:${RESET} "
-                read -r submenu
+                read -n1 -s submenu
+                echo ""  # Newline na input
                 
                 case $submenu in
                     1)
@@ -266,7 +272,8 @@ while true; do
             while true; do
                 show_ssh_menu
                 echo -ne "${BOLD}${GREEN}Choice:${RESET} "
-                read -r submenu
+                read -n1 -s submenu
+                echo ""  # Newline na input
                 
                 case $submenu in
                     1)
@@ -277,14 +284,18 @@ while true; do
                         ;;
                     2)
                         echo ""
-                        read -p "$(echo -e ${CYAN}IP address or hostname:${RESET} )" host
-                        if [[ -n "$host" ]]; then
+                        read -p "$(echo -e ${CYAN}IP address or hostname \(or 'b' for back\):${RESET} )" host
+                        if [[ "$host" == "b" ]] || [[ "$host" == "B" ]]; then
+                            continue
+                        elif [[ -n "$host" ]]; then
                             cleanup-keys "$host"
+                            echo ""
+                            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
                         else
                             echo -e "${RED}✗ No host provided${RESET}"
+                            echo ""
+                            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
                         fi
-                        echo ""
-                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
                         ;;
                     b|B|back)
                         break

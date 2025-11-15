@@ -1,5 +1,71 @@
 # Changelog - Homelab Tools
 
+## v3.4.0 (16 November 2025)
+
+### Major Changes
+
+- All scripts and documentation updated to v3.4.0
+- Bulk generate workflow improved: new "yes to all" option, clean MOTD default, ASCII art selection expanded
+- Input validation and command injection protection in all relevant scripts
+- Menu and interactive prompts reworked for clarity and usability
+- README.md: improved installation, usage, and MOTD style documentation
+- Minor bugfixes and consistency improvements across all scripts
+- FHS-compliant installation and uninstall scripts
+
+### Features
+
+- Bulk generate now supports fully automated workflows ("yes to all")
+- Clean & functional MOTD is now the default style
+- Expanded ASCII art selection: 5 styles, live preview
+- Interactive menu and prompts improved for usability
+
+### Bug Fixes & Improvements
+
+- Input validation added to all relevant scripts (command injection protection)
+- Minor bugfixes and consistency improvements
+
+### Documentation
+
+- CHANGELOG.md: new section for v3.4.0, all major changes listed
+- README.md: improved installation, usage, and MOTD style documentation
+
+---
+
+
+## v3.3.0 (15 November 2025)
+
+### 🏗️ Installation Structure Improvements
+
+#### Clean Directory Structure
+
+- **Program Location** - Moved from `~/homelab-tools/` to `/opt/homelab-tools/`
+  - Follows Linux Filesystem Hierarchy Standard (FHS)
+  - Keeps home directory clean and organized
+  - System-wide installation for all users
+- **Symlinks** - Changed from `/usr/local/bin/` to `~/.local/bin/`
+  - Standard user bin directory
+  - No sudo needed for symlinks
+  - Automatically in PATH for most systems
+- **User Data** - Templates remain in `~/.local/share/homelab-tools/templates/`
+  - Follows XDG Base Directory specification
+  - User data separate from program files
+
+### 🐛 Bug Fixes
+
+#### Uninstall Script
+
+- **Fixed** - `$INSTALL_DIR` unbound variable error
+- **Improved** - Backward compatibility with old installation paths
+- **Enhanced** - Proper cleanup of all components
+
+### 📝 Documentation
+
+- Updated all script versions to 3.3.0
+- Added clear sudo requirements in README
+- Updated installation instructions
+
+---
+
 ## v3.2.0 (15 November 2025)
 
 ### 🔒 Security Fixes (CRITICAL)
@@ -55,7 +121,7 @@
 
 ### 📝 Documentation
 
-- Updated all script versions to 3.2.0
+- Updated all script versions to 3.3.0
 - Security audit completed - no critical issues remaining
 - All 13 scripts hardened and validated
 

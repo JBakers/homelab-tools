@@ -440,16 +440,19 @@ case "$SERVICE" in
     
     *)
         # Capitalize eerste letter voor onbekende services
-        service_name="$(echo "$SERVICE" | sed 's/\b\(.\)/\u\1/g')"
+        # Preserve numbers in service name (e.g., test1 → Test 1)
+        base_name=$(echo "$SERVICE" | sed 's/[0-9]*$//')
+        service_name="$(echo "$base_name" | sed 's/\b\(.\)/\u\1/g')"
+        
+        # Add number if present
+        if [[ "$SERVICE" =~ ([0-9]+)$ ]]; then
+            num="${BASH_REMATCH[1]}"
+            service_name="$service_name $num"
+        fi
+        
         description="Server"
         ;;
 esac
-
-# Preserve numbers in service name (e.g., pihole2 → Pi-hole 2, test1 → Test 1)
-if [[ "$SERVICE" =~ ([0-9]+)$ ]]; then
-    num="${BASH_REMATCH[1]}"
-    service_name="$service_name $num"
-fi
 
 echo -e "${GREEN}✓${RESET} Auto-detected: ${CYAN}$service_name - $description${RESET}"
 if [[ "$has_webui" == "y" ]]; then

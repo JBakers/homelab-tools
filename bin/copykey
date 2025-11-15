@@ -75,8 +75,8 @@ for hostname in $hosts; do
     echo -ne "${YELLOW}→${RESET} ${BOLD}$hostname${RESET} ... "
     
     # Kopieer de sleutel
-    if cat "$PUBLIC_KEY_FILE" | ssh -F "$CONFIG_FILE" -o ConnectTimeout=5 "$hostname" \
-        "mkdir -p ~/.ssh; chmod 700 ~/.ssh; cat >> ~/.ssh/authorized_keys; chmod 600 ~/.ssh/authorized_keys" 2>/dev/null; then
+    if ssh -F "$CONFIG_FILE" -o ConnectTimeout=5 "$hostname" \
+        "mkdir -p ~/.ssh; chmod 700 ~/.ssh; cat >> ~/.ssh/authorized_keys; chmod 600 ~/.ssh/authorized_keys" < "$PUBLIC_KEY_FILE" 2>/dev/null; then
         echo -e "${GREEN}✓${RESET}"
         ((success++))
     else

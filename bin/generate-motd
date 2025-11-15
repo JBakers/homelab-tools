@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Generate MOTD template for homelab services
 # Author: J.Bakers
-# Version: 3.1.0
+# Version: 3.2.0
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -57,12 +57,12 @@ show_help() {
     echo ""
 }
 
-if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     show_help
     exit 0
 fi
 
-SERVICE=$1
+SERVICE=${1:-}
 
 if [[ -z "$SERVICE" ]]; then
     echo -e "${RED}✗ Fout: Geen service naam opgegeven${RESET}"
@@ -440,7 +440,16 @@ case "$SERVICE" in
     
     *)
         # Capitalize eerste letter voor onbekende services
-        service_name="$(echo "$SERVICE" | sed 's/\b\(.\)/\u\1/g')"
+        # Preserve numbers in service name (e.g., test1 → Test 1)
+        base_name=$(echo "$SERVICE" | sed 's/[0-9]*$//')
+        service_name="$(echo "$base_name" | sed 's/\b\(.\)/\u\1/g')"
+        
+        # Add number if present
+        if [[ "$SERVICE" =~ ([0-9]+)$ ]]; then
+            num="${BASH_REMATCH[1]}"
+            service_name="$service_name $num"
+        fi
+        
         description="Server"
 
         # Preserve numbers in service name for unknown services (e.g., myservice2 → Myservice 2)
@@ -480,33 +489,139 @@ if [[ "$customize" == "y" ]] || [[ "$customize" == "Y" ]]; then
 fi
 
 echo ""
-echo -e "${YELLOW}→${RESET} Generating rainbow ASCII art..."
+echo -e "${YELLOW}→${RESET} Choosing ASCII art style..."
+echo ""
 
-# Genereer ASCII art LOKAAL met toilet en gay filter
-rainbow_art=""
-if command -v toilet &> /dev/null; then
-    # Gebruik toilet met future font en gay filter voor rainbow
-    rainbow_art=$(toilet -f future -F gay "$service_name" 2>/dev/null)
-    if [[ -z "$rainbow_art" ]]; then
-        # Fallback naar standard font
-        rainbow_art=$(toilet -f standard -F gay "$service_name" 2>/dev/null)
-    fi
-    if [[ -n "$rainbow_art" ]]; then
-        echo -e "${GREEN}✓${RESET} Rainbow ASCII art generated with toilet"
+# Functie om preview te tonen
+show_ascii_preview() {
+    local text="$1"
+    local font="$2"
+    local filter="$3"
+    
+    if command -v toilet &> /dev/null; then
+        if [[ -n "$filter" ]]; then
+            toilet -f "$font" -F "$filter" "$text" 2>/dev/null
+        else
+            toilet -f "$font" "$text" 2>/dev/null
+        fi
+    elif command -v figlet &> /dev/null; then
+        figlet "$text" 2>/dev/null
     else
-        # Laatste fallback: zonder gay filter
-        rainbow_art=$(toilet -f future "$service_name" 2>/dev/null)
-        echo -e "${YELLOW}⚠${RESET} Using toilet without colors"
+        echo "=== $text ==="
     fi
-elif command -v figlet &> /dev/null; then
-    # Fallback naar figlet MET centrering
-    rainbow_art=$(figlet -c "$service_name" 2>/dev/null)
-    echo -e "${YELLOW}⚠${RESET} Using figlet (no colors). Install toilet for rainbow: ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
+}
+
+# Toon beschikbare stijlen
+echo -e "${BOLD}Beschikbare ASCII art stijlen:${RESET}"
+echo ""
+
+if command -v toilet &> /dev/null; then
+    echo -e "${CYAN}1)${RESET} Rainbow Future   ${YELLOW}(Kleurrijk, modern)${RESET}"
+    echo -e "${CYAN}2)${RESET} Rainbow Standard ${YELLOW}(Kleurrijk, klassiek)${RESET}"
+    echo -e "${CYAN}3)${RESET} Mono Future      ${YELLOW}(Zwart-wit, modern)${RESET}"
+    echo -e "${CYAN}4)${RESET} Big Mono         ${YELLOW}(Groot, vet)${RESET}"
+    echo -e "${CYAN}5)${RESET} Small/Smblock    ${YELLOW}(Klein, compact)${RESET}"
+    echo -e "${CYAN}p)${RESET} Preview all styles"
 else
-    # Laatste fallback: gewone text (gecentreerd)
-    rainbow_art=$(printf "%40s\n" "=== $service_name ===")
-    echo -e "${YELLOW}⚠${RESET} Warning: Neither toilet nor figlet found"
-    echo -e "  Install toilet for rainbow ASCII: ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
+    echo -e "${YELLOW}⚠ Toilet niet geïnstalleerd - alleen basis stijl beschikbaar${RESET}"
+    echo -e "  Installeer: ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
+    echo ""
+    ascii_style="basic"
+fi
+
+if command -v toilet &> /dev/null; then
+    echo ""
+    read -p "$(echo -e ${GREEN}Kies stijl [1-5, p voor preview]:${RESET} )" style_choice
+    
+    # Preview mode
+    if [[ "$style_choice" == "p" ]] || [[ "$style_choice" == "P" ]]; then
+        clear
+        echo -e "${BOLD}${CYAN}ASCII Art Preview - \"$service_name\"${RESET}"
+        echo ""
+        
+        echo -e "${CYAN}1) Rainbow Future:${RESET}"
+        show_ascii_preview "$service_name" "future" "gay"
+        echo ""
+        
+        echo -e "${CYAN}2) Rainbow Standard:${RESET}"
+        show_ascii_preview "$service_name" "standard" "gay"
+        echo ""
+        
+        echo -e "${CYAN}3) Mono Future:${RESET}"
+        show_ascii_preview "$service_name" "future" ""
+        echo ""
+        
+        echo -e "${CYAN}4) Big Mono:${RESET}"
+        show_ascii_preview "$service_name" "bigmono9" ""
+        echo ""
+        
+        echo -e "${CYAN}5) Small/Smblock:${RESET}"
+        show_ascii_preview "$service_name" "smblock" ""
+        echo ""
+        
+        read -p "$(echo -e ${GREEN}Kies stijl [1-5]:${RESET} )" style_choice
+    fi
+    
+    # Bepaal font en filter op basis van keuze
+    case "$style_choice" in
+        1|"")
+            ascii_font="future"
+            ascii_filter="gay"
+            echo -e "${GREEN}✓${RESET} Gekozen: Rainbow Future"
+            ;;
+        2)
+            ascii_font="standard"
+            ascii_filter="gay"
+            echo -e "${GREEN}✓${RESET} Gekozen: Rainbow Standard"
+            ;;
+        3)
+            ascii_font="future"
+            ascii_filter=""
+            echo -e "${GREEN}✓${RESET} Gekozen: Mono Future"
+            ;;
+        4)
+            ascii_font="bigmono9"
+            ascii_filter=""
+            echo -e "${GREEN}✓${RESET} Gekozen: Big Mono"
+            ;;
+        5)
+            ascii_font="smblock"
+            ascii_filter=""
+            echo -e "${GREEN}✓${RESET} Gekozen: Small/Smblock"
+            ;;
+        *)
+            ascii_font="future"
+            ascii_filter="gay"
+            echo -e "${YELLOW}⚠${RESET} Ongeldige keuze, gebruik Rainbow Future"
+            ;;
+    esac
+else
+    ascii_font="basic"
+    ascii_filter=""
+fi
+
+# Genereer ASCII art LOKAAL
+rainbow_art=""
+if [[ "$ascii_font" == "basic" ]]; then
+    # Fallback: figlet of plain text
+    if command -v figlet &> /dev/null; then
+        rainbow_art=$(figlet -c "$service_name" 2>/dev/null)
+    else
+        rainbow_art=$(printf "%40s\n" "=== $service_name ===")
+    fi
+else
+    # Gebruik gekozen toilet font/filter
+    if [[ -n "$ascii_filter" ]]; then
+        rainbow_art=$(toilet -f "$ascii_font" -F "$ascii_filter" "$service_name" 2>/dev/null)
+    else
+        rainbow_art=$(toilet -f "$ascii_font" "$service_name" 2>/dev/null)
+    fi
+    
+    # Fallback als font niet werkt
+    if [[ -z "$rainbow_art" ]]; then
+        rainbow_art=$(toilet -f standard -F gay "$service_name" 2>/dev/null)
+        echo -e "${YELLOW}⚠${RESET} Font niet beschikbaar, gebruik standard"
+    fi
 fi
 
 # Bepaal welke versie commando's nodig zijn
@@ -604,8 +719,9 @@ if [[ -n "$HASS_VERSION" ]]; then
 fi
 VERSION_DISPLAY
 
-# Vervang description placeholder
-sed -i "s/DESCRIPTION_PLACEHOLDER/$description/g" "$TEMPLATES_DIR/$SERVICE.sh"
+# Vervang description placeholder (escape special characters for sed)
+description_escaped=$(echo "$description" | sed 's/[\/&]/\\&/g')
+sed -i "s/DESCRIPTION_PLACEHOLDER/$description_escaped/g" "$TEMPLATES_DIR/$SERVICE.sh"
 
 # Web UI toevoegen als nodig
 if [[ -n "$webui_port" ]]; then

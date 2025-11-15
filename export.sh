@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+
 # Export homelab tools naar een archief
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)

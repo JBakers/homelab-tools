@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Copy SSH key to remote hosts
 # Author: J.Bakers

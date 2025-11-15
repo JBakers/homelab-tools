@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Edit homelab tools configuration
 # Author: J.Bakers

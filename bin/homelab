@@ -18,7 +18,7 @@ RESET='\033[0m'
 # Help functie (kort overzicht)
 show_help() {
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v3.2              ║"
+    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v3.2.0              ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "${BOLD}${BLUE}AVAILABLE COMMANDS:${RESET}"
@@ -100,7 +100,7 @@ show_detailed_help() {
 show_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v3.1.0            ║"
+    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v3.2.0            ║"
     echo -e "║                  by J.Bakers                           ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""

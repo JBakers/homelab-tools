@@ -1,4 +1,4 @@
-# 🏠 Homelab Management Tools
+# 🏠 Homelab Management Tools v3.2.0 
 
 [![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -136,7 +136,7 @@ homelab
 
 ```
 ╔════════════════════════════════════════════════════════════╗
-║           🏠 HOMELAB MANAGEMENT TOOLS v3.1.0               ║
+║           🏠 HOMELAB MANAGEMENT TOOLS v3.2.0               ║
 ║                    by J.Bakers                             ║
 ╚════════════════════════════════════════════════════════════╝
 

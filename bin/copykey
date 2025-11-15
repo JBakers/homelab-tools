@@ -72,6 +72,13 @@ failed=0
 
 # Loop door hosts
 for hostname in $hosts; do
+    # Validate hostname
+    if [[ ! "$hostname" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+        echo -e "${YELLOW}→${RESET} ${BOLD}$hostname${RESET} ... ${RED}✗ (invalid)${RESET}"
+        ((failed++))
+        continue
+    fi
+
     echo -ne "${YELLOW}→${RESET} ${BOLD}$hostname${RESET} ... "
     
     # Kopieer de sleutel

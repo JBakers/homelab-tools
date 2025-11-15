@@ -67,7 +67,7 @@ fi
 cat > "$CONFIG_FILE" << EOF
 # Homelab Tools Configuration
 # Author: J.Bakers
-# Version: 3.0
+# Version: 3.1.0
 
 # Domain suffix voor je homelab
 # Wordt gebruikt voor Web UI URLs

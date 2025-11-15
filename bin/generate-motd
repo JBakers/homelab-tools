@@ -451,6 +451,14 @@ case "$SERVICE" in
         fi
         
         description="Server"
+
+        # Preserve numbers in service name for unknown services (e.g., myservice2 → Myservice 2)
+        # Only for default case - known services handle numbers in their case statements
+        if [[ "$SERVICE" =~ ([0-9]+)$ ]]; then
+            num="${BASH_REMATCH[1]}"
+            # Remove number from service_name and add it back with space
+            service_name="${service_name%$num} $num"
+        fi
         ;;
 esac
 

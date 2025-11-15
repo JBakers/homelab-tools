@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Edit SSH host configuration
 # Author: J.Bakers
-# Version: 3.1.0
+# Version: 3.4.0
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -40,13 +40,13 @@ show_help() {
     echo ""
 }
 
-if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     show_help
     exit 0
 fi
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         ⚙️  Host Configuration Editor                  ║"
+echo -e "║         ⚙️  Host Configuration Editor              ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
@@ -77,13 +77,8 @@ fi
 echo -e "${BOLD}File:${RESET} ${CYAN}$SSH_CONFIG${RESET}"
 echo ""
 
-# Bepaal editor
+# Bepaal editor (nano default, tenzij EDITOR expliciet is ingesteld)
 EDITOR="${EDITOR:-nano}"
-if command -v vim &> /dev/null; then
-    EDITOR="vim"
-elif command -v vi &> /dev/null; then
-    EDITOR="vi"
-fi
 
 echo -e "${YELLOW}→${RESET} Opening in ${GREEN}$EDITOR${RESET}..."
 echo ""

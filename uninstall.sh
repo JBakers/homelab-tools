@@ -1,8 +1,9 @@
 #!/bin/bash
+set -euo pipefail
 
-# Uninstall script voor Homelab Management Tools
+# Homelab Tools Uninstaller
 # Author: J.Bakers
-# Version: 3.0
+# Version: 3.4.0
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -13,7 +14,7 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         🗑️  HOMELAB TOOLS - UNINSTALL                 ║"
+echo -e "║         🗑️  HOMELAB TOOLS - UNINSTALL               ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
@@ -40,7 +41,7 @@ echo -e "${YELLOW}⚠  WARNING:${RESET} This will remove Homelab Tools from your
 echo ""
 echo -e "${BOLD}What will be removed:${RESET}"
 echo -e "  • All scripts from ~/.local/bin/"
-echo -e "  • ~/homelab-tools/ directory"
+echo -e "  • /opt/homelab-tools/ directory"
 echo -e "  • PATH entry from ~/.bashrc"
 echo ""
 echo -e "${BOLD}${GREEN}What will be KEPT (your data is safe):${RESET}"
@@ -59,9 +60,10 @@ if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
 fi
 
 echo ""
-echo -e "${YELLOW}[1/4]${RESET} Removing scripts from ~/.local/bin/..."
+echo -e "${YELLOW}[1/4]${RESET} Verwijder symlinks uit ~/.local/bin/..."
 
-# Remove scripts
+# Remove symlinks from ~/.local/bin
+BIN_DIR="$HOME/.local/bin"
 scripts=(
     "homelab"
     "generate-motd"
@@ -72,91 +74,101 @@ scripts=(
     "edit-hosts"
     "edit-config"
     "copykey"
+    "cleanup-homelab"
 )
 
 removed=0
 for script in "${scripts[@]}"; do
-    if [[ -f "$HOME/.local/bin/$script" ]]; then
-        rm "$HOME/.local/bin/$script"
-        ((removed++))
+    if [[ -L "$BIN_DIR/$script" ]] || [[ -f "$BIN_DIR/$script" ]]; then
+        rm -f "$BIN_DIR/$script"
+        removed=$((removed + 1))
     fi
 done
 
-echo -e "${GREEN}  ✓${RESET} Removed $removed script(s)"
+echo -e "${GREEN}  ✓${RESET} Verwijderd $removed symlink(s)"
 echo ""
 
 # Backup templates
-echo -e "${YELLOW}[2/4]${RESET} Checking for MOTD templates..."
-if [[ -d "$HOME/homelab-tools/templates" ]]; then
-    template_count=$(find "$HOME/homelab-tools/templates" -name "*.sh" 2>/dev/null | wc -l)
-    
+TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
+
+echo -e "${YELLOW}[2/4]${RESET} Check MOTD templates..."
+if [[ -d "$TEMPLATES_DIR" ]]; then
+    template_count=$(find "$TEMPLATES_DIR" -name "*.sh" 2>/dev/null | wc -l)
+
     if [[ $template_count -gt 0 ]]; then
         backup_dir="$HOME/homelab-tools-backup-$(date +%Y%m%d_%H%M%S)"
-        echo -e "${YELLOW}  →${RESET} Found $template_count template(s)"
-        read -p "  Create backup before removing? (Y/n): " backup
+        echo -e "${YELLOW}  →${RESET} Gevonden $template_count template(s)"
+        read -p "  Backup maken? (Y/n): " backup
         backup=${backup:-y}
-        
+
         if [[ "$backup" =~ ^[Yy]$ ]]; then
             mkdir -p "$backup_dir"
-            cp -r "$HOME/homelab-tools/templates" "$backup_dir/"
-            echo -e "${GREEN}  ✓${RESET} Backup created: ${CYAN}$backup_dir${RESET}"
+            cp -r "$TEMPLATES_DIR" "$backup_dir/"
+            echo -e "${GREEN}  ✓${RESET} Backup: ${CYAN}$backup_dir${RESET}"
         else
-            echo -e "${YELLOW}  →${RESET} Skipping backup"
+            echo -e "${YELLOW}  →${RESET} Skip backup"
         fi
+
+        # Verwijder templates directory
+        rm -rf "$TEMPLATES_DIR"
+        echo -e "${GREEN}  ✓${RESET} Templates directory verwijderd"
     else
-        echo -e "${GREEN}  ✓${RESET} No templates found"
+        echo -e "${GREEN}  ✓${RESET} Geen templates gevonden"
     fi
 else
-    echo -e "${GREEN}  ✓${RESET} No templates directory"
+    echo -e "${GREEN}  ✓${RESET} Geen templates directory"
 fi
 echo ""
 
-# Remove directory
-echo -e "${YELLOW}[3/4]${RESET} Removing ~/homelab-tools/..."
-if [[ -d "$HOME/homelab-tools" ]]; then
-    rm -rf "$HOME/homelab-tools"
-    echo -e "${GREEN}  ✓${RESET} Directory removed"
+# Remove /opt/homelab-tools directory
+INSTALL_DIR="/opt/homelab-tools"
+echo -e "${YELLOW}[3/4]${RESET} Verwijder /opt/homelab-tools/ (vereist sudo)..."
+if [[ -d "$INSTALL_DIR" ]]; then
+    sudo rm -rf "$INSTALL_DIR"
+    echo -e "${GREEN}  ✓${RESET} Directory verwijderd"
 else
-    echo -e "${YELLOW}  →${RESET} Directory not found"
+    echo -e "${YELLOW}  →${RESET} Directory niet gevonden"
 fi
 echo ""
 
 # Remove from bashrc
-echo -e "${YELLOW}[4/4]${RESET} Cleaning up ~/.bashrc..."
-if grep -q "homelab-tools" "$HOME/.bashrc" 2>/dev/null; then
+echo -e "${YELLOW}[4/4]${RESET} Cleanup ~/.bashrc..."
+if [[ -f "$HOME/.bashrc" ]] && grep -q "Homelab Management Tools" "$HOME/.bashrc" 2>/dev/null; then
     # Create backup
     cp "$HOME/.bashrc" "$HOME/.bashrc.backup.$(date +%Y%m%d_%H%M%S)"
-    
-    # Remove homelab-tools lines
+
+    # Remove homelab-tools lines (works for both old /opt and new ~/.local/bin)
     sed -i '/# Homelab Management Tools/d' "$HOME/.bashrc"
-    sed -i '\|homelab-tools/bin|d' "$HOME/.bashrc"
-    
-    echo -e "${GREEN}  ✓${RESET} PATH entry removed"
-    echo -e "${YELLOW}  →${RESET} Backup created: ${CYAN}~/.bashrc.backup.*${RESET}"
+    sed -i '\|/opt/homelab-tools|d' "$HOME/.bashrc"
+    sed -i '\|\.local/bin.*homelab|d' "$HOME/.bashrc"
+
+    echo -e "${GREEN}  ✓${RESET} PATH entry verwijderd"
+    echo -e "${YELLOW}  →${RESET} Backup: ${CYAN}~/.bashrc.backup.*${RESET}"
 else
-    echo -e "${GREEN}  ✓${RESET} No entries found in ~/.bashrc"
+    echo -e "${GREEN}  ✓${RESET} Geen entries in ~/.bashrc"
 fi
 echo ""
 
 # Summary
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║           ✅ UNINSTALL COMPLETE                       ║"
+echo -e "║           ✅ UNINSTALL VOLTOOID                      ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
-echo -e "${GREEN}✓ Homelab Tools successfully removed!${RESET}"
+echo -e "${GREEN}✓ Homelab Tools succesvol verwijderd!${RESET}"
 echo ""
-echo -e "${BOLD}${GREEN}Your data is safe:${RESET}"
+echo -e "${BOLD}${GREEN}Je data is veilig:${RESET}"
 echo -e "  • SSH keys:       ${CYAN}~/.ssh/${RESET}"
 echo -e "  • SSH config:     ${CYAN}~/.ssh/config${RESET}"
-echo -e "  • Remote MOTDs:   ${CYAN}Still deployed on hosts${RESET}"
+echo -e "  • Templates:      ${CYAN}$HOME/.local/share/homelab-tools/${RESET}"
+echo -e "  • Remote MOTDs:   ${CYAN}Nog steeds deployed${RESET}"
 
-if [[ -n "$backup_dir" ]] && [[ -d "$backup_dir" ]]; then
-    echo -e "  • MOTD backups:   ${CYAN}$backup_dir${RESET}"
+if [[ -n "${backup_dir:-}" ]] && [[ -d "${backup_dir}" ]]; then
+    echo -e "  • Backup:         ${CYAN}$backup_dir${RESET}"
 fi
 
 echo ""
-echo -e "${YELLOW}Note:${RESET} Reload your shell to update PATH:"
+echo -e "${YELLOW}Note:${RESET} Herlaad je shell:"
 echo -e "  ${GREEN}source ~/.bashrc${RESET}"
 echo ""
-echo -e "${CYAN}Thanks for using Homelab Tools! 👋${RESET}"
+echo -e "${CYAN}Bedankt voor het gebruiken van Homelab Tools! 👋${RESET}"
 echo ""

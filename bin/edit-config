@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Edit homelab tools configuration
 # Author: J.Bakers
-# Version: 3.1.0
+# Version: 3.4.0
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -13,48 +13,37 @@ RED='\033[0;31m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
-CONFIG_FILE="$HOME/homelab-tools/config.sh"
+CONFIG_FILE="/opt/homelab-tools/config.sh"
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         ⚙️  Homelab Configuration                     ║"
+echo -e "║         ⚙️  Homelab Configuration                   ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
 # Load current config
 if [[ -f "$CONFIG_FILE" ]]; then
     source "$CONFIG_FILE"
-    echo -e "${GREEN}✓${RESET} Current configuration:"
-    echo -e "  Domain suffix: ${CYAN}${DOMAIN_SUFFIX}${RESET}"
-    echo -e "  IP method:     ${CYAN}${IP_METHOD}${RESET}"
-    echo ""
 else
-    echo -e "${YELLOW}⚠${RESET} No configuration file found"
-    echo -e "  Creating default configuration..."
+    echo -e "${YELLOW}⚠${RESET} No configuration found, using defaults"
     DOMAIN_SUFFIX=".home"
     IP_METHOD="ip"
 fi
 
-# Ask for new values
-echo -e "${BOLD}Update configuration:${RESET}"
+# Ask for new values (compact format)
+echo -e "${BOLD}Huidige instellingen:${RESET}"
+echo -e "  Domain: ${CYAN}${DOMAIN_SUFFIX:-<none>}${RESET}  |  IP methode: ${CYAN}${IP_METHOD}${RESET}"
 echo ""
 
-echo -e "Domain suffix ${CYAN}(current: $DOMAIN_SUFFIX)${RESET}"
-echo -e "  Examples: .home, .local, .lan, or leave empty for no domain"
-read -p "  New value [press Enter to keep]: " new_domain
+read -p "Domain suffix [${DOMAIN_SUFFIX}]: " new_domain
 new_domain=${new_domain:-$DOMAIN_SUFFIX}
 
 # Validate domain starts with dot if not empty
 if [[ -n "$new_domain" ]] && [[ ! "$new_domain" =~ ^\. ]]; then
-    echo -e "${RED}✗ Error: Domain suffix must start with a dot (e.g., .home)${RESET}"
-    echo -e "  Or leave empty for no domain"
+    echo -e "${RED}✗ Domain moet starten met '.' (bijv. .home) of leeg zijn${RESET}"
     exit 1
 fi
 
-echo ""
-echo -e "IP detection method ${CYAN}(current: $IP_METHOD)${RESET}"
-echo -e "  hostname - Uses 'hostname -I' (may fail in containers)"
-echo -e "  ip       - Uses 'ip route get' (more reliable)"
-read -p "  New value (hostname/ip) [press Enter to keep]: " new_ip_method
+read -p "IP methode (hostname/ip) [${IP_METHOD}]: " new_ip_method
 new_ip_method=${new_ip_method:-$IP_METHOD}
 
 # Validate IP method
@@ -64,10 +53,10 @@ if [[ "$new_ip_method" != "hostname" ]] && [[ "$new_ip_method" != "ip" ]]; then
 fi
 
 # Save configuration
-cat > "$CONFIG_FILE" << EOF
+if ! cat > "$CONFIG_FILE" 2>/dev/null << EOF
 # Homelab Tools Configuration
 # Author: J.Bakers
-# Version: 3.1.0
+# Version: 3.4.0
 
 # Domain suffix voor je homelab
 # Wordt gebruikt voor Web UI URLs
@@ -77,9 +66,15 @@ DOMAIN_SUFFIX="$new_domain"
 # Opties: "hostname" of "ip"
 IP_METHOD="$new_ip_method"
 EOF
-
-echo ""
-echo -e "${GREEN}✓${RESET} Configuration saved!"
+then
+    echo ""
+    echo -e "${GREEN}✓${RESET} Configuration saved!"
+else
+    echo ""
+    echo -e "${RED}✗${RESET} Kon configuratie niet opslaan (geen schrijfrechten)"
+    echo -e "  Probeer: ${GREEN}sudo edit-config${RESET}"
+    exit 1
+fi
 echo ""
 echo -e "${BOLD}New settings:${RESET}"
 echo -e "  Domain suffix: ${CYAN}$new_domain${RESET}"

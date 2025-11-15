@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Homelab Management Menu
 # Author: J.Bakers
-# Version: 3.1.0
+# Version: 3.2.0
 
 # Kleuren (zelfde stijl als MOTD)
 CYAN='\033[0;36m'
@@ -18,7 +18,7 @@ RESET='\033[0m'
 # Help functie (kort overzicht)
 show_help() {
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v3.0              ║"
+    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v3.2              ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "${BOLD}${BLUE}AVAILABLE COMMANDS:${RESET}"
@@ -164,10 +164,10 @@ show_ssh_menu() {
 }
 
 # Als --help of help wordt meegegeven
-if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     show_help
     exit 0
-elif [[ "$1" == "help" ]]; then
+elif [[ "${1:-}" == "help" ]]; then
     show_detailed_help
     exit 0
 fi

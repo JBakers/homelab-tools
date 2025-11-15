@@ -1,6 +1,6 @@
 # 🏠 Homelab Management Tools
 
-[![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
+[![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/shell-bash-lightgrey.svg)](https://www.gnu.org/software/bash/)
 

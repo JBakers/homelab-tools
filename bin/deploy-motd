@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Deploy MOTD to remote host
 # Author: J.Bakers
-# Version: 3.1.0
+# Version: 3.2.0
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -53,18 +53,26 @@ show_help() {
     echo ""
 }
 
-if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     show_help
     exit 0
 fi
 
-SERVICE=$1
+SERVICE=${1:-}
 
 if [[ -z "$SERVICE" ]]; then
     echo -e "${RED}✗ Fout: Geen service naam opgegeven${RESET}"
     echo -e "  Gebruik: ${GREEN}deploy-motd <service-naam>${RESET}"
     echo -e "  Voorbeeld: ${GREEN}deploy-motd jellyfin${RESET}"
     echo -e "  Of: ${CYAN}deploy-motd --help${RESET} voor meer informatie"
+    exit 1
+fi
+
+# Validate service name to prevent command injection
+if [[ ! "$SERVICE" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+    echo -e "${RED}✗ Fout: Ongeldige service naam${RESET}"
+    echo -e "  Alleen letters, cijfers, punten, underscores en streepjes zijn toegestaan"
+    echo -e "  Voorbeeld: ${GREEN}deploy-motd jellyfin${RESET}"
     exit 1
 fi
 

@@ -6,7 +6,7 @@ set -euo pipefail
 
 # Cleanup old SSH host keys
 # Author: J.Bakers
-# Version: 3.1.0
+# Version: 3.2.0
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -47,12 +47,19 @@ show_help() {
     echo ""
 }
 
-if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     show_help
     exit 0
 fi
 
-HOST=$1
+HOST=${1:-}
+
+# Validate hostname/IP if provided
+if [[ -n "$HOST" ]] && [[ ! "$HOST" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+    echo -e "${RED}✗ Fout: Ongeldige hostname${RESET}"
+    echo -e "  Alleen letters, cijfers, punten, underscores en streepjes zijn toegestaan"
+    exit 1
+fi
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
 echo -e "║         🧹 Cleanup Host Keys                          ║"

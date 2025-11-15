@@ -9,6 +9,7 @@ conversation*.md
 notes*.md
 todo*.md
 GESPREK.md
+.markdownlint.json
 
 # Test files
 test.sh

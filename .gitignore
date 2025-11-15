@@ -32,3 +32,6 @@ test-*.sh
 *.swo
 
 GESPREK.md
+
+# Commit change logs
+commit-changes.md

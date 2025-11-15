@@ -1,34 +1,47 @@
-# Generated MOTD templates (user-specific, contains hostnames/IPs)
+# User-specific configuration and data
+config.sh
 templates/
 !templates/.gitkeep
 
-# User configuration (contains domain names)
-config.sh
-
-# Development artifacts
+# Development and documentation artifacts
+claude.md
 conversation*.md
 notes*.md
-test-motd.sh
 todo*.md
+GESPREK.md
 
-# Test files (for local testing only)
+# Test files
 test.sh
 test-*.sh
+test-motd.sh
 
 # Backup files
+*.backup
 *.backup.*
 *.bak
 *~
+*.tar.gz
 
 # macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+.Trash-*
+.directory
 
 # Editor files
 .vscode/
 .idea/
 *.swp
 *.swo
-*.swp
-*.swo
+.viminfo
 
-GESPREK.md
+# Python (if any Python tools are added later)
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Logs
+*.log

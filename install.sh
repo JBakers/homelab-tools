@@ -28,60 +28,82 @@ INSTALL_DIR="$HOME/homelab-tools"
 echo -e "${BOLD}Installatie directory: ${CYAN}$INSTALL_DIR${RESET}"
 echo ""
 
-# 1. Check of directory al bestaat
-echo -e "${YELLOW}[1/4]${RESET} Controleer installatie..."
-if [[ "$PWD" != "$INSTALL_DIR" ]]; then
-    echo -e "${YELLOW}  →${RESET} Verplaats naar $INSTALL_DIR..."
-    
-    # Backup oude installatie
-    if [[ -d "$INSTALL_DIR" ]]; then
-        backup_dir="$INSTALL_DIR.backup.$(date +%Y%m%d_%H%M%S)"
-        echo -e "${YELLOW}  →${RESET} Backup oude installatie naar $backup_dir"
-        mv "$INSTALL_DIR" "$backup_dir"
-    fi
-    
-    # Kopieer nieuwe bestanden
-    mkdir -p "$HOME"
-    cp -r "$(pwd)" "$INSTALL_DIR"
-    echo -e "${GREEN}  ✓${RESET} Bestanden gekopieerd"
-else
-    echo -e "${GREEN}  ✓${RESET} Al in juiste directory"
+# 1. Installeer bestanden naar /opt
+echo -e "${YELLOW}[1/5]${RESET} Installeer naar /opt..."
+
+# Backup oude installatie
+if [[ -d "$INSTALL_DIR" ]]; then
+    backup_dir="$INSTALL_DIR.backup.$(date +%Y%m%d_%H%M%S)"
+    echo -e "${YELLOW}  →${RESET} Backup oude installatie naar $backup_dir"
+    mv "$INSTALL_DIR" "$backup_dir"
 fi
+
+# Maak /opt directory en kopieer bestanden
+echo -e "${YELLOW}  →${RESET} Kopieer bestanden naar $INSTALL_DIR..."
+mkdir -p "$INSTALL_DIR"
+cp -r "$(pwd)"/* "$INSTALL_DIR/"
+cp -r "$(pwd)"/.gitignore "$INSTALL_DIR/" 2>/dev/null || true
+echo -e "${GREEN}  ✓${RESET} Bestanden geïnstalleerd in /opt"
 echo ""
 
 # 2. Maak alle scripts executable
-echo -e "${YELLOW}[2/4]${RESET} Configureer permissions..."
+echo -e "${YELLOW}[2/5]${RESET} Configureer permissions..."
 chmod +x "$INSTALL_DIR"/bin/* 2>/dev/null
 chmod +x "$INSTALL_DIR"/*.sh 2>/dev/null
 echo -e "${GREEN}  ✓${RESET} Scripts zijn executable"
 echo ""
 
-# 3. Voeg toe aan PATH
-echo -e "${YELLOW}[3/4]${RESET} Configureer PATH..."
+# 3. Voeg toe aan system-wide PATH
+echo -e "${YELLOW}[3/5]${RESET} Configureer system PATH..."
 
-# Check of al in bashrc staat
-if grep -q "homelab-tools/bin" "$HOME/.bashrc" 2>/dev/null; then
-    echo -e "${GREEN}  ✓${RESET} PATH is al geconfigureerd in ~/.bashrc"
+# Creëer symlinks in /usr/local/bin (standaard in PATH)
+echo -e "${YELLOW}  →${RESET} Maak symlinks in /usr/local/bin..."
+for cmd in "$INSTALL_DIR"/bin/*; do
+    cmd_name=$(basename "$cmd")
+    ln -sf "$INSTALL_DIR/bin/$cmd_name" "/usr/local/bin/$cmd_name"
+done
+echo -e "${GREEN}  ✓${RESET} Commando's beschikbaar system-wide"
+echo ""
+
+# Optional: ook toevoegen aan bashrc voor expliciete PATH
+echo -e "${YELLOW}[3.5/5]${RESET} Configureer user PATH (optioneel)..."
+
+# Voeg toe aan bashrc van huidige user (optioneel, want /usr/local/bin is al in PATH)
+CURRENT_USER=${SUDO_USER:-$USER}
+USER_HOME=$(eval echo ~$CURRENT_USER)
+
+if [[ -f "$USER_HOME/.bashrc" ]]; then
+    if grep -q "/opt/homelab-tools/bin" "$USER_HOME/.bashrc" 2>/dev/null; then
+        echo -e "${GREEN}  ✓${RESET} PATH al in ~/.bashrc"
+    else
+        echo "" >> "$USER_HOME/.bashrc"
+        echo "# Homelab Management Tools" >> "$USER_HOME/.bashrc"
+        echo "export PATH=\"/opt/homelab-tools/bin:\$PATH\"" >> "$USER_HOME/.bashrc"
+        chown "$CURRENT_USER:$CURRENT_USER" "$USER_HOME/.bashrc"
+        echo -e "${GREEN}  ✓${RESET} PATH toegevoegd aan ~/.bashrc"
+    fi
 else
-    echo "" >> "$HOME/.bashrc"
-    echo "# Homelab Management Tools" >> "$HOME/.bashrc"
-    echo "export PATH=\"\$HOME/homelab-tools/bin:\$PATH\"" >> "$HOME/.bashrc"
-    echo -e "${GREEN}  ✓${RESET} PATH toegevoegd aan ~/.bashrc"
+    echo -e "${YELLOW}  →${RESET} Geen .bashrc gevonden, skip"
 fi
 echo ""
 
 # 4. Maak templates directory
 echo -e "${YELLOW}[4/5]${RESET} Initialiseer templates..."
-mkdir -p "$HOME/.local/share/homelab-tools/templates"
-echo -e "${GREEN}  ✓${RESET} Templates directory aangemaakt"
+
+# Templates in user home directory (niet in /opt)
+CURRENT_USER=${SUDO_USER:-$USER}
+USER_HOME=$(eval echo ~$CURRENT_USER)
+
+mkdir -p "$USER_HOME/.local/share/homelab-tools/templates"
+chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME/.local/share/homelab-tools"
+echo -e "${GREEN}  ✓${RESET} Templates directory: $USER_HOME/.local/share/homelab-tools/templates"
 echo ""
 
 # 5. Configuratie
-echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
-echo -e "${BOLD}${CYAN}           ⚙️  HOMELAB CONFIGURATIE                      ${RESET}"
-echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+echo -e "${YELLOW}[5/5]${RESET} Configureer homelab settings..."
 echo ""
 
+# Config file in /opt (system-wide)
 CONFIG_FILE="$INSTALL_DIR/config.sh"
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
@@ -238,7 +260,15 @@ echo -e "${GREEN}✓ Homelab Tools zijn geïnstalleerd!${RESET}"
 echo ""
 echo -e "${BOLD}${YELLOW}Volgende stappen:${RESET}"
 echo ""
-echo -e "1. ${CYAN}Herlaad je bash configuratie:${RESET}"
+echo -e "${BOLD}Installatie locaties:${RESET}"
+echo -e "  • Programma:  ${CYAN}/opt/homelab-tools/${RESET}"
+echo -e "  • Commando's: ${CYAN}/usr/local/bin/${RESET}"
+echo -e "  • Templates:  ${CYAN}$USER_HOME/.local/share/homelab-tools/templates/${RESET}"
+echo -e "  • Config:     ${CYAN}/opt/homelab-tools/config.sh${RESET}"
+echo ""
+echo -e "${BOLD}${YELLOW}Volgende stappen:${RESET}"
+echo ""
+echo -e "1. ${CYAN}Start een nieuwe terminal of reload shell:${RESET}"
 echo -e "   ${GREEN}source ~/.bashrc${RESET}"
 echo ""
 echo -e "2. ${CYAN}Start het menu:${RESET}"
@@ -254,9 +284,4 @@ echo -e "   ${GREEN}homelab help${RESET}"
 echo -e "   ${GREEN}generate-motd --help${RESET}"
 echo ""
 echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
-echo ""
-
-# Source bashrc automatisch (alleen voor huidige sessie)
-echo -e "${YELLOW}Tip:${RESET} Activeer nu meteen met:"
-echo -e "  ${GREEN}source ~/.bashrc${RESET}"
 echo ""

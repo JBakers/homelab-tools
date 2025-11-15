@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Copy SSH key to remote hosts
 # Author: J.Bakers
-# Version: 3.1.0
+# Version: 3.2.0
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -31,7 +31,7 @@ show_help() {
     echo "  - SSH key: ~/.ssh/id_ed25519.pub"
 }
 
-if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     show_help
     exit 0
 fi

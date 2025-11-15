@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# Uninstall script voor Homelab Management Tools
+#!/bin/bash
+# Homelab Tools Uninstaller
 # Author: J.Bakers
-# Version: 3.0
+# Version: 3.1.0
 
 # Kleuren
 CYAN='\033[0;36m'

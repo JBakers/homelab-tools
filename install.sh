@@ -130,9 +130,11 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
     done
     
     cat > "$CONFIG_FILE" << EOF
-# Homelab Tools Configuration
+#!/bin/bash
+# Homelab Tools Installer
+# Installs to /opt/homelab-tools with system-wide access
 # Author: J.Bakers
-# Version: 3.0
+# Version: 3.1.0
 
 # Domain suffix voor je homelab
 # Wordt gebruikt voor Web UI URLs

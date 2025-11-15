@@ -2,7 +2,7 @@
 
 # Homelab Management Menu
 # Author: J.Bakers
-# Version: 2.0
+# Version: 3.1.0
 
 # Kleuren (zelfde stijl als MOTD)
 CYAN='\033[0;36m'
@@ -99,28 +99,65 @@ show_detailed_help() {
 show_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v2.0              ║"
+    echo -e "║         🏠 HOMELAB MANAGEMENT TOOLS v3.1.0            ║"
     echo -e "║                  by J.Bakers                           ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-    echo -e "${BOLD}${BLUE}Available commands:${RESET}"
+    echo -e "${BOLD}${BLUE}What would you like to do?${RESET}"
     echo ""
-    echo -e "${BOLD}${CYAN}  MOTD Management:${RESET}"
-    echo -e "  ${YELLOW}1${RESET}) ${GREEN}generate-motd${RESET}      - Generate a new MOTD"
-    echo -e "  ${YELLOW}2${RESET}) ${GREEN}bulk-generate-motd${RESET} - Generate MOTDs for all hosts"
-    echo -e "  ${YELLOW}3${RESET}) ${GREEN}deploy-motd${RESET}        - Deploy MOTD to host"
-    echo -e "  ${YELLOW}4${RESET}) ${GREEN}list-templates${RESET}     - View all templates"
+    echo -e "  ${YELLOW}1${RESET}) ${GREEN}MOTD Management${RESET}     - Create and deploy login screens"
+    echo -e "  ${YELLOW}2${RESET}) ${GREEN}Configuration${RESET}       - Edit hosts and settings"
+    echo -e "  ${YELLOW}3${RESET}) ${GREEN}SSH Tools${RESET}           - Manage keys and access"
     echo ""
-    echo -e "${BOLD}${CYAN}  Configuration:${RESET}"
-    echo -e "  ${YELLOW}5${RESET}) ${GREEN}edit-hosts${RESET}         - Edit host configuration"
-    echo -e "  ${YELLOW}6${RESET}) ${GREEN}edit-config${RESET}        - Edit homelab settings"
+    echo -e "  ${YELLOW}h${RESET}) ${MAGENTA}Help${RESET}                - Show detailed help"
+    echo -e "  ${YELLOW}q${RESET}) ${RED}Quit${RESET}                - Exit"
     echo ""
-    echo -e "${BOLD}${CYAN}  SSH Management:${RESET}"
-    echo -e "  ${YELLOW}7${RESET}) ${GREEN}cleanup-keys${RESET}       - Remove old host keys"
-    echo -e "  ${YELLOW}8${RESET}) ${GREEN}copykey${RESET}            - Distribute SSH keys"
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+}
+
+# MOTD submenu
+show_motd_menu() {
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         📋 MOTD MANAGEMENT                             ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-    echo -e "  ${YELLOW}h${RESET}) ${MAGENTA}help${RESET}               - Detailed help"
-    echo -e "  ${YELLOW}q${RESET}) ${RED}quit${RESET}               - Exit"
+    echo -e "  ${YELLOW}1${RESET}) ${GREEN}Generate MOTD${RESET}           - Create template for one host"
+    echo -e "  ${YELLOW}2${RESET}) ${GREEN}Bulk Generate${RESET}           - Create for all hosts"
+    echo -e "  ${YELLOW}3${RESET}) ${GREEN}Deploy MOTD${RESET}             - Upload to host"
+    echo -e "  ${YELLOW}4${RESET}) ${GREEN}List Templates${RESET}          - View all templates"
+    echo ""
+    echo -e "  ${YELLOW}b${RESET}) ${MAGENTA}Back${RESET}                    - Return to main menu"
+    echo ""
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+}
+
+# Configuration submenu
+show_config_menu() {
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         ⚙️  CONFIGURATION                               ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "  ${YELLOW}1${RESET}) ${GREEN}Edit Hosts${RESET}              - Manage host list (~/.ssh/config)"
+    echo -e "  ${YELLOW}2${RESET}) ${GREEN}Edit Settings${RESET}           - Configure homelab tools"
+    echo ""
+    echo -e "  ${YELLOW}b${RESET}) ${MAGENTA}Back${RESET}                    - Return to main menu"
+    echo ""
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+}
+
+# SSH submenu
+show_ssh_menu() {
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         🔑 SSH TOOLS                                    ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "  ${YELLOW}1${RESET}) ${GREEN}Copy SSH Key${RESET}            - Distribute key to hosts"
+    echo -e "  ${YELLOW}2${RESET}) ${GREEN}Cleanup Old Keys${RESET}        - Remove outdated host keys"
+    echo ""
+    echo -e "  ${YELLOW}b${RESET}) ${MAGENTA}Back${RESET}                    - Return to main menu"
     echo ""
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 }
@@ -142,67 +179,121 @@ while true; do
     
     case $choice in
         1)
-            echo ""
-            read -p "$(echo -e ${CYAN}Service name:${RESET} )" service
-            if [[ -n "$service" ]]; then
-                generate-motd "$service"
-            else
-                echo -e "${RED}✗ No service name provided${RESET}"
-            fi
-            echo ""
-            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            # MOTD submenu
+            while true; do
+                show_motd_menu
+                echo -ne "${BOLD}${GREEN}Choice:${RESET} "
+                read -r submenu
+                
+                case $submenu in
+                    1)
+                        echo ""
+                        read -p "$(echo -e ${CYAN}Service name:${RESET} )" service
+                        if [[ -n "$service" ]]; then
+                            generate-motd "$service"
+                        else
+                            echo -e "${RED}✗ No service name provided${RESET}"
+                        fi
+                        echo ""
+                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        ;;
+                    2)
+                        echo ""
+                        bulk-generate-motd
+                        echo ""
+                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        ;;
+                    3)
+                        echo ""
+                        read -p "$(echo -e ${CYAN}Service name:${RESET} )" service
+                        if [[ -n "$service" ]]; then
+                            deploy-motd "$service"
+                        else
+                            echo -e "${RED}✗ No service name provided${RESET}"
+                        fi
+                        echo ""
+                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        ;;
+                    4)
+                        echo ""
+                        list-templates
+                        echo ""
+                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        ;;
+                    b|B|back)
+                        break
+                        ;;
+                    *)
+                        echo -e "${RED}✗ Invalid choice${RESET}"
+                        sleep 1
+                        ;;
+                esac
+            done
             ;;
         2)
-            echo ""
-            bulk-generate-motd
-            echo ""
-            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            # Configuration submenu
+            while true; do
+                show_config_menu
+                echo -ne "${BOLD}${GREEN}Choice:${RESET} "
+                read -r submenu
+                
+                case $submenu in
+                    1)
+                        echo ""
+                        edit-hosts
+                        echo ""
+                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        ;;
+                    2)
+                        echo ""
+                        edit-config
+                        echo ""
+                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        ;;
+                    b|B|back)
+                        break
+                        ;;
+                    *)
+                        echo -e "${RED}✗ Invalid choice${RESET}"
+                        sleep 1
+                        ;;
+                esac
+            done
             ;;
         3)
-            echo ""
-            read -p "$(echo -e ${CYAN}Service name:${RESET} )" service
-            if [[ -n "$service" ]]; then
-                deploy-motd "$service"
-            else
-                echo -e "${RED}✗ No service name provided${RESET}"
-            fi
-            echo ""
-            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
-            ;;
-        4)
-            echo ""
-            list-templates
-            echo ""
-            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
-            ;;
-        5)
-            echo ""
-            edit-hosts
-            echo ""
-            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
-            ;;
-        6)
-            echo ""
-            edit-config
-            echo ""
-            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
-            ;;
-        7)
-            echo ""
-            read -p "$(echo -e ${CYAN}IP address or hostname:${RESET} )" host
-            if [[ -n "$host" ]]; then
-                cleanup-keys "$host"
-            else
-                echo -e "${RED}✗ No host provided${RESET}"
-            fi
-            echo ""
-            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
-            ;;
-        8)
-            echo ""
-            copykey
-            echo ""
-            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            # SSH submenu
+            while true; do
+                show_ssh_menu
+                echo -ne "${BOLD}${GREEN}Choice:${RESET} "
+                read -r submenu
+                
+                case $submenu in
+                    1)
+                        echo ""
+                        copykey
+                        echo ""
+                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        ;;
+                    2)
+                        echo ""
+                        read -p "$(echo -e ${CYAN}IP address or hostname:${RESET} )" host
+                        if [[ -n "$host" ]]; then
+                            cleanup-keys "$host"
+                        else
+                            echo -e "${RED}✗ No host provided${RESET}"
+                        fi
+                        echo ""
+                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        ;;
+                    b|B|back)
+                        break
+                        ;;
+                    *)
+                        echo -e "${RED}✗ Invalid choice${RESET}"
+                        sleep 1
+                        ;;
+                esac
+            done
             ;;
         iddqd|IDDQD)
             clear
@@ -226,7 +317,7 @@ DOOMGUY
             sleep 2
             ;;
         h|H)
-            show_help
+            show_detailed_help
             echo ""
             read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
             ;;

@@ -1,9 +1,11 @@
 #!/bin/bash
 
 # Cleanup host keys for homelab hosts
-# Clean up old SSH host keys
+#!/bin/bash
+
+# Cleanup old SSH host keys
 # Author: J.Bakers
-# Version: 3.0
+# Version: 3.1.0
 
 # Kleuren
 CYAN='\033[0;36m'

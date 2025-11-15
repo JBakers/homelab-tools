@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# Bulk generate MOTDs for all SSH hosts
+#!/bin/bash
+
+# Bulk generate MOTD templates for all hosts
 # Author: J.Bakers
-# Version: 3.0
+# Version: 3.1.0
 
 # Kleuren
 CYAN='\033[0;36m'

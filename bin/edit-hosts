@@ -2,7 +2,7 @@
 
 # Edit SSH host configuration
 # Author: J.Bakers
-# Version: 3.0
+# Version: 3.1.0
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -76,12 +76,9 @@ fi
 echo -e "${BOLD}File:${RESET} ${CYAN}$SSH_CONFIG${RESET}"
 echo ""
 
-# Bepaal editor
-EDITOR="${EDITOR:-nano}"
-if command -v vim &> /dev/null; then
-    EDITOR="vim"
-elif command -v vi &> /dev/null; then
-    EDITOR="vi"
+# Bepaal editor (nano default, tenzij EDITOR expliciet is ingesteld)
+if [[ -z "$EDITOR" ]]; then
+    EDITOR="nano"
 fi
 
 echo -e "${YELLOW}→${RESET} Opening in ${GREEN}$EDITOR${RESET}..."

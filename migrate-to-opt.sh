@@ -1,9 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-# Migratie script: ~/homelab-tools → /opt/homelab-tools
+#!/bin/bash
+# Migrate homelab-tools from ~/homelab-tools to /opt/homelab-tools
 # Author: J.Bakers
-# Version: 1.0
+# Version: 3.1.0
 
 # Kleuren
 CYAN='\033[0;36m'

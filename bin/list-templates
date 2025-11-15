@@ -3,7 +3,7 @@ set -euo pipefail
 
 # List all MOTD templates
 # Author: J.Bakers
-# Version: 3.1.0
+# Version: 3.4.0
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -40,7 +40,7 @@ show_help() {
     echo ""
 }
 
-if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     show_help
     exit 0
 fi

@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-# Bulk generate MOTDs for all SSH hosts
+# Bulk generate MOTD templates for all hosts
 # Author: J.Bakers
-# Version: 3.1.0
+# Version: 3.4.0
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -20,43 +20,29 @@ TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 show_help() {
     echo -e "${BOLD}${CYAN}bulk-generate-motd - Generate MOTDs for all hosts${RESET}"
     echo ""
-    echo -e "${BOLD}${CYAN}USAGE:${RESET}"
-    echo "  bulk-generate-motd"
-    echo "  bulk-generate-motd --all    # Auto-generate all hosts"
+    echo -e "${BOLD}USAGE:${RESET}"
+    echo "  bulk-generate-motd          # Interactive mode"
+    echo "  bulk-generate-motd --yes    # Auto-confirm overwrites"
+    echo "  bulk-generate-motd --all    # Fully automatic"
     echo ""
-    echo -e "${BOLD}${CYAN}DESCRIPTION:${RESET}"
-    echo "  Reads all hosts from ~/.ssh/config and generates MOTD"
-    echo "  templates for each one interactively or with defaults."
-    echo ""
-    echo -e "${BOLD}${CYAN}OPTIONS:${RESET}"
-    echo "  --all, -a    Auto-generate ALL hosts with auto-detection"
-    echo "               Skips all prompts, overwrites existing templates"
-    echo ""
-    echo -e "${BOLD}${CYAN}MODES:${RESET}"
-    echo "  The script will ask for each host whether to:"
-    echo "  - Skip it (if MOTD already exists)"
-    echo "  - Use defaults (service name = hostname, no web UI)"
-    echo "  - Interactive mode (ask for details)"
-    echo ""
-    echo -e "${BOLD}EXAMPLE:${RESET}"
-    echo "  ${GREEN}bulk-generate-motd${RESET}"
-    echo ""
-    echo "  Found 3 hosts in SSH config:"
-    echo "  - jellyfin ... Generate? [y/n/i]"
-    echo "  - pihole   ... Generate? [y/n/i]"
-    echo "  - frigate  ... Generate? [y/n/i]"
+    echo -e "${BOLD}OPTIONS:${RESET}"
+    echo "  --yes, -y    Auto-confirm overwrite prompts"
+    echo "  --all, -a    Generate all hosts automatically"
     echo ""
 }
 
-if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     show_help
     exit 0
 fi
 
 # Check for --all flag
 AUTO_ALL=false
-if [[ "$1" == "--all" ]] || [[ "$1" == "-a" ]]; then
+AUTO_YES=false
+if [[ "${1:-}" == "--all" ]] || [[ "${1:-}" == "-a" ]]; then
     AUTO_ALL=true
+elif [[ "${1:-}" == "--yes" ]] || [[ "${1:-}" == "-y" ]]; then
+    AUTO_YES=true
 fi
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
@@ -66,6 +52,9 @@ echo ""
 
 if [[ "$AUTO_ALL" == true ]]; then
     echo -e "${GREEN}🚀 AUTO MODE:${RESET} Generating all hosts with auto-detection"
+    echo ""
+elif [[ "$AUTO_YES" == true ]]; then
+    echo -e "${GREEN}✓ YES MODE:${RESET} Auto-confirming overwrites"
     echo ""
 fi
 
@@ -116,8 +105,9 @@ for hostname in $hosts; do
             echo -e "  ${YELLOW}⚠${RESET} Template exists, overwriting..."
         fi
         
-        # Generate with auto-detection
-        echo -e "n\ny\n" | generate-motd "$hostname" &>/dev/null
+        # Generate with auto-detection (clean MOTD = style 1)
+        # Answers: customize=n, style=1 (clean), deploy=n (bulk deploys later)
+        echo -e "n\n1\nn\n" | generate-motd "$hostname" &>/dev/null
         
         if [[ -f "$template_file" ]]; then
             echo -e "  ${GREEN}✓${RESET} Generated successfully"
@@ -134,32 +124,45 @@ for hostname in $hosts; do
     # Check of template al bestaat
     if [[ -f "$template_file" ]]; then
         echo -e "  ${YELLOW}⚠${RESET} Template already exists"
-        read -p "  Overwrite? (Y/n): " overwrite
-        overwrite=${overwrite:-y}
-        if [[ ! "$overwrite" =~ ^[Yy]$ ]]; then
-            echo -e "  ${YELLOW}→${RESET} Skipped"
-            ((skipped++))
-            echo ""
-            continue
+        
+        if [[ "$AUTO_YES" == true ]]; then
+            echo -e "  ${GREEN}✓${RESET} Auto-confirming overwrite (--yes mode)"
+        else
+            read -p "  Overwrite? (Y/n): " overwrite
+            overwrite=${overwrite:-y}
+            if [[ ! "$overwrite" =~ ^[Yy]$ ]]; then
+                echo -e "  ${YELLOW}→${RESET} Skipped"
+                ((skipped++))
+                echo ""
+                continue
+            fi
         fi
     fi
     
     # Vraag hoe te genereren
     echo -e "  Generate MOTD for ${CYAN}$hostname${RESET}?"
-    echo -e "    ${GREEN}y${RESET}) Yes, use auto-detection"
-    echo -e "    ${GREEN}i${RESET}) Interactive (ask for details)"
+    echo -e "    ${GREEN}y${RESET}) Yes, use auto-detection (clean MOTD)"
+    echo -e "    ${GREEN}i${RESET}) Interactive (choose style, details)"
+    echo -e "    ${GREEN}a${RESET}) Yes to all remaining (clean MOTDs)"
     echo -e "    ${GREEN}n${RESET}) Skip"
-    read -p "  Choice (Y/i/n): " choice
+    read -p "  Choice (Y/i/a/n): " choice
     choice=${choice:-y}
+
+    # Handle "yes to all" - switch to AUTO_ALL mode
+    if [[ "$choice" =~ ^[Aa]$ ]]; then
+        AUTO_ALL=true
+        echo -e "  ${GREEN}✓${RESET} Switching to auto-mode for remaining hosts"
+        choice="y"
+    fi
     
     case "$choice" in
         y|Y)
             # Gebruik auto-detection en defaults
-            echo -e "  ${YELLOW}→${RESET} Generating with auto-detection..."
-            
-            # Call generate-motd met alleen hostname - laat auto-detection werken
-            # Feed alleen de customize en deploy prompts met defaults
-            echo -e "n\ny\n" | generate-motd "$hostname" &>/dev/null
+            echo -e "  ${YELLOW}→${RESET} Generating with auto-detection (clean MOTD)..."
+
+            # Call generate-motd met auto-detection
+            # Answers: customize=n, style=1 (clean), deploy=n (bulk deploys later)
+            echo -e "n\n1\nn\n" | generate-motd "$hostname" &>/dev/null
             
             if [[ -f "$template_file" ]]; then
                 echo -e "  ${GREEN}✓${RESET} Generated successfully"

@@ -2,6 +2,7 @@
 
 # Cleanup host keys for homelab hosts
 #!/bin/bash
+set -euo pipefail
 
 # Cleanup old SSH host keys
 # Author: J.Bakers

@@ -1,6 +1,5 @@
 #!/bin/bash
-
-#!/bin/bash
+set -euo pipefail
 
 # Bulk generate MOTD templates for all hosts
 # Author: J.Bakers

@@ -1,9 +1,12 @@
 #!/bin/bash
+set -euo pipefail
+
 # Cleanup orphaned MOTD templates
-# by J.Bakers
+# Author: J.Bakers
+# Version: 3.2.0
 
 CONFIG_FILE="$HOME/.ssh/config"
-MOTD_DIR="$HOME/.config/server-motd"
+MOTD_DIR="$HOME/.local/share/homelab-tools/templates"
 
 # Kleuren
 RED='\033[0;31m'

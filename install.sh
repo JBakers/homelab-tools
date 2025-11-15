@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Installatie script voor Homelab Management Tools
 # Author: J.Bakers
+# Version: 3.2.0
 
 # Kleuren
 CYAN='\033[0;36m'

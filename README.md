@@ -1,6 +1,6 @@
-# 🏠 Homelab Management Tools v3.2.0 
+# 🏠 Homelab Management Tools v3.4.0 
 
-[![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
+[![Version](https://img.shields.io/badge/version-3.4.0-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/shell-bash-lightgrey.svg)](https://www.gnu.org/software/bash/)
 
@@ -18,7 +18,8 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
 
 ### 🎨 Beautiful Interface
 
-- **Rainbow ASCII Art** - Eye-catching banners with `toilet -F gay`
+- **Clean & Functional MOTDs** - Professional login screens with system info (default)
+- **Optional ASCII Art** - 5 colorful styles including rainbow banners with `toilet -F gay`
 - **Color-Coded Output** - Clear visual feedback with ANSI colors
 - **Interactive Menus** - Intuitive TUI for all operations
 
@@ -49,9 +50,9 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
 cd ~
 git clone https://github.com/JBakers/homelab-tools.git
 
-# Run the installer
+# Run the installer (requires sudo for /opt installation)
 cd homelab-tools
-./install.sh
+sudo ./install.sh
 
 # Reload your shell
 source ~/.bashrc
@@ -121,6 +122,65 @@ ssh jellyfin
 
 **That's it!** The tool auto-detected the service, created a template, and deployed it.
 
+## 🎨 MOTD Styles
+
+The tool offers clean, functional MOTDs by default, with optional ASCII art for a more colorful look.
+
+### Clean & Functional (Default)
+
+**Professional, informative, and always readable:**
+
+```
+==========================================
+  Jellyfin
+  Media Server
+  by J.Bakers
+==========================================
+
+📊 System Information:
+
+  🖥️  Hostname:    jellyfin
+  🌐 IP Address:  192.168.1.10
+  ⏱️  Uptime:      3 days, 12 hours
+  🐋 Docker:      24.0.7
+  🔗 Web UI:      http://jellyfin:8096
+
+==========================================
+```
+
+### Optional ASCII Art Styles
+
+<details>
+<summary><strong>Click to view ASCII art examples</strong></summary>
+
+**1. Rainbow Future** (Colorful, modern)
+**2. Rainbow Standard** (Colorful, classic)
+**3. Mono Future** (Black & white, modern)
+**4. Big Mono** (Large, bold)
+**5. Small/Smblock** (Compact)
+
+Choose during generation with `generate-motd <service>`, or press 'p' for a live preview.
+
+**Example Rainbow Future:**
+
+```
+     ███████╗███████╗██╗     ██╗  ██╗   ██╗███████╗██╗███╗   ██╗
+     ██╔════╝██╔════╝██║     ██║  ╚██╗ ██╔╝██╔════╝██║████╗  ██║
+     █████╗  █████╗  ██║     ██║   ╚████╔╝ █████╗  ██║██╔██╗ ██║
+     ██╔══╝  ██╔══╝  ██║     ██║    ╚██╔╝  ██╔══╝  ██║██║╚██╗██║
+     ███████╗███████╗███████╗███████╗██║   ██║   ██║██║ ╚████║
+     ╚══════╝╚══════╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚═╝╚═╝  ╚═══╝
+                                                    (in rainbow colors!)
+        Media Server
+           by J.Bakers
+
+==========================================
+   📊 System Information:
+...
+```
+
+</details>
+
 ## 🎮 Usage
 
 ### 📋 Interactive Menu
@@ -136,7 +196,7 @@ homelab
 
 ```
 ╔════════════════════════════════════════════════════════════╗
-║           🏠 HOMELAB MANAGEMENT TOOLS v3.2.0               ║
+║           🏠 HOMELAB MANAGEMENT TOOLS v3.4.0               ║
 ║                    by J.Bakers                             ║
 ╚════════════════════════════════════════════════════════════╝
 
@@ -236,10 +296,12 @@ copykey
 - **ssh** - OpenSSH client
 - **coreutils** - Standard GNU utilities (grep, sed, awk, etc.)
 
-### Optional (but recommended)
+### Optional
 
-- **toilet** - For rainbow ASCII art in MOTDs
-- **toilet-fonts** - Additional fonts for ASCII art
+- **toilet** - For ASCII art in MOTDs (5 colorful styles available)
+- **toilet-fonts** - Additional ASCII art fonts
+
+**Note:** The tool works perfectly without `toilet` - it will use clean, functional MOTDs by default.
 
 ### Installation
 
@@ -438,20 +500,24 @@ ssh yourhost  # Try again
 </details>
 
 <details>
-<summary><strong>No ASCII art in MOTD</strong></summary>
+<summary><strong>Want ASCII art in your MOTD?</strong></summary>
 
-**Problem:** ASCII art doesn't render.
-
-**Solution:**
+**By default, MOTDs use a clean, functional style.** To use ASCII art:
 
 ```bash
-# Install toilet (optional but recommended)
+# Install toilet (optional)
 sudo apt install toilet toilet-fonts
 
-# Regenerate MOTD
+# Generate MOTD and choose ASCII style (2-6)
 generate-motd yourservice
+# When prompted, select option 2-6 for ASCII art
+# Or press 'p' to preview all styles
+
+# Deploy
 deploy-motd yourservice
 ```
+
+**Available ASCII styles:** Rainbow Future, Rainbow Standard, Mono Future, Big Mono, Small/Smblock
 
 </details>
 

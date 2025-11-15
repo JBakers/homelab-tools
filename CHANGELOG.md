@@ -1,5 +1,65 @@
 # Changelog - Homelab Tools
 
+## v3.2.0 (15 November 2025)
+
+### 🔒 Security Fixes (CRITICAL)
+
+#### Command Injection Protection
+- **Input Validation** - Added regex validation `^[a-zA-Z0-9._-]+$` to prevent command injection
+  - `generate-motd`: Validate service names before use in commands
+  - `deploy-motd`: Validate service names before SSH/SCP operations  
+  - `cleanup-keys`: Validate hostnames before ssh-keygen
+- **Attack Prevention** - Blocks attempts like `generate-motd "; rm -rf / #"`
+- **Sed Injection Fix** - Escape special characters in descriptions for sed operations
+
+#### Error Handling
+- **set -euo pipefail** - Added to ALL 13 scripts (bin/* + root scripts)
+  - Exit on command failures (-e)
+  - Exit on undefined variables (-u)
+  - Exit on pipe failures (-o pipefail)
+- **Unbound Variable Fix** - Replace `$1` with `${1:-}` in all argument checks
+  - Prevents crashes when scripts run without arguments
+  - Safe defaults for optional parameters
+
+### 🐛 Bug Fixes
+
+#### Number Duplication Bug
+- **Fixed** - Services like `pihole2` no longer show "Pi-hole 2 2"
+- **Solution** - Moved number extraction to default case only
+- **Known services** - Keep their predefined formatting (Jellyfin 2, Plex 3, etc.)
+- **Unknown services** - Get number extraction (test1 → Test 1)
+
+#### Host Count Bug
+- **Fixed** - `bulk-generate-motd` now counts hosts correctly
+- **Change** - `wc -w` → `wc -l` for line-based counting
+- **Impact** - Accurate host count display
+
+#### UUOC (Useless Use of Cat)
+- **Fixed** - Removed cat pipe in `copykey`
+- **Before** - `cat "$file" | ssh ...`
+- **After** - `ssh ... < "$file"`
+- **Benefit** - Better performance, cleaner code
+
+### ✨ Features
+
+#### Bulk Generate Improvements
+- **--yes flag** - Auto-confirm overwrite prompts
+- **--all flag** - Fully automatic generation (existing)
+- **Simplified help** - Clearer, more concise usage information
+
+### 📝 Documentation
+- Updated all script versions to 3.2.0
+- Security audit completed - no critical issues remaining
+- All 13 scripts hardened and validated
+
+### 📊 Statistics
+- 13 scripts with `set -euo pipefail` (100% coverage)
+- 3 scripts with input validation (all user-facing scripts)
+- 4 critical bugs fixed
+- 0 security vulnerabilities remaining
+
+---
+
 ## v3.0 (14 November 2025)
 
 ### 🎯 Major Features

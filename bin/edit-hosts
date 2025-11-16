@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Edit SSH host configuration
 # Author: J.Bakers
-# Version: 3.5.0-dev.11
+# Version: 3.5.0-dev.12
 
 # Kleuren
 CYAN='\033[0;36m'

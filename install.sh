@@ -97,7 +97,7 @@ fi
 if ! grep -q "Tip: Type.*homelab" "$HOME/.bashrc" 2>/dev/null; then
     echo "" >> "$HOME/.bashrc"
     echo "# Homelab Tools tip" >> "$HOME/.bashrc"
-    echo 'echo -e "\033[0;36mTip:\033[0m Type '\033[1mhomelab\033[0m' for available commands"' >> "$HOME/.bashrc"
+    echo 'echo -e "\033[0;36mTip:\033[0m Type \033[1mhomelab\033[0m for available commands"' >> "$HOME/.bashrc"
     echo -e "${GREEN}  ✓${RESET} MOTD tip toegevoegd aan ~/.bashrc"
 fi
 echo ""

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Homelab Tools Uninstaller
 # Author: J.Bakers
-# Version: 3.5.0-dev.6
+# Version: 3.5.0-dev.7
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -129,18 +129,37 @@ if [[ -d "$INSTALL_DIR" ]]; then
 else
     echo -e "${YELLOW}  →${RESET} Directory niet gevonden"
 fi
+
+# Also remove backup directories
+backup_count=$(sudo find /opt -maxdepth 1 -name "homelab-tools.backup.*" -type d 2>/dev/null | wc -l)
+if [[ $backup_count -gt 0 ]]; then
+    echo -e "${YELLOW}  →${RESET} Gevonden $backup_count backup director(y/ies)"
+    read -p "  Ook backups verwijderen? (y/N): " remove_backups
+    remove_backups=${remove_backups:-n}
+
+    if [[ "$remove_backups" =~ ^[Yy]$ ]]; then
+        sudo rm -rf /opt/homelab-tools.backup.*
+        echo -e "${GREEN}  ✓${RESET} Backups verwijderd"
+    else
+        echo -e "${YELLOW}  →${RESET} Backups behouden"
+    fi
+fi
 echo ""
 
 # Remove from bashrc
 echo -e "${YELLOW}[4/4]${RESET} Cleanup ~/.bashrc..."
-if [[ -f "$HOME/.bashrc" ]] && grep -q "Homelab Management Tools" "$HOME/.bashrc" 2>/dev/null; then
+if [[ -f "$HOME/.bashrc" ]] && grep -qi "homelab" "$HOME/.bashrc" 2>/dev/null; then
     # Create backup
     cp "$HOME/.bashrc" "$HOME/.bashrc.backup.$(date +%Y%m%d_%H%M%S)"
 
     # Remove homelab-tools lines (works for both old /opt and new ~/.local/bin)
     sed -i '/# Homelab Management Tools/d' "$HOME/.bashrc"
+    sed -i '/# Homelab Tools tip/d' "$HOME/.bashrc"
+    sed -i '/# =.*SSH Homelab Configuratie/d' "$HOME/.bashrc"
     sed -i '\|/opt/homelab-tools|d' "$HOME/.bashrc"
     sed -i '\|\.local/bin.*homelab|d' "$HOME/.bashrc"
+    sed -i '\|Type.*homelab.*for available commands|d' "$HOME/.bashrc"
+    sed -i '\|Type.*homelab.*voor beschikbare|d' "$HOME/.bashrc"
 
     echo -e "${GREEN}  ✓${RESET} PATH entry verwijderd"
     echo -e "${YELLOW}  →${RESET} Backup: ${CYAN}~/.bashrc.backup.*${RESET}"

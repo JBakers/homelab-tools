@@ -85,7 +85,7 @@ while true; do
     style_type=${style_type:-D}
     style_type=$(echo "$style_type" | tr '[:lower:]' '[:upper:]')
 
-    # ASCII style selection
+    # ASCII style selection with preview
     ascii_style=""
     if [[ "$style_type" == "A" ]]; then
         echo ""
@@ -93,15 +93,51 @@ while true; do
         echo ""
 
         if command -v toilet &> /dev/null; then
-            echo -e "  ${CYAN}1${RESET}) Clean & Functional ${YELLOW}(No ASCII - Default)${RESET}"
-            echo -e "  ${CYAN}2${RESET}) Rainbow Future    ${YELLOW}(Colorful, modern)${RESET}"
-            echo -e "  ${CYAN}3${RESET}) Rainbow Standard  ${YELLOW}(Colorful, classic)${RESET}"
-            echo -e "  ${CYAN}4${RESET}) Mono Future       ${YELLOW}(Black & white, modern)${RESET}"
-            echo -e "  ${CYAN}5${RESET}) Big Mono          ${YELLOW}(Large, bold)${RESET}"
-            echo -e "  ${CYAN}6${RESET}) Small/Smblock     ${YELLOW}(Compact)${RESET}"
-            echo ""
-            read -p "$(echo -e ${CYAN}Choose ASCII style \(1-6\):${RESET} )" ascii_style
-            ascii_style=${ascii_style:-1}
+            while true; do
+                echo -e "  ${CYAN}1${RESET}) Clean & Functional ${YELLOW}(No ASCII - Default)${RESET}"
+                echo -e "  ${CYAN}2${RESET}) Rainbow Future    ${YELLOW}(Colorful, modern)${RESET}"
+                echo -e "  ${CYAN}3${RESET}) Rainbow Standard  ${YELLOW}(Colorful, classic)${RESET}"
+                echo -e "  ${CYAN}4${RESET}) Mono Future       ${YELLOW}(Black & white, modern)${RESET}"
+                echo -e "  ${CYAN}5${RESET}) Big Mono          ${YELLOW}(Large, bold)${RESET}"
+                echo -e "  ${CYAN}6${RESET}) Small/Smblock     ${YELLOW}(Compact)${RESET}"
+                echo ""
+                read -p "$(echo -e ${CYAN}Choose ASCII style \(1-6, p for preview\):${RESET} )" ascii_choice
+                ascii_choice=${ascii_choice:-1}
+
+                # Handle preview
+                if [[ "$ascii_choice" == "p" ]] || [[ "$ascii_choice" == "P" ]]; then
+                    clear
+                    echo -e "${BOLD}${CYAN}ASCII Art Preview${RESET}"
+                    echo ""
+                    toilet -f future --gay "TEST" 2>/dev/null || echo "Style 2: Rainbow Future"
+                    echo ""
+                    toilet -f standard --gay "TEST" 2>/dev/null || echo "Style 3: Rainbow Standard"
+                    echo ""
+                    toilet -f future "TEST" 2>/dev/null || echo "Style 4: Mono Future"
+                    echo ""
+                    toilet -f bigmono9 "TEST" 2>/dev/null || echo "Style 5: Big Mono"
+                    echo ""
+                    toilet -f smblock "TEST" 2>/dev/null || echo "Style 6: Small/Smblock"
+                    echo ""
+                    read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                    clear
+                    echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
+                    echo ""
+                    continue
+                fi
+
+                # Validate choice
+                if [[ "$ascii_choice" =~ ^[1-6]$ ]]; then
+                    ascii_style="$ascii_choice"
+                    break
+                else
+                    echo -e "${RED}Invalid choice. Please enter 1-6 or 'p' for preview.${RESET}"
+                    sleep 1
+                    clear
+                    echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
+                    echo ""
+                fi
+            done
         else
             echo -e "${YELLOW}⚠ Toilet not installed - ASCII art not available${RESET}"
             echo -e "  For ASCII art: ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
@@ -193,7 +229,8 @@ while true; do
             # - customize=n (use auto-detection)
             # - style=$ascii_style
             # - deploy=n (we'll do bulk deploy later)
-            echo -e "n\n${ascii_style}\nn\n" | generate-motd "$hostname" &>/dev/null
+            # Use < /dev/null to prevent stdin consumption from loop
+            echo -e "n\n${ascii_style}\nn\n" | generate-motd "$hostname" </dev/null &>/dev/null
 
             if [[ -f "$template_file" ]]; then
                 echo -e "  ${GREEN}✓${RESET} Generated successfully"
@@ -210,7 +247,8 @@ while true; do
             # Pre-fill with chosen ASCII style, but let user customize
             # The user can still change everything in generate-motd
             # We'll pass: customize=y, style=$ascii_style, and let them customize
-            echo -e "y\n${ascii_style}\nn\n" | generate-motd "$hostname"
+            # Use < /dev/null to prevent stdin consumption from loop
+            echo -e "y\n${ascii_style}\nn\n" | generate-motd "$hostname" </dev/null
 
             if [[ -f "$template_file" ]]; then
                 echo -e "  ${GREEN}✓${RESET} Generated"

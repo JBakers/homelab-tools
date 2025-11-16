@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Edit homelab tools configuration
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -16,7 +16,7 @@ RESET='\033[0m'
 CONFIG_FILE="/opt/homelab-tools/config.sh"
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         ⚙️  Homelab Configuration                   ║"
+echo -e "║         ⚙️  Homelab Configuration                        ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
@@ -56,7 +56,7 @@ fi
 if ! cat > "$CONFIG_FILE" 2>/dev/null << EOF
 # Homelab Tools Configuration
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev
 
 # Domain suffix voor je homelab
 # Wordt gebruikt voor Web UI URLs

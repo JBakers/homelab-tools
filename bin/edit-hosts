@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Edit SSH host configuration
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -46,7 +46,7 @@ if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
 fi
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         ⚙️  Host Configuration Editor              ║"
+echo -e "║         ⚙️  Host Configuration Editor                    ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Deploy MOTD to remote host
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -88,7 +88,7 @@ if [[ ! -f "$TEMPLATE_FILE" ]]; then
 fi
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         🚀 MOTD Deploy                                ║"
+echo -e "║         🚀 MOTD Deploy                                    ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 echo -e "${BOLD}Service: ${GREEN}$SERVICE${RESET}"

@@ -3,11 +3,11 @@ set -euo pipefail
 
 # Homelab Management Menu
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev
 
 # Kleuren (zelfde stijl als MOTD)
 CYAN='\033[0;36m'
-BLUE='\033[0;34m'
+# BLUE removed - using CYAN instead
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -18,10 +18,10 @@ RESET='\033[0m'
 # Help functie (kort overzicht)
 show_help() {
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 Homelab Management Tools v3.3.0            ║"
+    echo -e "║         🏠 Homelab Management Tools v3.5.0-dev            ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-    echo -e "${BOLD}${BLUE}Available commands:${RESET}"
+    echo -e "${BOLD}${CYAN}Available commands:${RESET}"
     echo ""
     echo -e "  ${YELLOW}generate-motd${RESET}         Generate MOTD for a service"
     echo -e "  ${YELLOW}bulk-generate-motd${RESET}    Generate MOTDs for all hosts"
@@ -31,7 +31,7 @@ show_help() {
     echo -e "  ${YELLOW}edit-hosts${RESET}            Edit SSH configuration"
     echo -e "  ${YELLOW}copykey${RESET}               Distribute SSH keys"
     echo ""
-    echo -e "${BOLD}${BLUE}Usage:${RESET}"
+    echo -e "${BOLD}${CYAN}Usage:${RESET}"
     echo -e "  ${GREEN}homelab${RESET}               Show interactive menu"
     echo -e "  ${GREEN}homelab help${RESET}          Show detailed help"
     echo -e "  ${GREEN}<command> --help${RESET}     Show help for specific command"
@@ -42,10 +42,10 @@ show_help() {
 # Gedetailleerde help
 show_detailed_help() {
     echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗"
-    echo -e "║        🏠 Homelab Tools - Detailed Help               ║"
+    echo -e "║         🏠 Homelab Tools - Detailed Help                  ║"
     echo -e "╚════════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-    echo -e "${BOLD}${BLUE}MOTD (Message of the Day) system:${RESET}"
+    echo -e "${BOLD}${CYAN}MOTD (Message of the Day) system:${RESET}"
     echo -e "────────────────────────────────────────"
     echo -e "Creates beautiful, dynamic login screens for your servers with:"
     echo -e "  • Rainbow ASCII art (using toilet)"
@@ -61,7 +61,7 @@ show_detailed_help() {
     echo -e "The MOTD is generated dynamically at each login,"
     echo -e "so information like uptime is always current."
     echo ""
-    echo -e "${BOLD}${BLUE}Host management:${RESET}"
+    echo -e "${BOLD}${CYAN}Host management:${RESET}"
     echo -e "────────────────────────────────────────"
     echo -e "Your hosts are configured in ~/.ssh/config"
     echo -e "All homelab tools use this for host access."
@@ -69,12 +69,12 @@ show_detailed_help() {
     echo -e "  ${GREEN}edit-hosts${RESET}     Edit your host configuration"
     echo -e "  ${GREEN}copykey${RESET}        Distribute SSH keys to all hosts"
     echo ""
-    echo -e "${BOLD}${BLUE}Requirements:${RESET}"
+    echo -e "${BOLD}${CYAN}Requirements:${RESET}"
     echo -e "────────────────────────────────────────"
     echo -e "  • toilet (for ASCII art): ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
     echo -e "  • figlet (fallback): ${GREEN}sudo apt install figlet${RESET}"
     echo ""
-    echo -e "${BOLD}${BLUE}Examples:${RESET}"
+    echo -e "${BOLD}${CYAN}Examples:${RESET}"
     echo -e "────────────────────────────────────────"
     echo -e "  ${GREEN}bulk-generate-motd${RESET}"
     echo -e "    → Scan host list and generate MOTDs for all hosts"
@@ -88,7 +88,7 @@ show_detailed_help() {
     echo -e "  ${GREEN}cleanup-keys 192.168.1.30${RESET}"
     echo -e "    → Remove old SSH keys for this IP"
     echo ""
-    echo -e "${BOLD}${BLUE}More info:${RESET}"
+    echo -e "${BOLD}${CYAN}More info:${RESET}"
     echo -e "────────────────────────────────────────"
     echo -e "  GitHub: https://github.com/JBakers/homelab-tools"
     echo -e "  Each command: ${GREEN}<command> --help${RESET}"
@@ -100,7 +100,7 @@ show_detailed_help() {
 show_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 Homelab Management Tools v3.3.0            ║"
+    echo -e "║         🏠 Homelab Management Tools v3.5.0-dev            ║"
     echo -e "║                  by J.Bakers                           ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
@@ -113,10 +113,92 @@ show_menu() {
 }
 
 # MOTD submenu
+# MOTD submenu help
+show_motd_help() {
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         📝 MOTD Tools - Help                              ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "${BOLD}${CYAN}Available Commands:${RESET}"
+    echo ""
+    echo -e "${BOLD}1. Generate MOTD${RESET}"
+    echo -e "   Create a custom MOTD template for a single host."
+    echo -e "   Choose from multiple ASCII art styles or clean functional design."
+    echo -e "   ${GREEN}Usage:${RESET} Select option 1, enter hostname (e.g., jellyfin)"
+    echo ""
+    echo -e "${BOLD}2. Bulk Generate${RESET}"
+    echo -e "   Generate MOTDs for all hosts in your SSH config at once."
+    echo -e "   Choose Default or ASCII style, then Interactive or Smart-detect mode."
+    echo -e "   ${GREEN}Usage:${RESET} Select option 2, follow the prompts"
+    echo ""
+    echo -e "${BOLD}3. Deploy MOTD${RESET}"
+    echo -e "   Upload a generated template to a remote host via SSH."
+    echo -e "   The MOTD will be shown when you log in to that host."
+    echo -e "   ${GREEN}Usage:${RESET} Select option 3, enter hostname"
+    echo ""
+    echo -e "${BOLD}4. List Templates${RESET}"
+    echo -e "   View all generated MOTD templates with details."
+    echo -e "   Shows hostname, last modified date, and file size."
+    echo -e "   ${GREEN}Usage:${RESET} Select option 4"
+    echo ""
+    echo -e "${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo ""
+    read -p "$(echo -e ${YELLOW}Press Enter to return to menu...${RESET})"
+}
+
+# Configuration submenu help
+show_config_help() {
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         ⚙️  Configuration - Help                         ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "${BOLD}${CYAN}Available Commands:${RESET}"
+    echo ""
+    echo -e "${BOLD}1. Edit Hosts${RESET}"
+    echo -e "   Manage your host list via SSH config file (~/.ssh/config)."
+    echo -e "   Add, edit, or remove host entries for your homelab servers."
+    echo -e "   ${GREEN}Usage:${RESET} Select option 1, edit in your preferred editor"
+    echo ""
+    echo -e "${BOLD}2. Edit Settings${RESET}"
+    echo -e "   Configure homelab tools global settings."
+    echo -e "   Set domain suffix (.home, .local) and IP detection method."
+    echo -e "   ${GREEN}Usage:${RESET} Select option 2, enter new settings"
+    echo ""
+    echo -e "${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo ""
+    read -p "$(echo -e ${YELLOW}Press Enter to return to menu...${RESET})"
+}
+
+# SSH submenu help
+show_ssh_help() {
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         🔑 SSH Tools - Help                               ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "${BOLD}${CYAN}Available Commands:${RESET}"
+    echo ""
+    echo -e "${BOLD}1. Copy SSH Key${RESET}"
+    echo -e "   Distribute your SSH public key to all hosts in your config."
+    echo -e "   Enables passwordless SSH login for easier management."
+    echo -e "   ${GREEN}Usage:${RESET} Select option 1, confirm distribution"
+    echo ""
+    echo -e "${BOLD}2. Cleanup Old Keys${RESET}"
+    echo -e "   Remove outdated or conflicting SSH host keys."
+    echo -e "   Useful when hosts are rebuilt or IPs change."
+    echo -e "   ${GREEN}Usage:${RESET} Select option 2, confirm cleanup"
+    echo ""
+    echo -e "${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo ""
+    read -p "$(echo -e ${YELLOW}Press Enter to return to menu...${RESET})"
+}
+
 show_motd_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         📝 MOTD Tools                                 ║"
+    echo -e "║         📝 MOTD Tools                                     ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "  ${YELLOW}1${RESET}) ${GREEN}Generate MOTD${RESET}           - Create template for one host"
@@ -124,7 +206,8 @@ show_motd_menu() {
     echo -e "  ${YELLOW}3${RESET}) ${GREEN}Deploy MOTD${RESET}             - Upload to host"
     echo -e "  ${YELLOW}4${RESET}) ${GREEN}List Templates${RESET}          - View all templates"
     echo ""
-    echo -e "  ${YELLOW}b${RESET}) ${MAGENTA}Back${RESET}"
+    echo -e "  ${YELLOW}h${RESET}) ${CYAN}Help${RESET}
+  ${YELLOW}b${RESET}) ${MAGENTA}Back${RESET}"
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 }
 
@@ -132,13 +215,15 @@ show_motd_menu() {
 show_config_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         ⚙️  Configuration                             ║"
+    echo -e "║         ⚙️  Configuration                                ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "  ${YELLOW}1${RESET}) ${GREEN}Edit Hosts${RESET}              - Manage host list (~/.ssh/config)"
     echo -e "  ${YELLOW}2${RESET}) ${GREEN}Edit Settings${RESET}           - Configure homelab tools"
     echo ""
-    echo -e "  ${YELLOW}b${RESET}) ${MAGENTA}Back${RESET}                    - Return to main menu"
+    echo -e "  ${YELLOW}h${RESET}) ${CYAN}Help${RESET}                    - Show submenu help
+  ${YELLOW}h${RESET}) ${CYAN}Help${RESET}                    - Show submenu help
+  ${YELLOW}b${RESET}) ${MAGENTA}Back${RESET}                    - Return to main menu"
     echo ""
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 }
@@ -147,13 +232,14 @@ show_config_menu() {
 show_ssh_menu() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🔑 SSH Tools                                  ║"
+    echo -e "║         🔑 SSH Tools                                      ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "  ${YELLOW}1${RESET}) ${GREEN}Copy SSH Key${RESET}            - Distribute key to hosts"
     echo -e "  ${YELLOW}2${RESET}) ${GREEN}Cleanup Old Keys${RESET}        - Remove outdated host keys"
     echo ""
-    echo -e "  ${YELLOW}b${RESET}) ${MAGENTA}Back${RESET}                    - Return to main menu"
+    echo -e "  ${YELLOW}h${RESET}) ${CYAN}Help${RESET}                    - Show submenu help
+  ${YELLOW}b${RESET}) ${MAGENTA}Back${RESET}                    - Return to main menu"
     echo ""
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 }
@@ -226,6 +312,9 @@ while true; do
                         echo ""
                         read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
                         ;;
+                    h|H|help)
+                        show_motd_help
+                        ;;
                     b|B|back)
                         break
                         ;;
@@ -256,6 +345,9 @@ while true; do
                         edit-config
                         echo ""
                         read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        ;;
+                    h|H|help)
+                        show_config_help
                         ;;
                     b|B|back)
                         break
@@ -296,6 +388,9 @@ while true; do
                             echo ""
                             read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
                         fi
+                        ;;
+                    h|H|help)
+                        show_ssh_help
                         ;;
                     b|B|back)
                         break

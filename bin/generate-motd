@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Generate MOTD template for homelab services
 # Author: J.Bakers
-# Version: 3.5.0-dev
+# Version: 3.5.0-dev.14
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -15,6 +15,17 @@ RESET='\033[0m'
 
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 CONFIG_FILE="/opt/homelab-tools/config.sh"
+
+# Systems that don't support MOTD (appliances, Docker, non-Linux)
+UNSUPPORTED_SYSTEMS=(
+    "homeassistant" "hass" "ha"           # Home Assistant (Docker)
+    "truenas"                              # TrueNAS (FreeBSD appliance)
+    "pfsense" "opnsense"                   # Firewall appliances
+    "windows" "win"                        # Windows systems
+    "unraid"                               # Unraid (different MOTD)
+    "synology" "nas"                       # Synology NAS
+    "qnap"                                 # QNAP NAS
+)
 
 # Load config
 if [[ -f "$CONFIG_FILE" ]]; then
@@ -80,6 +91,44 @@ if [[ ! "$SERVICE" =~ ^[a-zA-Z0-9._-]+$ ]]; then
     exit 1
 fi
 
+# Check if system is unsupported
+SERVICE_LOWER=$(echo "$SERVICE" | tr '[:upper:]' '[:lower:]')
+for unsupported in "${UNSUPPORTED_SYSTEMS[@]}"; do
+    if [[ "$SERVICE_LOWER" == "$unsupported" ]]; then
+        echo -e "${YELLOW}⚠${RESET} ${BOLD}$SERVICE${RESET} doesn't support MOTD"
+        echo ""
+        echo -e "${BOLD}Reason:${RESET}"
+        case "$unsupported" in
+            homeassistant|hass|ha)
+                echo -e "  Home Assistant runs in Docker without system access"
+                echo -e "  Use the web UI: ${CYAN}http://${SERVICE}${DOMAIN_SUFFIX}:8123${RESET}"
+                ;;
+            truenas)
+                echo -e "  TrueNAS is a FreeBSD appliance (not Linux)"
+                echo -e "  Use the web UI: ${CYAN}https://${SERVICE}${DOMAIN_SUFFIX}${RESET}"
+                ;;
+            pfsense|opnsense)
+                echo -e "  Firewall appliances don't support custom MOTD"
+                echo -e "  Use the web UI: ${CYAN}https://${SERVICE}${DOMAIN_SUFFIX}${RESET}"
+                ;;
+            windows|win)
+                echo -e "  Windows systems don't use MOTD"
+                echo -e "  Use RDP to connect"
+                ;;
+            unraid)
+                echo -e "  Unraid uses a different MOTD system"
+                echo -e "  Use the web UI: ${CYAN}http://${SERVICE}${DOMAIN_SUFFIX}${RESET}"
+                ;;
+            synology|nas|qnap)
+                echo -e "  NAS systems have proprietary operating systems"
+                echo -e "  Use the web UI: ${CYAN}http://${SERVICE}${DOMAIN_SUFFIX}:5000${RESET}"
+                ;;
+        esac
+        echo ""
+        exit 0
+    fi
+done
+
 mkdir -p "$TEMPLATES_DIR"
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
@@ -98,21 +147,21 @@ webui_port=""
 case "$SERVICE" in
     # Media Servers
     jellyfin*)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         service_name="Jellyfin${number:+ $number}"
         description="Media Server"
         has_webui="y"
         webui_port="8096"
         ;;
     plex*)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         service_name="Plex${number:+ $number}"
         description="Media Server"
         has_webui="y"
         webui_port="32400/web"
         ;;
     emby*)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         service_name="Emby${number:+ $number}"
         description="Media Server"
         has_webui="y"
@@ -206,7 +255,7 @@ case "$SERVICE" in
     # Network & DNS
     pihole*|pi-hole*)
         # Extract number if present (pihole2 -> 2)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         if [[ -n "$number" ]]; then
             service_name="Pi-hole $number"
         else
@@ -217,7 +266,7 @@ case "$SERVICE" in
         webui_port="80/admin"
         ;;
     adguard*)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         if [[ -n "$number" ]]; then
             service_name="AdGuard Home $number"
         else
@@ -258,14 +307,8 @@ case "$SERVICE" in
         has_webui="y"
         webui_port="8000"
         ;;
-    
+
     # Home Automation
-    homeassistant|hass|ha)
-        service_name="Home Assistant"
-        description="Home Automation"
-        has_webui="y"
-        webui_port="8123"
-        ;;
     nodered|node-red)
         service_name="Node-RED"
         description="Flow Programming"

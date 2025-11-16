@@ -3,7 +3,21 @@ set -euo pipefail
 
 # Installatie script voor Homelab Management Tools
 # Author: J.Bakers
-# Version: 3.5.0-dev
+# Version: 3.5.0-dev.14
+
+# Detect actual user (not root when using sudo)
+ACTUAL_USER="${SUDO_USER:-$USER}"
+ACTUAL_HOME=$(eval echo "~$ACTUAL_USER")
+
+# Helper function to run commands with or without sudo
+run_sudo() {
+    if [[ $EUID -eq 0 ]]; then
+        # Already root, no sudo needed
+        "$@"
+    else
+        sudo "$@"
+    fi
+}
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -13,9 +27,20 @@ RED='\033[0;31m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
+# Get version and branch info
+VERSION=$(grep -m1 "Version: " bin/homelab | sed 's/.*Version: //')
+BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+INSTALL_DATE=$(date '+%Y-%m-%d %H:%M:%S')
+
 echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗"
 echo -e "║         🏠 HOMELAB TOOLS - INSTALLATIE                    ║"
 echo -e "╚════════════════════════════════════════════════════════════╝${RESET}"
+echo ""
+echo -e "${BOLD}Installatie Info:${RESET}"
+echo -e "  Versie:  ${CYAN}$VERSION${RESET}"
+echo -e "  Branch:  ${CYAN}$BRANCH${RESET}"
+echo -e "  Datum:   ${CYAN}$INSTALL_DATE${RESET}"
+echo -e "  User:    ${CYAN}$ACTUAL_USER${RESET}"
 echo ""
 
 # Check of we in de juiste directory zijn
@@ -37,23 +62,23 @@ echo -e "${YELLOW}[1/5]${RESET} Installeer naar /opt (vereist sudo)..."
 if [[ -d "$INSTALL_DIR" ]]; then
     backup_dir="$INSTALL_DIR.backup.$(date +%Y%m%d_%H%M%S)"
     echo -e "${YELLOW}  →${RESET} Backup oude installatie naar $backup_dir"
-    sudo mv "$INSTALL_DIR" "$backup_dir"
+    run_sudo mv "$INSTALL_DIR" "$backup_dir"
 fi
 
 # Kopieer bestanden naar /opt (vereist sudo)
 echo -e "${YELLOW}  →${RESET} Kopieer bestanden naar $INSTALL_DIR..."
-sudo mkdir -p "$INSTALL_DIR"
-sudo cp -r "$(pwd)"/* "$INSTALL_DIR/"
-sudo cp -r "$(pwd)"/.gitignore "$INSTALL_DIR/" 2>/dev/null || true
+run_sudo mkdir -p "$INSTALL_DIR"
+run_sudo cp -r "$(pwd)"/* "$INSTALL_DIR/"
+run_sudo cp -r "$(pwd)"/.gitignore "$INSTALL_DIR/" 2>/dev/null || true
 echo -e "${GREEN}  ✓${RESET} Bestanden geïnstalleerd in /opt"
 # Verwijder oude config.sh zodat deze opnieuw wordt aangemaakt
-sudo rm -f "$INSTALL_DIR/config.sh" 2>/dev/null || true
+run_sudo rm -f "$INSTALL_DIR/config.sh" 2>/dev/null || true
 echo ""
 
 # 2. Maak alle scripts executable
 echo -e "${YELLOW}[2/5]${RESET} Configureer permissions..."
-sudo chmod +x "$INSTALL_DIR"/bin/* 2>/dev/null
-sudo chmod +x "$INSTALL_DIR"/*.sh 2>/dev/null
+run_sudo chmod +x "$INSTALL_DIR"/bin/* 2>/dev/null
+run_sudo chmod +x "$INSTALL_DIR"/*.sh 2>/dev/null
 echo -e "${GREEN}  ✓${RESET} Scripts zijn executable"
 echo ""
 
@@ -61,14 +86,16 @@ echo ""
 echo -e "${YELLOW}[3/5]${RESET} Configureer PATH..."
 
 # Maak ~/.local/bin directory
-BIN_DIR="$HOME/.local/bin"
+BIN_DIR="$ACTUAL_HOME/.local/bin"
 mkdir -p "$BIN_DIR"
+chown -R "$ACTUAL_USER:$ACTUAL_USER" "$ACTUAL_HOME/.local" 2>/dev/null || true
 
 # Creëer symlinks in ~/.local/bin (geen sudo nodig)
 echo -e "${YELLOW}  →${RESET} Maak symlinks in ~/.local/bin..."
 for cmd in "$INSTALL_DIR"/bin/*; do
     cmd_name=$(basename "$cmd")
     ln -sf "$INSTALL_DIR/bin/$cmd_name" "$BIN_DIR/$cmd_name"
+    chown -h "$ACTUAL_USER:$ACTUAL_USER" "$BIN_DIR/$cmd_name" 2>/dev/null || true
 done
 echo -e "${GREEN}  ✓${RESET} Commando's beschikbaar in ~/.local/bin"
 echo ""
@@ -76,28 +103,28 @@ echo ""
 # Voeg ~/.local/bin toe aan PATH in bashrc
 echo -e "${YELLOW}  →${RESET} Configureer PATH in ~/.bashrc..."
 
-if [[ -f "$HOME/.bashrc" ]]; then
+if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
     # Check of ~/.local/bin al in PATH staat
-    if grep -q 'PATH.*\.local/bin' "$HOME/.bashrc" 2>/dev/null; then
+    if grep -q 'PATH.*\.local/bin' "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
         echo -e "${GREEN}  ✓${RESET} ~/.local/bin al in PATH"
     else
-        echo "" >> "$HOME/.bashrc"
-        echo "# Homelab Management Tools" >> "$HOME/.bashrc"
-        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+        echo "" >> "$ACTUAL_HOME/.bashrc"
+        echo "# Homelab Management Tools" >> "$ACTUAL_HOME/.bashrc"
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$ACTUAL_HOME/.bashrc"
         echo -e "${GREEN}  ✓${RESET} PATH toegevoegd aan ~/.bashrc"
     fi
 else
     echo -e "${YELLOW}  ⚠${RESET} Geen .bashrc gevonden, maak nieuwe aan"
-    echo '# Homelab Management Tools' > "$HOME/.bashrc"
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+    echo '# Homelab Management Tools' > "$ACTUAL_HOME/.bashrc"
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$ACTUAL_HOME/.bashrc"
     echo -e "${GREEN}  ✓${RESET} .bashrc aangemaakt met PATH"
 fi
 
 # Voeg MOTD tip toe aan bashrc (alleen als nog niet aanwezig)
-if ! grep -q "Tip: Type.*homelab" "$HOME/.bashrc" 2>/dev/null; then
-    echo "" >> "$HOME/.bashrc"
-    echo "# Homelab Tools tip" >> "$HOME/.bashrc"
-    echo 'echo -e "\033[0;36mTip:\033[0m Type \033[1mhomelab\033[0m for available commands"' >> "$HOME/.bashrc"
+if ! grep -q "Tip: Type.*homelab" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
+    echo "" >> "$ACTUAL_HOME/.bashrc"
+    echo "# Homelab Tools tip" >> "$ACTUAL_HOME/.bashrc"
+    echo 'echo -e "\033[0;36mTip:\033[0m Type \033[1mhomelab\033[0m for available commands"' >> "$ACTUAL_HOME/.bashrc"
     echo -e "${GREEN}  ✓${RESET} MOTD tip toegevoegd aan ~/.bashrc"
 fi
 echo ""
@@ -106,8 +133,9 @@ echo ""
 echo -e "${YELLOW}[4/5]${RESET} Initialiseer templates..."
 
 # Templates in user home directory
-mkdir -p "$HOME/.local/share/homelab-tools/templates"
-echo -e "${GREEN}  ✓${RESET} Templates directory: $HOME/.local/share/homelab-tools/templates"
+mkdir -p "$ACTUAL_HOME/.local/share/homelab-tools/templates"
+chown -R "$ACTUAL_USER:$ACTUAL_USER" "$ACTUAL_HOME/.local/share/homelab-tools" 2>/dev/null || true
+echo -e "${GREEN}  ✓${RESET} Templates directory: $ACTUAL_HOME/.local/share/homelab-tools/templates"
 echo ""
 
 # 5. Configuratie
@@ -130,7 +158,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
     while true; do
         read -p "  Domein suffix (bijv. .home): " domain_suffix
         domain_suffix=${domain_suffix:-.home}
-        
+
         # Validate domain starts with dot if not empty
         if [[ -n "$domain_suffix" ]] && [[ ! "$domain_suffix" =~ ^\. ]]; then
             echo -e "  ${RED}✗ Domein moet beginnen met een punt (bijv. .home)${RESET}"
@@ -139,13 +167,15 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
         fi
         break
     done
-    
-    cat > "$CONFIG_FILE" << EOF
+
+    # Create config in temp file first, then move with sudo
+    TEMP_CONFIG=$(mktemp)
+    cat > "$TEMP_CONFIG" << EOF
 #!/bin/bash
 # Homelab Tools Installer
 # Installs to /opt/homelab-tools with system-wide access
 # Author: J.Bakers
-# Version: 3.5.0-dev
+# Version: 3.5.0-dev.14
 
 # Domain suffix voor je homelab
 # Wordt gebruikt voor Web UI URLs
@@ -153,9 +183,13 @@ DOMAIN_SUFFIX="$domain_suffix"
 
 # IP detectie methode
 # Opties: "hostname" of "ip"
-IP_METHOD="ip"
+IP_METHOD="hostname"
 EOF
-    
+
+    # Move temp config to final location with sudo
+    run_sudo mv "$TEMP_CONFIG" "$CONFIG_FILE"
+    run_sudo chmod 644 "$CONFIG_FILE"
+
     echo -e "${GREEN}  ✓${RESET} Configuratie opgeslagen: ${CYAN}$domain_suffix${RESET}"
 else
     echo -e "${GREEN}  ✓${RESET} Configuratie bestaat al"
@@ -170,7 +204,7 @@ echo -e "${BOLD}${CYAN}           🔑 SSH CONFIGURATIE                         
 echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 echo ""
 
-SSH_DIR="$HOME/.ssh"
+SSH_DIR="$ACTUAL_HOME/.ssh"
 SSH_CONFIG="$SSH_DIR/config"
 SSH_KEY="$SSH_DIR/id_ed25519"
 
@@ -271,7 +305,10 @@ echo -e "╚══════════════════════�
 echo ""
 echo -e "${GREEN}✓ Homelab Tools zijn geïnstalleerd!${RESET}"
 echo ""
-echo -e "${BOLD}${YELLOW}Volgende stappen:${RESET}"
+echo -e "${BOLD}Geïnstalleerde Versie:${RESET}"
+echo -e "  • Versie:     ${CYAN}$VERSION${RESET}"
+echo -e "  • Branch:     ${CYAN}$BRANCH${RESET}"
+echo -e "  • Datum:      ${CYAN}$INSTALL_DATE${RESET}"
 echo ""
 echo -e "${BOLD}Installatie locaties:${RESET}"
 echo -e "  • Programma:  ${CYAN}/opt/homelab-tools/${RESET}"

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Smart Release Tool - Combines version bumping with intelligent CHANGELOG generation
 # Author: J.Bakers
-# Version: 3.5.0-dev.14
+# Version: 3.5.0-dev.15
 
 # Colors
 CYAN='\033[0;36m'
@@ -85,7 +85,7 @@ fi
 # ============================================================================
 # Step 1: Analyze Git Commits
 # ============================================================================
-echo -e "${YELLOW}[1/7]${RESET} Analyzing commits since v$CURRENT_VERSION..."
+echo -e "${YELLOW}[1/6]${RESET} Analyzing commits since v$CURRENT_VERSION..."
 
 # Get commits since last tag
 LAST_TAG="v$CURRENT_VERSION"
@@ -132,7 +132,7 @@ echo ""
 # ============================================================================
 # Step 2: Update Version Numbers
 # ============================================================================
-echo -e "${YELLOW}[2/7]${RESET} Update version numbers..."
+echo -e "${YELLOW}[2/6]${RESET} Update version numbers..."
 
 # Update script headers
 find . -type f \( -name "*.sh" -o -path "*/bin/*" \) \
@@ -150,7 +150,7 @@ echo ""
 # ============================================================================
 # Step 3: Generate CHANGELOG Entry
 # ============================================================================
-echo -e "${YELLOW}[3/7]${RESET} Generate CHANGELOG entry..."
+echo -e "${YELLOW}[3/6]${RESET} Generate CHANGELOG entry..."
 
 # Build CHANGELOG content
 CHANGELOG_ENTRY="## v$NEW_VERSION ($(date '+%d %B %Y'))\n\n"
@@ -197,83 +197,9 @@ fi
 echo ""
 
 # ============================================================================
-# Step 4: Create Release Notes
+# Step 4: Review Changes
 # ============================================================================
-echo -e "${YELLOW}[4/7]${RESET} Create release notes..."
-
-RELEASE_NOTES="RELEASE_NOTES_v$NEW_VERSION.md"
-if [[ ! -f "$RELEASE_NOTES" ]]; then
-    # Determine release emoji
-    case "$BUMP_TYPE" in
-        major) TYPE_EMOJI="💥"; TYPE_DESC="Breaking Changes" ;;
-        minor) TYPE_EMOJI="✨"; TYPE_DESC="New Features" ;;
-        patch) TYPE_EMOJI="🐛"; TYPE_DESC="Bug Fixes" ;;
-    esac
-
-    cat > "$RELEASE_NOTES" << EOF
-# $TYPE_EMOJI Homelab Tools v$NEW_VERSION Release Notes
-
-**Release Date:** $(date '+%d %B %Y')
-**Author:** J.Bakers
-**Type:** $TYPE_DESC (v$CURRENT_VERSION → v$NEW_VERSION)
-
----
-
-## 🚀 What's New
-
-EOF
-
-    # Add auto-generated sections
-    [[ -n "$SECURITY" ]] && echo -e "### 🔒 Security Improvements\n\n$(echo -e "$SECURITY")" >> "$RELEASE_NOTES"
-    [[ -n "$FEATURES" ]] && echo -e "### ✨ New Features\n\n$(echo -e "$FEATURES")" >> "$RELEASE_NOTES"
-    [[ -n "$FIXES" ]] && echo -e "### 🐛 Bug Fixes\n\n$(echo -e "$FIXES")" >> "$RELEASE_NOTES"
-
-    cat >> "$RELEASE_NOTES" << EOF
-
----
-
-## 🔧 Upgrade Instructions
-
-### From v$CURRENT_VERSION or earlier
-
-\`\`\`bash
-cd ~/homelab-tools
-git pull
-sudo ./install.sh
-source ~/.bashrc
-\`\`\`
-
-### Fresh Install
-
-\`\`\`bash
-cd ~
-git clone https://github.com/JBakers/homelab-tools.git
-cd homelab-tools
-sudo ./install.sh
-source ~/.bashrc
-\`\`\`
-
----
-
-## 📝 Full Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for detailed changes.
-
----
-
-Made with ❤️ by [J.Bakers](https://github.com/JBakers)
-EOF
-
-    echo -e "${GREEN}  ✓${RESET} Created $RELEASE_NOTES"
-else
-    echo -e "${YELLOW}  →${RESET} Release notes already exist"
-fi
-echo ""
-
-# ============================================================================
-# Step 5: Review Changes
-# ============================================================================
-echo -e "${YELLOW}[5/7]${RESET} Review changes..."
+echo -e "${YELLOW}[4/6]${RESET} Review changes..."
 echo ""
 echo -e "${BOLD}${CYAN}Generated CHANGELOG Preview:${RESET}"
 echo -e "${CYAN}─────────────────────────────────────────────────────────${RESET}"
@@ -288,9 +214,9 @@ fi
 echo ""
 
 # ============================================================================
-# Step 6: Commit Changes
+# Step 5: Commit Changes
 # ============================================================================
-echo -e "${YELLOW}[6/7]${RESET} Stage and commit changes..."
+echo -e "${YELLOW}[5/6]${RESET} Stage and commit changes..."
 
 git add -A
 git commit -m "Release v$NEW_VERSION
@@ -307,15 +233,22 @@ echo -e "${GREEN}  ✓${RESET} Created commit"
 echo ""
 
 # ============================================================================
-# Step 7: Create Git Tag
+# Step 6: Create Git Tag
 # ============================================================================
-echo -e "${YELLOW}[7/7]${RESET} Create git tag..."
+echo -e "${YELLOW}[6/6]${RESET} Create git tag..."
+
+# Determine release type description
+case "$BUMP_TYPE" in
+    major) TYPE_DESC="Breaking Changes" ;;
+    minor) TYPE_DESC="New Features" ;;
+    patch) TYPE_DESC="Bug Fixes" ;;
+esac
 
 git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION
 
 $TYPE_DESC release
 
-See RELEASE_NOTES_v$NEW_VERSION.md for details.
+See CHANGELOG.md for details.
 "
 
 echo -e "${GREEN}  ✓${RESET} Created tag v$NEW_VERSION"
@@ -345,5 +278,6 @@ echo -e "   ${GREEN}git push origin v$NEW_VERSION${RESET}"
 echo -e "   ${GREEN}# Or push all tags: git push --tags${RESET}"
 echo ""
 echo -e "3. ${CYAN}Create GitHub release:${RESET}"
-echo -e "   ${GREEN}gh release create v$NEW_VERSION -F $RELEASE_NOTES${RESET}"
+echo -e "   ${GREEN}gh release create v$NEW_VERSION --generate-notes${RESET}"
+echo -e "   ${GREEN}# Or manually with CHANGELOG excerpt${RESET}"
 echo ""

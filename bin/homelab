@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Homelab Management Menu
 # Author: J.Bakers
-# Version: 3.5.0-dev.18
+# Version: 3.5.0-dev.19
 
 # Load shared menu helper library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -255,15 +255,17 @@ elif [[ "${1:-}" == "help" ]]; then
     exit 0
 fi
 
-# Interactief menu
+# Interactief menu met arrow navigation
 while true; do
-    show_menu
-    echo -ne "${BOLD}${GREEN}Choice:${RESET} "
-    read -n1 -s choice
-    echo ""  # Newline na input
-    
-    case $choice in
-        1)
+    # Show main menu with arrow navigation
+    result=$(show_arrow_menu "🏠 Homelab Management Tools v3.5.0-dev" \
+        "📝 MOTD Tools|Generate/deploy/list MOTDs" \
+        "⚙️  Configuration|Edit hosts & settings" \
+        "🔑 SSH Management|Keys & cleanup" \
+        "HELP" "QUIT")
+
+    case "$result" in
+        0)
             # MOTD submenu
             while true; do
                 show_motd_menu
@@ -327,7 +329,7 @@ while true; do
                 esac
             done
             ;;
-        2)
+        1)
             # Configuration submenu
             while true; do
                 show_config_menu
@@ -361,7 +363,7 @@ while true; do
                 esac
             done
             ;;
-        3)
+        2)
             # SSH submenu
             while true; do
                 show_ssh_menu
@@ -404,7 +406,19 @@ while true; do
                 esac
             done
             ;;
-        iddqd|IDDQD)
+        3)
+            # Help
+            show_detailed_help
+            echo ""
+            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            ;;
+        4|-1)
+            # Quit (selected or ESC)
+            echo -e "${GREEN}✓ Goodbye!${RESET}"
+            exit 0
+            ;;
+        "IDDQD")
+            # Easter egg
             clear
             echo ""
             echo -e "${RED}${BOLD}"
@@ -416,7 +430,7 @@ while true; do
             ██║  ██║██║   ██║██║   ██║██║╚██╔╝██║
             ██████╔╝╚██████╔╝╚██████╔╝██║ ╚═╝ ██║
             ╚═════╝  ╚═════╝  ╚═════╝ ╚═╝     ╚═╝
-            
+
 DOOMGUY
             echo -e "${RESET}"
             echo -e "${GREEN}              🎮 ${BOLD}GOD MODE ACTIVATED${RESET}${GREEN} 🎮${RESET}"
@@ -424,19 +438,6 @@ DOOMGUY
             echo -e "${YELLOW}         Degreelessness Mode: ${BOLD}INVINCIBLE${RESET}"
             echo ""
             sleep 2
-            ;;
-        h|H)
-            show_detailed_help
-            echo ""
-            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
-            ;;
-        q|Q|quit|exit)
-            echo -e "${GREEN}✓ Goodbye!${RESET}"
-            exit 0
-            ;;
-        *)
-            echo -e "${RED}✗ Invalid choice${RESET}"
-            sleep 1
             ;;
     esac
 done

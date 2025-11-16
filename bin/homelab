@@ -3,17 +3,21 @@ set -euo pipefail
 
 # Homelab Management Menu
 # Author: J.Bakers
-# Version: 3.5.0-dev.17
+# Version: 3.5.0-dev.18
 
-# Kleuren (zelfde stijl als MOTD)
-CYAN='\033[0;36m'
-# BLUE removed - using CYAN instead
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-MAGENTA='\033[0;35m'
-BOLD='\033[1m'
-RESET='\033[0m'
+# Load shared menu helper library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
+source "$LIB_DIR/menu-helpers.sh"
+
+# Kleuren (from menu-helpers.sh, but keep for backwards compat)
+CYAN="$MENU_CYAN"
+GREEN="$MENU_GREEN"
+YELLOW="$MENU_YELLOW"
+RED="$MENU_RED"
+MAGENTA="$MENU_MAGENTA"
+BOLD="$MENU_BOLD"
+RESET="$MENU_RESET"
 
 # Help functie (kort overzicht)
 show_help() {

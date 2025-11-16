@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Bulk generate MOTD templates for all hosts
 # Author: J.Bakers
-# Version: 3.5.0-dev.5
+# Version: 3.5.0-dev.6
 
 # Colors
 CYAN='\033[0;36m'
@@ -211,7 +211,7 @@ while true; do
                 overwrite=${overwrite:-1}
                 if [[ "$overwrite" != "1" ]]; then
                     echo -e "  ${YELLOW}→${RESET} Skipped"
-                    ((skipped++))
+                    skipped=$((skipped + 1))
                     echo ""
                     continue
                 fi
@@ -232,10 +232,10 @@ while true; do
 
             if [[ -f "$template_file" ]]; then
                 echo -e "  ${GREEN}✓${RESET} Generated successfully"
-                ((generated++))
+                generated=$((generated + 1))
             else
                 echo -e "  ${RED}✗${RESET} Generation failed"
-                ((failed++))
+                failed=$((failed + 1))
             fi
         else
             # Interactive mode: call generate-motd interactively
@@ -250,15 +250,16 @@ while true; do
 
             if [[ -f "$template_file" ]]; then
                 echo -e "  ${GREEN}✓${RESET} Generated"
-                ((generated++))
+                generated=$((generated + 1))
             else
                 echo -e "  ${YELLOW}→${RESET} Skipped or failed"
-                ((skipped++))
+                skipped=$((skipped + 1))
             fi
         fi
 
         echo ""
     done
+
 
     # Summary
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"

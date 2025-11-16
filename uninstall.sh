@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Homelab Tools Uninstaller
 # Author: J.Bakers
-# Version: 3.5.0-dev.7
+# Version: 3.5.0-dev.8
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -37,21 +37,9 @@ if [[ -d ".git" ]] && [[ -f "uninstall.sh" ]]; then
     exit 1
 fi
 
-echo -e "${YELLOW}⚠  WARNING:${RESET} This will remove Homelab Tools from your system."
-echo ""
-echo -e "${BOLD}What will be removed:${RESET}"
-echo -e "  • All scripts from ~/.local/bin/"
-echo -e "  • /opt/homelab-tools/ directory"
-echo -e "  • PATH entry from ~/.bashrc"
-echo ""
-echo -e "${BOLD}${GREEN}What will be KEPT (your data is safe):${RESET}"
-echo -e "  • ~/.ssh/ directory (SSH keys & config)"
-echo -e "  • All your host configurations"
-echo -e "  • Deployed MOTDs on remote hosts"
-echo ""
-
-read -p "Continue with uninstall? (y/N): " confirm
-confirm=${confirm:-n}
+# Ask for confirmation
+read -p "Uninstall Homelab Tools? (Y/n): " confirm
+confirm=${confirm:-y}
 
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     echo ""
@@ -88,30 +76,24 @@ done
 echo -e "${GREEN}  ✓${RESET} Verwijderd $removed symlink(s)"
 echo ""
 
-# Backup templates
+# Templates
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 
-echo -e "${YELLOW}[2/4]${RESET} Check MOTD templates..."
+echo -e "${YELLOW}[2/5]${RESET} Check MOTD templates..."
 if [[ -d "$TEMPLATES_DIR" ]]; then
     template_count=$(find "$TEMPLATES_DIR" -name "*.sh" 2>/dev/null | wc -l)
 
     if [[ $template_count -gt 0 ]]; then
-        backup_dir="$HOME/homelab-tools-backup-$(date +%Y%m%d_%H%M%S)"
         echo -e "${YELLOW}  →${RESET} Gevonden $template_count template(s)"
-        read -p "  Backup maken? (Y/n): " backup
-        backup=${backup:-y}
+        read -p "  Remove templates? (Y/n): " remove_templates
+        remove_templates=${remove_templates:-y}
 
-        if [[ "$backup" =~ ^[Yy]$ ]]; then
-            mkdir -p "$backup_dir"
-            cp -r "$TEMPLATES_DIR" "$backup_dir/"
-            echo -e "${GREEN}  ✓${RESET} Backup: ${CYAN}$backup_dir${RESET}"
+        if [[ "$remove_templates" =~ ^[Yy]$ ]]; then
+            rm -rf "$TEMPLATES_DIR"
+            echo -e "${GREEN}  ✓${RESET} Templates verwijderd"
         else
-            echo -e "${YELLOW}  →${RESET} Skip backup"
+            echo -e "${YELLOW}  →${RESET} Templates behouden"
         fi
-
-        # Verwijder templates directory
-        rm -rf "$TEMPLATES_DIR"
-        echo -e "${GREEN}  ✓${RESET} Templates directory verwijderd"
     else
         echo -e "${GREEN}  ✓${RESET} Geen templates gevonden"
     fi
@@ -120,22 +102,13 @@ else
 fi
 echo ""
 
-# Remove /opt/homelab-tools directory
-INSTALL_DIR="/opt/homelab-tools"
-echo -e "${YELLOW}[3/4]${RESET} Verwijder /opt/homelab-tools/ (vereist sudo)..."
-if [[ -d "$INSTALL_DIR" ]]; then
-    sudo rm -rf "$INSTALL_DIR"
-    echo -e "${GREEN}  ✓${RESET} Directory verwijderd"
-else
-    echo -e "${YELLOW}  →${RESET} Directory niet gevonden"
-fi
-
-# Also remove backup directories
+# Backup directories in /opt
+echo -e "${YELLOW}[3/5]${RESET} Check backup directories..."
 backup_count=$(sudo find /opt -maxdepth 1 -name "homelab-tools.backup.*" -type d 2>/dev/null | wc -l)
 if [[ $backup_count -gt 0 ]]; then
     echo -e "${YELLOW}  →${RESET} Gevonden $backup_count backup director(y/ies)"
-    read -p "  Ook backups verwijderen? (y/N): " remove_backups
-    remove_backups=${remove_backups:-n}
+    read -p "  Remove backups? (Y/n): " remove_backups
+    remove_backups=${remove_backups:-y}
 
     if [[ "$remove_backups" =~ ^[Yy]$ ]]; then
         sudo rm -rf /opt/homelab-tools.backup.*
@@ -143,11 +116,24 @@ if [[ $backup_count -gt 0 ]]; then
     else
         echo -e "${YELLOW}  →${RESET} Backups behouden"
     fi
+else
+    echo -e "${GREEN}  ✓${RESET} Geen backups gevonden"
+fi
+echo ""
+
+# Remove /opt/homelab-tools directory
+INSTALL_DIR="/opt/homelab-tools"
+echo -e "${YELLOW}[4/5]${RESET} Verwijder /opt/homelab-tools/..."
+if [[ -d "$INSTALL_DIR" ]]; then
+    sudo rm -rf "$INSTALL_DIR"
+    echo -e "${GREEN}  ✓${RESET} Directory verwijderd"
+else
+    echo -e "${YELLOW}  →${RESET} Directory niet gevonden"
 fi
 echo ""
 
 # Remove from bashrc
-echo -e "${YELLOW}[4/4]${RESET} Cleanup ~/.bashrc..."
+echo -e "${YELLOW}[5/5]${RESET} Cleanup ~/.bashrc..."
 if [[ -f "$HOME/.bashrc" ]] && grep -qi "homelab" "$HOME/.bashrc" 2>/dev/null; then
     # Create backup
     cp "$HOME/.bashrc" "$HOME/.bashrc.backup.$(date +%Y%m%d_%H%M%S)"

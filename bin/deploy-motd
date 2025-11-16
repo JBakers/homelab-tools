@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Deploy MOTD to remote host
 # Author: J.Bakers
-# Version: 3.5.0-dev.7
+# Version: 3.5.0-dev.8
 
 # Kleuren
 CYAN='\033[0;36m'

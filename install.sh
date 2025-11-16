@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Installatie script voor Homelab Management Tools
 # Author: J.Bakers
-# Version: 3.5.0-dev.3
+# Version: 3.5.0-dev.4
 
 # Detect actual user (not root when using sudo)
 ACTUAL_USER="${SUDO_USER:-$USER}"
@@ -134,6 +134,7 @@ echo -e "${YELLOW}[4/5]${RESET} Initialiseer templates..."
 
 # Templates in user home directory
 mkdir -p "$ACTUAL_HOME/.local/share/homelab-tools/templates"
+chown -R "$ACTUAL_USER:$ACTUAL_USER" "$ACTUAL_HOME/.local/share/homelab-tools" 2>/dev/null || true
 echo -e "${GREEN}  ✓${RESET} Templates directory: $ACTUAL_HOME/.local/share/homelab-tools/templates"
 echo ""
 
@@ -174,7 +175,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Homelab Tools Installer
 # Installs to /opt/homelab-tools with system-wide access
 # Author: J.Bakers
-# Version: 3.5.0-dev.3
+# Version: 3.5.0-dev.4
 
 # Domain suffix voor je homelab
 # Wordt gebruikt voor Web UI URLs

@@ -46,3 +46,6 @@ __pycache__/
 
 # Logs
 *.log
+
+# Commit change logs
+commit-changes.md

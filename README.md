@@ -1,7 +1,7 @@
 # 🏠 Homelab Management Tools v3.4.0 
 
 [![Version](https://img.shields.io/badge/version-3.4.0-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL--v3-blue.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/shell-bash-lightgrey.svg)](https://www.gnu.org/software/bash/)
 
 > **Professional command-line toolkit for managing homelab infrastructure with beautiful, colorful interfaces and intelligent automation.**

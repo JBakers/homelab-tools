@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Generate MOTD template for homelab services
 # Author: J.Bakers
-# Version: 3.5.0-dev.11
+# Version: 3.5.0-dev.12
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -98,21 +98,21 @@ webui_port=""
 case "$SERVICE" in
     # Media Servers
     jellyfin*)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         service_name="Jellyfin${number:+ $number}"
         description="Media Server"
         has_webui="y"
         webui_port="8096"
         ;;
     plex*)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         service_name="Plex${number:+ $number}"
         description="Media Server"
         has_webui="y"
         webui_port="32400/web"
         ;;
     emby*)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         service_name="Emby${number:+ $number}"
         description="Media Server"
         has_webui="y"
@@ -206,7 +206,7 @@ case "$SERVICE" in
     # Network & DNS
     pihole*|pi-hole*)
         # Extract number if present (pihole2 -> 2)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         if [[ -n "$number" ]]; then
             service_name="Pi-hole $number"
         else
@@ -217,7 +217,7 @@ case "$SERVICE" in
         webui_port="80/admin"
         ;;
     adguard*)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         if [[ -n "$number" ]]; then
             service_name="AdGuard Home $number"
         else

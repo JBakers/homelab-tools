@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Homelab Management Menu
 # Author: J.Bakers
-# Version: 3.5.0-dev.8
+# Version: 3.5.0-dev.9
 
 # Kleuren (zelfde stijl als MOTD)
 CYAN='\033[0;36m'
@@ -221,9 +221,7 @@ show_config_menu() {
     echo -e "  ${YELLOW}1${RESET}) ${GREEN}Edit Hosts${RESET}              - Manage host list (~/.ssh/config)"
     echo -e "  ${YELLOW}2${RESET}) ${GREEN}Edit Settings${RESET}           - Configure homelab tools"
     echo ""
-    echo -e "  ${YELLOW}h${RESET}) ${CYAN}Help${RESET}                    - Show submenu help
-  ${YELLOW}h${RESET}) ${CYAN}Help${RESET}                    - Show submenu help
-  ${YELLOW}b${RESET}) ${MAGENTA}Back${RESET}                    - Return to main menu"
+    echo -e "  ${YELLOW}h${RESET}) ${CYAN}Help${RESET}    ${YELLOW}b${RESET}) ${MAGENTA}Back${RESET}"
     echo ""
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 }

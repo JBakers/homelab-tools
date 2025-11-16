@@ -75,19 +75,18 @@ while true; do
     # Step 1: Choose style type
     echo -e "${BOLD}${CYAN}Step 1: Choose MOTD Style${RESET}"
     echo ""
-    echo -e "  ${GREEN}D${RESET}) ${BOLD}Default Clean MOTD${RESET}"
+    echo -e "  ${YELLOW}1${RESET}) ${BOLD}Default Clean MOTD${RESET}"
     echo -e "     ${YELLOW}→${RESET} Functional & informative, no ASCII art"
     echo ""
-    echo -e "  ${GREEN}A${RESET}) ${BOLD}ASCII Art MOTD${RESET}"
+    echo -e "  ${YELLOW}2${RESET}) ${BOLD}ASCII Art MOTD${RESET}"
     echo -e "     ${YELLOW}→${RESET} Choose from 6 artistic styles"
     echo ""
-    read -p "$(echo -e ${CYAN}Choose style type \(D/a\):${RESET} )" style_type
-    style_type=${style_type:-D}
-    style_type=$(echo "$style_type" | tr '[:lower:]' '[:upper:]')
+    read -p "$(echo -e ${CYAN}Choice \(1/2\):${RESET} )" style_type
+    style_type=${style_type:-1}
 
     # ASCII style selection with preview
     ascii_style=""
-    if [[ "$style_type" == "A" ]]; then
+    if [[ "$style_type" == "2" ]]; then
         echo ""
         echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
         echo ""
@@ -157,25 +156,24 @@ while true; do
     # Step 2: Choose generation mode
     echo -e "${BOLD}${CYAN}Step 2: Choose Generation Mode${RESET}"
     echo ""
-    echo -e "  ${GREEN}I${RESET}) ${BOLD}Interactive Mode${RESET}"
+    echo -e "  ${YELLOW}1${RESET}) ${BOLD}Interactive Mode${RESET}"
     echo -e "     ${YELLOW}→${RESET} Customize each host individually"
     echo -e "     ${YELLOW}→${RESET} Choose service name, description, web UI per host"
     echo ""
-    echo -e "  ${GREEN}S${RESET}) ${BOLD}Smart-Detect Mode${RESET} ${GREEN}[Recommended]${RESET}"
+    echo -e "  ${YELLOW}2${RESET}) ${BOLD}Smart-Detect Mode${RESET} ${GREEN}[Recommended]${RESET}"
     echo -e "     ${YELLOW}→${RESET} Automatic generation for all hosts"
     echo -e "     ${YELLOW}→${RESET} Uses chosen style with auto-detected settings"
     echo -e "     ${YELLOW}→${RESET} No prompts per host"
     echo ""
-    read -p "$(echo -e ${CYAN}Choose mode \(i/S\):${RESET} )" gen_mode
-    gen_mode=${gen_mode:-S}
-    gen_mode=$(echo "$gen_mode" | tr '[:lower:]' '[:upper:]')
+    read -p "$(echo -e ${CYAN}Choice \(1/2\):${RESET} )" gen_mode
+    gen_mode=${gen_mode:-2}
 
     echo ""
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
     echo ""
 
     # Show what will happen
-    if [[ "$gen_mode" == "I" ]]; then
+    if [[ "$gen_mode" == "1" ]]; then
         echo -e "${YELLOW}→${RESET} ${BOLD}Starting Interactive Mode...${RESET}"
         echo -e "  You will be prompted to customize each host individually"
     else
@@ -204,14 +202,14 @@ while true; do
         if [[ -f "$template_file" ]]; then
             echo -e "  ${YELLOW}⚠${RESET} Template already exists"
 
-            if [[ "$gen_mode" == "S" ]]; then
+            if [[ "$gen_mode" == "2" ]]; then
                 # Smart mode: always overwrite
                 echo -e "  ${GREEN}✓${RESET} Overwriting (Smart-detect mode)"
             else
                 # Interactive mode: ask
-                read -p "  Overwrite? (Y/n): " overwrite
-                overwrite=${overwrite:-y}
-                if [[ ! "$overwrite" =~ ^[Yy]$ ]]; then
+                read -p "  Overwrite? (1=Yes, 2=No): " overwrite
+                overwrite=${overwrite:-1}
+                if [[ "$overwrite" != "1" ]]; then
                     echo -e "  ${YELLOW}→${RESET} Skipped"
                     ((skipped++))
                     echo ""
@@ -221,7 +219,7 @@ while true; do
         fi
 
         # Generate based on mode
-        if [[ "$gen_mode" == "S" ]]; then
+        if [[ "$gen_mode" == "2" ]]; then
             # Smart-detect mode: auto-generate with chosen style
             echo -e "  ${YELLOW}→${RESET} Auto-generating..."
 
@@ -283,13 +281,13 @@ while true; do
         echo ""
         echo -e "${BOLD}Deploy all generated MOTDs to hosts now?${RESET}"
         echo ""
-        echo -e "  ${GREEN}Y${RESET}) Yes, deploy now via SSH"
-        echo -e "  ${GREEN}N${RESET}) No, I'll deploy manually later"
+        echo -e "  ${YELLOW}1${RESET}) Yes, deploy now via SSH"
+        echo -e "  ${YELLOW}2${RESET}) No, I'll deploy manually later"
         echo ""
-        read -p "$(echo -e ${CYAN}Deploy now? \(Y/n\):${RESET} )" deploy_all
-        deploy_all=${deploy_all:-y}
+        read -p "$(echo -e ${CYAN}Choice \(1/2\):${RESET} )" deploy_all
+        deploy_all=${deploy_all:-1}
 
-        if [[ "$deploy_all" =~ ^[Yy]$ ]]; then
+        if [[ "$deploy_all" == "1" ]]; then
             echo ""
             echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
             echo -e "${BOLD}${CYAN}                   🚀 Deploying MOTDs                       ${RESET}"
@@ -354,14 +352,13 @@ while true; do
     echo ""
     echo -e "${BOLD}What would you like to do next?${RESET}"
     echo ""
-    echo -e "  ${GREEN}M${RESET}) Return to main menu (generate more)"
-    echo -e "  ${GREEN}Q${RESET}) Quit"
+    echo -e "  ${YELLOW}1${RESET}) Return to main menu (generate more)"
+    echo -e "  ${YELLOW}2${RESET}) Quit"
     echo ""
-    read -p "$(echo -e ${CYAN}Choice \(m/Q\):${RESET} )" next_action
-    next_action=${next_action:-Q}
-    next_action=$(echo "$next_action" | tr '[:lower:]' '[:upper:]')
+    read -p "$(echo -e ${CYAN}Choice \(1/2\):${RESET} )" next_action
+    next_action=${next_action:-2}
 
-    if [[ "$next_action" == "M" ]]; then
+    if [[ "$next_action" == "1" ]]; then
         continue
     else
         echo ""

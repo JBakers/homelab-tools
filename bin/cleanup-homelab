@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Cleanup orphaned MOTD templates
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev
 
 CONFIG_FILE="$HOME/.ssh/config"
 MOTD_DIR="$HOME/.local/share/homelab-tools/templates"
@@ -12,7 +12,7 @@ MOTD_DIR="$HOME/.local/share/homelab-tools/templates"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
-BLUE='\033[0;36m'
+# BLUE removed - using CYAN instead
 NC='\033[0m' # No Color
 
 # Functie om orphaned templates te vinden
@@ -86,9 +86,9 @@ case "${1}" in
         ;;
 esac
 
-echo -e "${BLUE}=================================================${NC}"
-echo -e "${BLUE}         Homelab Cleanup Utility${NC}"
-echo -e "${BLUE}=================================================${NC}"
+echo -e "${CYAN}=================================================${NC}"
+echo -e "${CYAN}         Homelab Cleanup Utility${NC}"
+echo -e "${CYAN}=================================================${NC}"
 echo ""
 
 # Vind orphaned templates

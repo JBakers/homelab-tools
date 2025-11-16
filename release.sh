@@ -3,14 +3,14 @@ set -euo pipefail
 
 # Smart Release Tool - Combines version bumping with intelligent CHANGELOG generation
 # Author: J.Bakers
-# Version: 1.0.0
+# Version: 3.5.0-dev
 
 # Colors
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
-BLUE='\033[0;34m'
+# BLUE removed - using CYAN instead
 BOLD='\033[1m'
 RESET='\033[0m'
 
@@ -36,7 +36,7 @@ case "$BUMP_TYPE" in
 esac
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         🚀 SMART RELEASE TOOL                         ║"
+echo -e "║         🚀 SMART RELEASE TOOL                             ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
@@ -275,7 +275,7 @@ echo ""
 # ============================================================================
 echo -e "${YELLOW}[5/7]${RESET} Review changes..."
 echo ""
-echo -e "${BOLD}${BLUE}Generated CHANGELOG Preview:${RESET}"
+echo -e "${BOLD}${CYAN}Generated CHANGELOG Preview:${RESET}"
 echo -e "${CYAN}─────────────────────────────────────────────────────────${RESET}"
 head -50 CHANGELOG.md | tail -n +2 | head -40
 echo -e "${CYAN}─────────────────────────────────────────────────────────${RESET}"

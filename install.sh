@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Installatie script voor Homelab Management Tools
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -14,7 +14,7 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗"
-echo -e "║         🏠 HOMELAB TOOLS - INSTALLATIE                ║"
+echo -e "║         🏠 HOMELAB TOOLS - INSTALLATIE                    ║"
 echo -e "╚════════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
@@ -46,6 +46,8 @@ sudo mkdir -p "$INSTALL_DIR"
 sudo cp -r "$(pwd)"/* "$INSTALL_DIR/"
 sudo cp -r "$(pwd)"/.gitignore "$INSTALL_DIR/" 2>/dev/null || true
 echo -e "${GREEN}  ✓${RESET} Bestanden geïnstalleerd in /opt"
+# Verwijder oude config.sh zodat deze opnieuw wordt aangemaakt
+sudo rm -f "$INSTALL_DIR/config.sh" 2>/dev/null || true
 echo ""
 
 # 2. Maak alle scripts executable
@@ -89,6 +91,14 @@ else
     echo '# Homelab Management Tools' > "$HOME/.bashrc"
     echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
     echo -e "${GREEN}  ✓${RESET} .bashrc aangemaakt met PATH"
+fi
+
+# Voeg MOTD tip toe aan bashrc (alleen als nog niet aanwezig)
+if ! grep -q "Tip: Type.*homelab" "$HOME/.bashrc" 2>/dev/null; then
+    echo "" >> "$HOME/.bashrc"
+    echo "# Homelab Tools tip" >> "$HOME/.bashrc"
+    echo 'echo -e "\033[0;36mTip:\033[0m Type '\033[1mhomelab\033[0m' for available commands"' >> "$HOME/.bashrc"
+    echo -e "${GREEN}  ✓${RESET} MOTD tip toegevoegd aan ~/.bashrc"
 fi
 echo ""
 
@@ -135,7 +145,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Homelab Tools Installer
 # Installs to /opt/homelab-tools with system-wide access
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev
 
 # Domain suffix voor je homelab
 # Wordt gebruikt voor Web UI URLs

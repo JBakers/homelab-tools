@@ -88,7 +88,7 @@ if [[ ! -f "$TEMPLATE_FILE" ]]; then
 fi
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         🚀 MOTD Deploy                                ║"
+echo -e "║         🚀 MOTD Deploy                                    ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 echo -e "${BOLD}Service: ${GREEN}$SERVICE${RESET}"

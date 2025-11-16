@@ -32,7 +32,7 @@ if [[ ! "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         📝 VERSION UPDATE TOOL                        ║"
+echo -e "║         📝 VERSION UPDATE TOOL                            ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 echo -e "${BOLD}Updating to version:${RESET} ${CYAN}v$NEW_VERSION${RESET}"

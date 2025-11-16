@@ -52,7 +52,7 @@ esac
 NEW_VERSION="$MAJOR.$MINOR.$PATCH"
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         🚀 AUTOMATIC VERSION BUMP                     ║"
+echo -e "║         🚀 AUTOMATIC VERSION BUMP                         ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 echo -e "${BOLD}Bump type:${RESET}      ${YELLOW}$BUMP_TYPE${RESET}"

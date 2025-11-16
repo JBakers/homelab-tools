@@ -37,7 +37,7 @@ if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
 fi
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗${RESET}"
-echo -e "${BOLD}${CYAN}║         🔑 SSH Key Distribution                       ║${RESET}"
+echo -e "${BOLD}${CYAN}║         🔑 SSH Key Distribution                           ║${RESET}"
 echo -e "${BOLD}${CYAN}╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 

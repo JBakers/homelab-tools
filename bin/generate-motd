@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Generate MOTD template for homelab services
 # Author: J.Bakers
-# Version: 3.5.0-dev.12
+# Version: 3.5.0-dev.13
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -261,10 +261,10 @@ case "$SERVICE" in
     
     # Home Automation
     homeassistant|hass|ha)
-        service_name="Home Assistant"
-        description="Home Automation"
-        has_webui="y"
-        webui_port="8123"
+        echo -e "${YELLOW}⚠${RESET} Home Assistant runs in Docker and doesn't support MOTD"
+        echo -e "  Use the container's web UI instead: http://ha${DOMAIN_SUFFIX}:8123"
+        echo ""
+        exit 0
         ;;
     nodered|node-red)
         service_name="Node-RED"

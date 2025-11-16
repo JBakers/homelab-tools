@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Smart Release Tool - Combines version bumping with intelligent CHANGELOG generation
 # Author: J.Bakers
-# Version: 3.5.0-dev.15
+# Version: 3.5.0-dev.16
 
 # Colors
 CYAN='\033[0;36m'

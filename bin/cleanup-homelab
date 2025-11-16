@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Cleanup orphaned MOTD templates
 # Author: J.Bakers
-# Version: 3.5.0-dev.13
+# Version: 3.5.0-dev.14
 
 CONFIG_FILE="$HOME/.ssh/config"
 MOTD_DIR="$HOME/.local/share/homelab-tools/templates"

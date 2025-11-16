@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Bulk generate MOTD templates for all hosts
 # Author: J.Bakers
-# Version: 3.5.0-dev.13
+# Version: 3.5.0-dev.14
 
 # Colors
 CYAN='\033[0;36m'
@@ -15,6 +15,17 @@ RESET='\033[0m'
 
 SSH_CONFIG="$HOME/.ssh/config"
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
+
+# Systems that don't support MOTD (appliances, Docker, non-Linux)
+UNSUPPORTED_SYSTEMS=(
+    "homeassistant" "hass" "ha"           # Home Assistant (Docker)
+    "truenas"                              # TrueNAS (FreeBSD appliance)
+    "pfsense" "opnsense"                   # Firewall appliances
+    "windows" "win"                        # Windows systems
+    "unraid"                               # Unraid (different MOTD)
+    "synology" "nas"                       # Synology NAS
+    "qnap"                                 # QNAP NAS
+)
 
 show_help() {
     echo -e "${BOLD}${CYAN}bulk-generate-motd - Generate MOTDs for all hosts${RESET}"
@@ -198,12 +209,22 @@ while true; do
 
         echo -e "${BOLD}${CYAN}Host: ${hostname}${RESET}"
 
-        # Skip Home Assistant (doesn't support MOTD in Docker)
-        if [[ "$hostname" =~ ^(homeassistant|hass|ha)$ ]]; then
-            echo -e "  ${YELLOW}⚠${RESET} Home Assistant doesn't support MOTD (Docker)"
-            echo -e "  ${YELLOW}→${RESET} Skipped"
-            skipped=$((skipped + 1))
-            echo ""
+        # Check if system is unsupported
+        hostname_lower=$(echo "$hostname" | tr '[:upper:]' '[:lower:]')
+        is_unsupported=false
+        for unsupported in "${UNSUPPORTED_SYSTEMS[@]}"; do
+            if [[ "$hostname_lower" == "$unsupported" ]]; then
+                echo -e "  ${YELLOW}⚠${RESET} System doesn't support MOTD"
+                echo -e "  ${YELLOW}→${RESET} Skipped"
+                skipped=$((skipped + 1))
+                echo ""
+                is_unsupported=true
+                break
+            fi
+        done
+
+        # Skip to next host if unsupported
+        if [[ "$is_unsupported" == "true" ]]; then
             continue
         fi
 

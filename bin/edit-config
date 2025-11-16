@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Edit homelab tools configuration
 # Author: J.Bakers
-# Version: 3.5.0-dev.8
+# Version: 3.5.0-dev.9
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -26,7 +26,7 @@ if [[ -f "$CONFIG_FILE" ]]; then
 else
     echo -e "${YELLOW}⚠${RESET} No configuration found, using defaults"
     DOMAIN_SUFFIX=".home"
-    IP_METHOD="ip"
+    IP_METHOD="hostname"
 fi
 
 # Ask for new values (compact format)
@@ -52,11 +52,12 @@ if [[ "$new_ip_method" != "hostname" ]] && [[ "$new_ip_method" != "ip" ]]; then
     exit 1
 fi
 
-# Save configuration
-if ! cat > "$CONFIG_FILE" 2>/dev/null << EOF
+# Save configuration via temp file
+TEMP_CONFIG=$(mktemp)
+cat > "$TEMP_CONFIG" << EOF
 # Homelab Tools Configuration
 # Author: J.Bakers
-# Version: 3.5.0-dev.8
+# Version: 3.5.0-dev.9
 
 # Domain suffix voor je homelab
 # Wordt gebruikt voor Web UI URLs
@@ -66,13 +67,15 @@ DOMAIN_SUFFIX="$new_domain"
 # Opties: "hostname" of "ip"
 IP_METHOD="$new_ip_method"
 EOF
-then
+
+# Move temp file to final location with sudo
+if sudo mv "$TEMP_CONFIG" "$CONFIG_FILE" && sudo chmod 644 "$CONFIG_FILE"; then
     echo ""
     echo -e "${GREEN}✓${RESET} Configuration saved!"
 else
     echo ""
-    echo -e "${RED}✗${RESET} Kon configuratie niet opslaan (geen schrijfrechten)"
-    echo -e "  Probeer: ${GREEN}sudo edit-config${RESET}"
+    echo -e "${RED}✗${RESET} Kon configuratie niet opslaan"
+    rm -f "$TEMP_CONFIG"
     exit 1
 fi
 echo ""

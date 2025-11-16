@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Installatie script voor Homelab Management Tools
 # Author: J.Bakers
-# Version: 3.5.0-dev.8
+# Version: 3.5.0-dev.9
 
 # Detect actual user (not root when using sudo)
 ACTUAL_USER="${SUDO_USER:-$USER}"
@@ -175,7 +175,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Homelab Tools Installer
 # Installs to /opt/homelab-tools with system-wide access
 # Author: J.Bakers
-# Version: 3.5.0-dev.8
+# Version: 3.5.0-dev.9
 
 # Domain suffix voor je homelab
 # Wordt gebruikt voor Web UI URLs
@@ -183,7 +183,7 @@ DOMAIN_SUFFIX="$domain_suffix"
 
 # IP detectie methode
 # Opties: "hostname" of "ip"
-IP_METHOD="ip"
+IP_METHOD="hostname"
 EOF
 
     # Move temp config to final location with sudo

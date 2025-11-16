@@ -83,7 +83,7 @@ fi
 mkdir -p "$TEMPLATES_DIR"
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         📝 MOTD Generator                             ║"
+echo -e "║         📝 MOTD Generator                                 ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 echo -e "${BOLD}Service: ${GREEN}$SERVICE${RESET}"
@@ -658,7 +658,7 @@ cat > "$TEMPLATES_DIR/$SERVICE.sh" << 'TEMPLATE_START'
 CYAN='\033[0;96m'
 GREEN='\033[0;92m'
 YELLOW='\033[0;93m'
-BLUE='\033[0;94m'
+# BLUE removed - using CYAN instead
 MAGENTA='\033[0;95m'
 RED='\033[0;91m'
 BOLD='\033[1m'
@@ -688,11 +688,11 @@ if [[ "$ascii_font" == "none" ]]; then
     cat >> "$TEMPLATES_DIR/$SERVICE.sh" << 'TEMPLATE_CLEAN'
 
 echo ""
-echo -e "${BLUE}==========================================${NC}"
+echo -e "${CYAN}==========================================${NC}"
 echo -e "  ${CYAN}${BOLD}SERVICE_NAME_PLACEHOLDER${NC}"
 echo -e "  ${MAGENTA}DESCRIPTION_PLACEHOLDER${NC}"
 echo -e "  ${MAGENTA}by J.Bakers${NC}"
-echo -e "${BLUE}==========================================${NC}"
+echo -e "${CYAN}==========================================${NC}"
 echo ""
 echo -e "${GREEN}${BOLD}📊 System Information:${NC}"
 echo ""
@@ -721,7 +721,7 @@ echo ""
 echo -e "        ${CYAN}DESCRIPTION_PLACEHOLDER${NC}"
 echo -e "           ${MAGENTA}by J.Bakers${NC}"
 echo ""
-echo -e "${BLUE}==========================================${NC}"
+echo -e "${CYAN}==========================================${NC}"
 printf "%7s" ""
 echo -e "${GREEN}${BOLD}${UNDERLINE}📊 System Information:${NC}"
 echo ""
@@ -788,7 +788,7 @@ fi
 # Sluit af
 cat >> "$TEMPLATES_DIR/$SERVICE.sh" << 'TEMPLATE_END'
 echo ""
-echo -e "${BLUE}==========================================${NC}"
+echo -e "${CYAN}==========================================${NC}"
 echo ""
 TEMPLATE_END
 

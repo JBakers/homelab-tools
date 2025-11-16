@@ -5,6 +5,10 @@ set -euo pipefail
 # Author: J.Bakers
 # Version: 3.5.0-dev
 
+# Detect actual user (not root when using sudo)
+ACTUAL_USER="${SUDO_USER:-$USER}"
+ACTUAL_HOME=$(eval echo "~$ACTUAL_USER")
+
 # Kleuren
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
@@ -13,9 +17,20 @@ RED='\033[0;31m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
+# Get version and branch info
+VERSION=$(grep -m1 "Version: " bin/homelab | sed 's/.*Version: //')
+BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+INSTALL_DATE=$(date '+%Y-%m-%d %H:%M:%S')
+
 echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗"
 echo -e "║         🏠 HOMELAB TOOLS - INSTALLATIE                    ║"
 echo -e "╚════════════════════════════════════════════════════════════╝${RESET}"
+echo ""
+echo -e "${BOLD}Installatie Info:${RESET}"
+echo -e "  Versie:  ${CYAN}$VERSION${RESET}"
+echo -e "  Branch:  ${CYAN}$BRANCH${RESET}"
+echo -e "  Datum:   ${CYAN}$INSTALL_DATE${RESET}"
+echo -e "  User:    ${CYAN}$ACTUAL_USER${RESET}"
 echo ""
 
 # Check of we in de juiste directory zijn
@@ -61,14 +76,16 @@ echo ""
 echo -e "${YELLOW}[3/5]${RESET} Configureer PATH..."
 
 # Maak ~/.local/bin directory
-BIN_DIR="$HOME/.local/bin"
+BIN_DIR="$ACTUAL_HOME/.local/bin"
 mkdir -p "$BIN_DIR"
+chown -R "$ACTUAL_USER:$ACTUAL_USER" "$ACTUAL_HOME/.local" 2>/dev/null || true
 
 # Creëer symlinks in ~/.local/bin (geen sudo nodig)
 echo -e "${YELLOW}  →${RESET} Maak symlinks in ~/.local/bin..."
 for cmd in "$INSTALL_DIR"/bin/*; do
     cmd_name=$(basename "$cmd")
     ln -sf "$INSTALL_DIR/bin/$cmd_name" "$BIN_DIR/$cmd_name"
+    chown -h "$ACTUAL_USER:$ACTUAL_USER" "$BIN_DIR/$cmd_name" 2>/dev/null || true
 done
 echo -e "${GREEN}  ✓${RESET} Commando's beschikbaar in ~/.local/bin"
 echo ""
@@ -76,28 +93,28 @@ echo ""
 # Voeg ~/.local/bin toe aan PATH in bashrc
 echo -e "${YELLOW}  →${RESET} Configureer PATH in ~/.bashrc..."
 
-if [[ -f "$HOME/.bashrc" ]]; then
+if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
     # Check of ~/.local/bin al in PATH staat
-    if grep -q 'PATH.*\.local/bin' "$HOME/.bashrc" 2>/dev/null; then
+    if grep -q 'PATH.*\.local/bin' "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
         echo -e "${GREEN}  ✓${RESET} ~/.local/bin al in PATH"
     else
-        echo "" >> "$HOME/.bashrc"
-        echo "# Homelab Management Tools" >> "$HOME/.bashrc"
-        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+        echo "" >> "$ACTUAL_HOME/.bashrc"
+        echo "# Homelab Management Tools" >> "$ACTUAL_HOME/.bashrc"
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$ACTUAL_HOME/.bashrc"
         echo -e "${GREEN}  ✓${RESET} PATH toegevoegd aan ~/.bashrc"
     fi
 else
     echo -e "${YELLOW}  ⚠${RESET} Geen .bashrc gevonden, maak nieuwe aan"
-    echo '# Homelab Management Tools' > "$HOME/.bashrc"
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+    echo '# Homelab Management Tools' > "$ACTUAL_HOME/.bashrc"
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$ACTUAL_HOME/.bashrc"
     echo -e "${GREEN}  ✓${RESET} .bashrc aangemaakt met PATH"
 fi
 
 # Voeg MOTD tip toe aan bashrc (alleen als nog niet aanwezig)
-if ! grep -q "Tip: Type.*homelab" "$HOME/.bashrc" 2>/dev/null; then
-    echo "" >> "$HOME/.bashrc"
-    echo "# Homelab Tools tip" >> "$HOME/.bashrc"
-    echo 'echo -e "\033[0;36mTip:\033[0m Type \033[1mhomelab\033[0m for available commands"' >> "$HOME/.bashrc"
+if ! grep -q "Tip: Type.*homelab" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
+    echo "" >> "$ACTUAL_HOME/.bashrc"
+    echo "# Homelab Tools tip" >> "$ACTUAL_HOME/.bashrc"
+    echo 'echo -e "\033[0;36mTip:\033[0m Type \033[1mhomelab\033[0m for available commands"' >> "$ACTUAL_HOME/.bashrc"
     echo -e "${GREEN}  ✓${RESET} MOTD tip toegevoegd aan ~/.bashrc"
 fi
 echo ""
@@ -106,8 +123,8 @@ echo ""
 echo -e "${YELLOW}[4/5]${RESET} Initialiseer templates..."
 
 # Templates in user home directory
-mkdir -p "$HOME/.local/share/homelab-tools/templates"
-echo -e "${GREEN}  ✓${RESET} Templates directory: $HOME/.local/share/homelab-tools/templates"
+mkdir -p "$ACTUAL_HOME/.local/share/homelab-tools/templates"
+echo -e "${GREEN}  ✓${RESET} Templates directory: $ACTUAL_HOME/.local/share/homelab-tools/templates"
 echo ""
 
 # 5. Configuratie
@@ -170,7 +187,7 @@ echo -e "${BOLD}${CYAN}           🔑 SSH CONFIGURATIE                         
 echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 echo ""
 
-SSH_DIR="$HOME/.ssh"
+SSH_DIR="$ACTUAL_HOME/.ssh"
 SSH_CONFIG="$SSH_DIR/config"
 SSH_KEY="$SSH_DIR/id_ed25519"
 
@@ -271,7 +288,10 @@ echo -e "╚══════════════════════�
 echo ""
 echo -e "${GREEN}✓ Homelab Tools zijn geïnstalleerd!${RESET}"
 echo ""
-echo -e "${BOLD}${YELLOW}Volgende stappen:${RESET}"
+echo -e "${BOLD}Geïnstalleerde Versie:${RESET}"
+echo -e "  • Versie:     ${CYAN}$VERSION${RESET}"
+echo -e "  • Branch:     ${CYAN}$BRANCH${RESET}"
+echo -e "  • Datum:      ${CYAN}$INSTALL_DATE${RESET}"
 echo ""
 echo -e "${BOLD}Installatie locaties:${RESET}"
 echo -e "  • Programma:  ${CYAN}/opt/homelab-tools/${RESET}"

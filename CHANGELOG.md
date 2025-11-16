@@ -1,5 +1,44 @@
 # Changelog - Homelab Tools
 
+## v3.5.0-dev (Unreleased)
+
+**Development builds - Not yet released**
+
+After v3.4.0 release, multiple critical bugs were discovered. Development was rolled back to the `develop` branch for systematic bugfixing before the next stable release.
+
+### 🐛 Bug Fixes
+
+#### Installation & Configuration
+- **dev.1** - Initial development build numbering system with bump-dev.sh
+- **dev.2** - Add run_sudo helper for root environments (container compatibility)
+- **dev.3** - Fix config.sh creation using temp file + proper sudo handling
+- **dev.4** - Fix templates directory ownership for actual user (not root)
+
+#### Bulk Generate & Loop Issues
+- **dev.5** - Remove conflicting stdin redirection in bulk-generate
+- **dev.6** - Replace `(())` arithmetic with `$(())`, fixes bulk-generate loop hang
+- **dev.11** - Replace all remaining `(())` arithmetic - fixes copykey & cleanup-keys loops
+
+#### Uninstall Improvements
+- **dev.7** - Improve bashrc cleanup + add backup removal option
+- **dev.8** - Simplify with numbered defaults (1/2) + fix backup removal
+- **dev.10** - Add remote MOTD removal option + fix menu borders
+
+#### MOTD Generation
+- **dev.9** - Remove duplicate help output + fix config write permissions + default hostname
+- **dev.12** - Fix grep exit code causing script hang with `set -e` (plex and others)
+- **dev.13** - Skip Home Assistant detection (Docker incompatible)
+- **dev.14** - Add global unsupported systems list for better service detection
+
+### 📝 Changes from Previous Session
+- Version display in install menu (version/branch/date)
+- Bashrc tip now works correctly with sudo user detection
+- ASCII art preview menu in bulk-generate
+- All menu choices changed from letters (A/D/Y/N) to numbers (1/2/3)
+- Bulk-generate no longer stops after first server
+
+---
+
 ## v3.4.0 (16 November 2025)
 
 ### Major Changes

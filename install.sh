@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Installatie script voor Homelab Management Tools
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -145,7 +145,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Homelab Tools Installer
 # Installs to /opt/homelab-tools with system-wide access
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev
 
 # Domain suffix voor je homelab
 # Wordt gebruikt voor Web UI URLs

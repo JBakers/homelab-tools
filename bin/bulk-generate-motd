@@ -3,15 +3,20 @@ set -euo pipefail
 
 # Bulk generate MOTD templates for all hosts
 # Author: J.Bakers
-# Version: 3.5.0-dev.20
+# Version: 3.5.0-dev.21
 
-# Colors
-CYAN='\033[0;36m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BOLD='\033[1m'
-RESET='\033[0m'
+# Load shared menu helper library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
+source "$LIB_DIR/menu-helpers.sh"
+
+# Colors (from menu-helpers.sh)
+CYAN="$MENU_CYAN"
+GREEN="$MENU_GREEN"
+YELLOW="$MENU_YELLOW"
+RED="$MENU_RED"
+BOLD="$MENU_BOLD"
+RESET="$MENU_RESET"
 
 SSH_CONFIG="$HOME/.ssh/config"
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
@@ -203,21 +208,39 @@ while true; do
     skipped=0
     failed=0
 
+    # Initialize progress display for Smart-detect mode
+    if [[ "$gen_mode" == "2" ]]; then
+        init_progress
+    fi
+
     # Loop through hosts
+    local current=0
     for hostname in $hosts; do
         template_file="$TEMPLATES_DIR/${hostname}.sh"
+        ((current++))
 
-        echo -e "${BOLD}${CYAN}Host: ${hostname}${RESET}"
+        # Update progress bar for Smart-detect mode
+        if [[ "$gen_mode" == "2" ]]; then
+            show_progress $current $host_count "$hostname" "${YELLOW}Processing...${RESET}"
+        else
+            # Interactive mode: show traditional output
+            echo -e "${BOLD}${CYAN}Host: ${hostname}${RESET}"
+        fi
 
         # Check if system is unsupported
         hostname_lower=$(echo "$hostname" | tr '[:upper:]' '[:lower:]')
         is_unsupported=false
         for unsupported in "${UNSUPPORTED_SYSTEMS[@]}"; do
             if [[ "$hostname_lower" == "$unsupported" ]]; then
-                echo -e "  ${YELLOW}⚠${RESET} System doesn't support MOTD"
-                echo -e "  ${YELLOW}→${RESET} Skipped"
+                if [[ "$gen_mode" == "2" ]]; then
+                    show_progress $current $host_count "$hostname" "${YELLOW}⚠ System doesn't support MOTD - Skipped${RESET}"
+                    sleep 0.5
+                else
+                    echo -e "  ${YELLOW}⚠${RESET} System doesn't support MOTD"
+                    echo -e "  ${YELLOW}→${RESET} Skipped"
+                    echo ""
+                fi
                 skipped=$((skipped + 1))
-                echo ""
                 is_unsupported=true
                 break
             fi
@@ -230,13 +253,12 @@ while true; do
 
         # Check if template exists
         if [[ -f "$template_file" ]]; then
-            echo -e "  ${YELLOW}⚠${RESET} Template already exists"
-
             if [[ "$gen_mode" == "2" ]]; then
                 # Smart mode: always overwrite
-                echo -e "  ${GREEN}✓${RESET} Overwriting (Smart-detect mode)"
+                show_progress $current $host_count "$hostname" "${YELLOW}Template exists - Overwriting${RESET}"
             else
                 # Interactive mode: ask
+                echo -e "  ${YELLOW}⚠${RESET} Template already exists"
                 read -p "  Overwrite? (1=Yes, 2=No): " overwrite
                 overwrite=${overwrite:-1}
                 if [[ "$overwrite" != "1" ]]; then
@@ -251,31 +273,26 @@ while true; do
         # Generate based on mode
         if [[ "$gen_mode" == "2" ]]; then
             # Smart-detect mode: auto-generate with chosen style
-            echo -e "  ${YELLOW}→${RESET} Auto-generating..."
+            show_progress $current $host_count "$hostname" "${CYAN}Generating MOTD...${RESET}"
 
-            # Prepare input for generate-motd:
-            # - customize=n (use auto-detection)
-            # - style=$ascii_style
-            # - deploy=n (we'll do bulk deploy later)
-            # Echo pipe provides input and prevents stdin consumption from loop
+            # Prepare input for generate-motd
             echo -e "n\n${ascii_style}\nn\n" | generate-motd "$hostname" &>/dev/null
 
             if [[ -f "$template_file" ]]; then
-                echo -e "  ${GREEN}✓${RESET} Generated successfully"
+                show_progress $current $host_count "$hostname" "${GREEN}✓ Generated successfully${RESET}"
                 generated=$((generated + 1))
+                sleep 0.3
             else
-                echo -e "  ${RED}✗${RESET} Generation failed"
+                show_progress $current $host_count "$hostname" "${RED}✗ Generation failed${RESET}"
                 failed=$((failed + 1))
+                sleep 0.5
             fi
         else
             # Interactive mode: call generate-motd interactively
             echo -e "  ${YELLOW}→${RESET} Interactive customization..."
             echo ""
 
-            # Pre-fill with chosen ASCII style, but let user customize
-            # The user can still change everything in generate-motd
-            # We'll pass: customize=y, style=$ascii_style, and let them customize
-            # Echo pipe provides input and prevents stdin consumption from loop
+            # Pre-fill with chosen ASCII style
             echo -e "y\n${ascii_style}\nn\n" | generate-motd "$hostname"
 
             if [[ -f "$template_file" ]]; then
@@ -285,10 +302,15 @@ while true; do
                 echo -e "  ${YELLOW}→${RESET} Skipped or failed"
                 skipped=$((skipped + 1))
             fi
+            echo ""
         fi
-
-        echo ""
     done
+
+    # Finish progress display for Smart-detect mode
+    if [[ "$gen_mode" == "2" ]]; then
+        finish_progress
+        clear
+    fi
 
 
     # Summary
@@ -383,18 +405,28 @@ while true; do
     echo ""
     echo -e "${BOLD}What would you like to do next?${RESET}"
     echo ""
-    echo -e "  ${YELLOW}1${RESET}) Return to main menu (generate more)"
-    echo -e "  ${YELLOW}2${RESET}) Quit"
+    echo -e "  ${YELLOW}1${RESET}) Back to Homelab menu"
+    echo -e "  ${YELLOW}2${RESET}) Generate more (restart bulk-generate)"
+    echo -e "  ${YELLOW}3${RESET}) Quit"
     echo ""
-    read -p "$(echo -e ${CYAN}Choice \(1/2\):${RESET} )" next_action
-    next_action=${next_action:-2}
+    read -p "$(echo -e ${CYAN}Choice \(1/2/3\):${RESET} )" next_action
+    next_action=${next_action:-1}
 
-    if [[ "$next_action" == "1" ]]; then
-        continue
-    else
-        echo ""
-        echo -e "${GREEN}✓${RESET} Done! Have a great day!"
-        echo ""
-        break
-    fi
+    case "$next_action" in
+        1)
+            # Back to homelab main menu
+            break
+            ;;
+        2)
+            # Restart bulk-generate loop
+            continue
+            ;;
+        *)
+            # Quit
+            echo ""
+            echo -e "${GREEN}✓${RESET} Done! Have a great day!"
+            echo ""
+            exit 0
+            ;;
+    esac
 done

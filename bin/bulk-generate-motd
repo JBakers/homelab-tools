@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Bulk generate MOTD templates for all hosts
 # Author: J.Bakers
-# Version: 3.5.0-dev.12
+# Version: 3.5.0-dev.13
 
 # Colors
 CYAN='\033[0;36m'
@@ -197,6 +197,15 @@ while true; do
         template_file="$TEMPLATES_DIR/${hostname}.sh"
 
         echo -e "${BOLD}${CYAN}Host: ${hostname}${RESET}"
+
+        # Skip Home Assistant (doesn't support MOTD in Docker)
+        if [[ "$hostname" =~ ^(homeassistant|hass|ha)$ ]]; then
+            echo -e "  ${YELLOW}⚠${RESET} Home Assistant doesn't support MOTD (Docker)"
+            echo -e "  ${YELLOW}→${RESET} Skipped"
+            skipped=$((skipped + 1))
+            echo ""
+            continue
+        fi
 
         # Check if template exists
         if [[ -f "$template_file" ]]; then

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Homelab Tools Uninstaller
 # Author: J.Bakers
-# Version: 3.5.0-dev.9
+# Version: 3.5.0-dev.10
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -14,7 +14,7 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         🗑️  HOMELAB TOOLS - UNINSTALL               ║"
+echo -e "║         🗑️  HOMELAB TOOLS - UNINSTALL                ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
@@ -121,9 +121,53 @@ else
 fi
 echo ""
 
+# Remove MOTDs from remote hosts
+echo -e "${YELLOW}[4/6]${RESET} Check deployed MOTDs..."
+SSH_CONFIG="$HOME/.ssh/config"
+if [[ -f "$SSH_CONFIG" ]]; then
+    hosts=$(grep "^Host " "$SSH_CONFIG" | awk '{print $2}' | grep -v '\*' | sort -u)
+    host_count=$(echo "$hosts" | wc -w)
+
+    if [[ $host_count -gt 0 ]]; then
+        echo -e "${YELLOW}  →${RESET} Gevonden $host_count host(s) in SSH config"
+        read -p "  Remove MOTDs from remote hosts? (Y/n): " remove_motds
+        remove_motds=${remove_motds:-y}
+
+        if [[ "$remove_motds" =~ ^[Yy]$ ]]; then
+            echo ""
+            removed=0
+            failed=0
+
+            for hostname in $hosts; do
+                echo -e "  ${CYAN}$hostname${RESET}..."
+                if ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$hostname" "sudo rm -f /etc/update-motd.d/99-homelab" 2>/dev/null; then
+                    echo -e "    ${GREEN}✓${RESET} MOTD verwijderd"
+                    removed=$((removed + 1))
+                else
+                    echo -e "    ${YELLOW}→${RESET} Niet bereikbaar of geen MOTD"
+                    failed=$((failed + 1))
+                fi
+            done
+
+            echo ""
+            echo -e "${GREEN}  ✓${RESET} Verwijderd van $removed host(s)"
+            if [[ $failed -gt 0 ]]; then
+                echo -e "${YELLOW}  →${RESET} $failed host(s) niet bereikbaar"
+            fi
+        else
+            echo -e "${YELLOW}  →${RESET} MOTDs behouden op remote hosts"
+        fi
+    else
+        echo -e "${GREEN}  ✓${RESET} Geen hosts gevonden in SSH config"
+    fi
+else
+    echo -e "${GREEN}  ✓${RESET} Geen SSH config gevonden"
+fi
+echo ""
+
 # Remove /opt/homelab-tools directory
 INSTALL_DIR="/opt/homelab-tools"
-echo -e "${YELLOW}[4/5]${RESET} Verwijder /opt/homelab-tools/..."
+echo -e "${YELLOW}[5/6]${RESET} Verwijder /opt/homelab-tools/..."
 if [[ -d "$INSTALL_DIR" ]]; then
     sudo rm -rf "$INSTALL_DIR"
     echo -e "${GREEN}  ✓${RESET} Directory verwijderd"
@@ -133,7 +177,7 @@ fi
 echo ""
 
 # Remove from bashrc
-echo -e "${YELLOW}[5/5]${RESET} Cleanup ~/.bashrc..."
+echo -e "${YELLOW}[6/6]${RESET} Cleanup ~/.bashrc..."
 if [[ -f "$HOME/.bashrc" ]] && grep -qi "homelab" "$HOME/.bashrc" 2>/dev/null; then
     # Create backup
     cp "$HOME/.bashrc" "$HOME/.bashrc.backup.$(date +%Y%m%d_%H%M%S)"
@@ -156,16 +200,19 @@ echo ""
 
 # Summary
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║           ✅ UNINSTALL VOLTOOID                      ║"
+echo -e "║         ✅ UNINSTALL VOLTOOID                        ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 echo -e "${GREEN}✓ Homelab Tools succesvol verwijderd!${RESET}"
 echo ""
-echo -e "${BOLD}${GREEN}Je data is veilig:${RESET}"
-echo -e "  • SSH keys:       ${CYAN}~/.ssh/${RESET}"
-echo -e "  • SSH config:     ${CYAN}~/.ssh/config${RESET}"
-echo -e "  • Templates:      ${CYAN}$HOME/.local/share/homelab-tools/${RESET}"
-echo -e "  • Remote MOTDs:   ${CYAN}Nog steeds deployed${RESET}"
+echo -e "${BOLD}${GREEN}Belangrijke informatie:${RESET}"
+echo -e "  • SSH keys:       ${CYAN}Behouden in ~/.ssh/${RESET}"
+echo -e "  • SSH config:     ${CYAN}Behouden in ~/.ssh/config${RESET}"
+
+# Only show remote MOTDs message if they weren't removed
+if [[ "${remove_motds:-n}" != "y" ]]; then
+    echo -e "  • Remote MOTDs:   ${YELLOW}Nog steeds deployed op hosts${RESET}"
+fi
 
 if [[ -n "${backup_dir:-}" ]] && [[ -d "${backup_dir}" ]]; then
     echo -e "  • Backup:         ${CYAN}$backup_dir${RESET}"

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Migrate homelab-tools from ~/homelab-tools to /opt/homelab-tools
 # Author: J.Bakers
-# Version: 3.5.0-dev.9
+# Version: 3.5.0-dev.10
 
 # Kleuren
 CYAN='\033[0;36m'

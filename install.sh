@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Installatie script voor Homelab Management Tools
 # Author: J.Bakers
-# Version: 3.5.0-dev.22
+# Version: 3.5.0-dev.23
 
 # Detect actual user (not root when using sudo)
 ACTUAL_USER="${SUDO_USER:-$USER}"
@@ -79,7 +79,9 @@ echo ""
 echo -e "${YELLOW}[2/5]${RESET} Configureer permissions..."
 run_sudo chmod +x "$INSTALL_DIR"/bin/* 2>/dev/null
 run_sudo chmod +x "$INSTALL_DIR"/*.sh 2>/dev/null
+run_sudo chmod 755 "$INSTALL_DIR"/lib/* 2>/dev/null
 echo -e "${GREEN}  ✓${RESET} Scripts zijn executable"
+echo -e "${GREEN}  ✓${RESET} Library files zijn readable"
 echo ""
 
 # 3. Configureer PATH
@@ -175,7 +177,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Homelab Tools Installer
 # Installs to /opt/homelab-tools with system-wide access
 # Author: J.Bakers
-# Version: 3.5.0-dev.22
+# Version: 3.5.0-dev.23
 
 # Domain suffix voor je homelab
 # Wordt gebruikt voor Web UI URLs

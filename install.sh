@@ -3,11 +3,21 @@ set -euo pipefail
 
 # Installatie script voor Homelab Management Tools
 # Author: J.Bakers
-# Version: 3.5.0-dev.1
+# Version: 3.5.0-dev.2
 
 # Detect actual user (not root when using sudo)
 ACTUAL_USER="${SUDO_USER:-$USER}"
 ACTUAL_HOME=$(eval echo "~$ACTUAL_USER")
+
+# Helper function to run commands with or without sudo
+run_sudo() {
+    if [[ $EUID -eq 0 ]]; then
+        # Already root, no sudo needed
+        "$@"
+    else
+        sudo "$@"
+    fi
+}
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -52,23 +62,23 @@ echo -e "${YELLOW}[1/5]${RESET} Installeer naar /opt (vereist sudo)..."
 if [[ -d "$INSTALL_DIR" ]]; then
     backup_dir="$INSTALL_DIR.backup.$(date +%Y%m%d_%H%M%S)"
     echo -e "${YELLOW}  →${RESET} Backup oude installatie naar $backup_dir"
-    sudo mv "$INSTALL_DIR" "$backup_dir"
+    run_sudo mv "$INSTALL_DIR" "$backup_dir"
 fi
 
 # Kopieer bestanden naar /opt (vereist sudo)
 echo -e "${YELLOW}  →${RESET} Kopieer bestanden naar $INSTALL_DIR..."
-sudo mkdir -p "$INSTALL_DIR"
-sudo cp -r "$(pwd)"/* "$INSTALL_DIR/"
-sudo cp -r "$(pwd)"/.gitignore "$INSTALL_DIR/" 2>/dev/null || true
+run_sudo mkdir -p "$INSTALL_DIR"
+run_sudo cp -r "$(pwd)"/* "$INSTALL_DIR/"
+run_sudo cp -r "$(pwd)"/.gitignore "$INSTALL_DIR/" 2>/dev/null || true
 echo -e "${GREEN}  ✓${RESET} Bestanden geïnstalleerd in /opt"
 # Verwijder oude config.sh zodat deze opnieuw wordt aangemaakt
-sudo rm -f "$INSTALL_DIR/config.sh" 2>/dev/null || true
+run_sudo rm -f "$INSTALL_DIR/config.sh" 2>/dev/null || true
 echo ""
 
 # 2. Maak alle scripts executable
 echo -e "${YELLOW}[2/5]${RESET} Configureer permissions..."
-sudo chmod +x "$INSTALL_DIR"/bin/* 2>/dev/null
-sudo chmod +x "$INSTALL_DIR"/*.sh 2>/dev/null
+run_sudo chmod +x "$INSTALL_DIR"/bin/* 2>/dev/null
+run_sudo chmod +x "$INSTALL_DIR"/*.sh 2>/dev/null
 echo -e "${GREEN}  ✓${RESET} Scripts zijn executable"
 echo ""
 
@@ -162,7 +172,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Homelab Tools Installer
 # Installs to /opt/homelab-tools with system-wide access
 # Author: J.Bakers
-# Version: 3.5.0-dev.1
+# Version: 3.5.0-dev.2
 
 # Domain suffix voor je homelab
 # Wordt gebruikt voor Web UI URLs

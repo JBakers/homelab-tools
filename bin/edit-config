@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Edit homelab tools configuration
 # Author: J.Bakers
-# Version: 3.5.0-dev.1
+# Version: 3.5.0-dev.2
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -56,7 +56,7 @@ fi
 if ! cat > "$CONFIG_FILE" 2>/dev/null << EOF
 # Homelab Tools Configuration
 # Author: J.Bakers
-# Version: 3.5.0-dev.1
+# Version: 3.5.0-dev.2
 
 # Domain suffix voor je homelab
 # Wordt gebruikt voor Web UI URLs

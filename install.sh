@@ -19,6 +19,22 @@ run_sudo() {
     fi
 }
 
+# Helper function for interactive read (works with curl|bash)
+# When stdin is piped, read from /dev/tty instead
+# Usage: value=$(read_input "prompt: ")
+read_input() {
+    local prompt="$1"
+    local input
+    if [[ -t 0 ]]; then
+        # stdin is a terminal, read normally
+        read -r -p "$prompt" input
+    else
+        # stdin is piped (curl|bash), read from /dev/tty
+        read -r -p "$prompt" input </dev/tty
+    fi
+    echo "$input"
+}
+
 # Kleuren
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
@@ -91,7 +107,7 @@ if [[ -d "$LEGACY_DIR" ]] && [[ "$LEGACY_DIR" != "$(pwd)" ]]; then
     echo -e "  ${CYAN}2${RESET}) Backup only"
     echo -e "  ${CYAN}3${RESET}) Keep it"
     echo ""
-    read -p "Choice (1/2/3): " legacy_choice
+    legacy_choice=$(read_input "Choice (1/2/3): ")
     legacy_choice=${legacy_choice:-1}
     
     case "$legacy_choice" in
@@ -257,7 +273,7 @@ if grep -q "HLT_BANNER" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
     echo -e "${GREEN}  ✓${RESET} Welcome banner already configured"
 else
     echo ""
-    read -p "Add a welcome banner to your shell? (Y/n): " add_banner
+    add_banner=$(read_input "Add a welcome banner to your shell? (Y/n): ")
     add_banner=${add_banner:-y}
     
     if [[ "$add_banner" =~ ^[Yy]$ ]]; then
@@ -270,7 +286,7 @@ else
 if [[ -z "$HLT_BANNER" ]] || [[ "$HLT_BANNER" != "0" ]]; then
     # Show banner only for interactive shells, not in VS Code
     if [[ $- == *i* ]] && [[ -z "$VSCODE_INJECTION" ]] && [[ -z "$TERM_PROGRAM" ]]; then
-        cat << "EOF"
+        cat << "ASCIIART"
 
   _   _                      _       _       _____           _     
  | | | | ___  _ __ ___   ___| | __ _| |__   |_   _|__   ___ | |___ 
@@ -278,11 +294,11 @@ if [[ -z "$HLT_BANNER" ]] || [[ "$HLT_BANNER" != "0" ]]; then
  |  _  | (_) | | | | | |  __/ | (_| | |_) |   | | (_) | (_) | \__ \
  |_| |_|\___/|_| |_| |_|\___|_|\__,_|_.__/    |_|\___/ \___/|_|___/
 
-EOF
-        echo -e \"\\033[0;36m------------------------------------------------------------\\033[0m\"
-        echo -e \"\\033[0;32mWelcome back, \$USER!\\033[0m\"
-        echo \"Hostname: \$HOSTNAME\"
-        echo \"\$(date +'%A %d %B %Y, %H:%M')\"
+ASCIIART
+        echo -e "\033[0;36m------------------------------------------------------------\033[0m"
+        echo -e "\033[0;32mWelcome back, $USER!\033[0m"
+        echo "Hostname: $HOSTNAME"
+        echo "$(date +'%A %d %B %Y, %H:%M')"
         
         # Show version if available
         if [[ -f /opt/homelab-tools/VERSION ]]; then
@@ -328,7 +344,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
     echo ""
     
     while true; do
-        read -p "  Domain suffix (e.g. .home): " domain_suffix
+        domain_suffix=$(read_input "  Domain suffix (e.g. .home): ")
         domain_suffix=${domain_suffix:-.home}
 
         # Validate domain starts with dot if not empty
@@ -385,7 +401,7 @@ SSH_KEY="$SSH_DIR/id_ed25519"
 if [[ ! -d "$SSH_DIR" ]]; then
     echo -e "${YELLOW}⚠ SSH directory not found${RESET}"
     echo ""
-    read -p "Create SSH setup? (Y/n): " setup_ssh
+    setup_ssh=$(read_input "Create SSH setup? (Y/n): ")
     setup_ssh=${setup_ssh:-y}
     
     if [[ "$setup_ssh" =~ ^[Yy]$ ]]; then
@@ -402,13 +418,13 @@ fi
 if [[ -d "$SSH_DIR" ]] && [[ ! -f "$SSH_KEY" ]] && [[ ! -f "$SSH_DIR/id_rsa" ]]; then
     echo -e "${YELLOW}⚠ No SSH keys found${RESET}"
     echo ""
-    read -p "Generate SSH key? (Y/n): " gen_key
+    gen_key=$(read_input "Generate SSH key? (Y/n): ")
     gen_key=${gen_key:-y}
     
     if [[ "$gen_key" =~ ^[Yy]$ ]]; then
         echo ""
         echo -e "${YELLOW}→${RESET} Generating SSH key (ed25519)..."
-        read -p "Email for SSH key: " ssh_email
+        ssh_email=$(read_input "Email for SSH key: ")
         
         if [[ -n "$ssh_email" ]]; then
             ssh-keygen -t ed25519 -C "$ssh_email" -f "$SSH_KEY" -N ""
@@ -428,7 +444,7 @@ fi
 if [[ -d "$SSH_DIR" ]] && [[ ! -f "$SSH_CONFIG" ]]; then
     echo -e "${YELLOW}⚠ SSH config not found${RESET}"
     echo ""
-    read -p "Create SSH config? (Y/n): " create_config
+    create_config=$(read_input "Create SSH config? (Y/n): ")
     create_config=${create_config:-y}
     
     if [[ "$create_config" =~ ^[Yy]$ ]]; then
@@ -451,7 +467,7 @@ EOF
         echo -e "${GREEN}✓${RESET} SSH config created"
         echo ""
         echo -e "${BOLD}Add hosts now?${RESET}"
-        read -p "Edit SSH config? (Y/n): " edit_config
+        edit_config=$(read_input "Edit SSH config? (Y/n): ")
         edit_config=${edit_config:-y}
         
         if [[ "$edit_config" =~ ^[Yy]$ ]]; then

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Installatie script voor Homelab Management Tools
 # Author: J.Bakers
-# Version: 3.5.0-dev.30
+# Version: 3.5.0-dev.31
 
 # Detect actual user (not root when using sudo)
 ACTUAL_USER="${SUDO_USER:-$USER}"
@@ -169,11 +169,12 @@ clean_user_data() {
 # If an existing install is present, ask what to do
 if [[ -d "$INSTALL_DIR" ]]; then
     echo -e "${YELLOW}⚠ Existing installation detected at ${CYAN}$INSTALL_DIR${RESET}"
+    echo ""
     echo -e "${BOLD}Choose an action:${RESET}"
     echo -e "  ${CYAN}1${RESET}) Update (backup old, then install) ${YELLOW}(default)${RESET}"
-    echo -e "  ${CYAN}2${RESET}) Remove and exit (keep user configs/templates)"
-    echo -e "  ${CYAN}3${RESET}) Full uninstall and exit (remove configs/templates)"
-    echo -e "  ${CYAN}4${RESET}) Remove and clean install (wipe configs/templates, then install)"
+    echo -e "  ${CYAN}2${RESET}) Clean install (remove old, wipe configs, then install) ${RED}(removes templates/configs)${RESET}"
+    echo -e "  ${CYAN}3${RESET}) Remove only (keep templates/configs)"
+    echo -e "  ${CYAN}4${RESET}) Complete uninstall ${RED}(removes everything including templates/configs)${RESET}"
     echo ""
     existing_choice=$(read_input "Choice (1/2/3/4): ")
     existing_choice=${existing_choice:-1}
@@ -183,26 +184,26 @@ if [[ -d "$INSTALL_DIR" ]]; then
             echo -e "${YELLOW}→${RESET} Proceeding with update (will backup old install)"
             ;;
         2)
+            echo -e "${YELLOW}→${RESET} Performing clean install (removing old data)..."
+            run_sudo rm -rf "$INSTALL_DIR"
+            remove_symlinks
+            clean_user_data
+            echo -e "${GREEN}✓${RESET} Old installation and user data removed; continuing with clean install."
+            ;;
+        3)
             echo -e "${YELLOW}→${RESET} Removing existing installation..."
             run_sudo rm -rf "$INSTALL_DIR"
             remove_symlinks
             echo -e "${GREEN}✓${RESET} Removed. Exiting per selection."
             exit 0
             ;;
-        3)
-            echo -e "${YELLOW}→${RESET} Performing full uninstall..."
+        4)
+            echo -e "${RED}→${RESET} Performing complete uninstall..."
             run_sudo rm -rf "$INSTALL_DIR"
             remove_symlinks
             clean_user_data
             echo -e "${GREEN}✓${RESET} Fully uninstalled. Exiting per selection."
             exit 0
-            ;;
-        4)
-            echo -e "${YELLOW}→${RESET} Removing existing installation for clean install..."
-            run_sudo rm -rf "$INSTALL_DIR"
-            remove_symlinks
-            clean_user_data
-            echo -e "${GREEN}✓${RESET} Old installation removed; continuing with clean install."
             ;;
         *)
             echo -e "${YELLOW}→${RESET} Invalid choice; defaulting to Update"
@@ -430,7 +431,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Homelab Tools Installer
 # Installs to /opt/homelab-tools with system-wide access
 # Author: J.Bakers
-# Version: 3.5.0-dev.30
+# Version: 3.5.0-dev.31
 
 # Domain suffix for your homelab
 # Used for Web UI URLs

@@ -512,7 +512,11 @@ fi
 echo ""
 
 # Vraag bevestiging of override (default = n = direct doorgaan)
-read -p "$(echo -e ${YELLOW}Customize? \(y/N\):${RESET} )" customize
+read -p "$(echo -e ${YELLOW}Customize? \(y/N/q=cancel\):${RESET} )" customize
+if [[ "$customize" == "q" || "$customize" == "Q" ]]; then
+    echo -e "${YELLOW}Cancelled${RESET}"
+    exit 0
+fi
 customize=${customize:-n}
 
 if [[ "$customize" == "y" ]] || [[ "$customize" == "Y" ]]; then
@@ -575,7 +579,11 @@ else
 fi
 
 echo ""
-read -p "$(echo -e ${GREEN}Kies stijl [1-6, p voor preview]:${RESET} )" style_choice
+read -p "$(echo -e ${GREEN}Kies stijl [1-6, p=preview, q=cancel]:${RESET} )" style_choice
+if [[ "$style_choice" == "q" || "$style_choice" == "Q" ]]; then
+    echo -e "${YELLOW}Cancelled${RESET}"
+    exit 0
+fi
 
 # Preview mode
 if [[ "$style_choice" == "p" ]] || [[ "$style_choice" == "P" ]]; then
@@ -604,7 +612,11 @@ if [[ "$style_choice" == "p" ]] || [[ "$style_choice" == "P" ]]; then
         show_ascii_preview "$service_name" "smblock" ""
         echo ""
 
-        read -p "$(echo -e ${GREEN}Kies stijl [1-6]:${RESET} )" style_choice
+        read -p "$(echo -e ${GREEN}Kies stijl [1-6, q=cancel]:${RESET} )" style_choice
+        if [[ "$style_choice" == "q" || "$style_choice" == "Q" ]]; then
+            echo -e "${YELLOW}Cancelled${RESET}"
+            exit 0
+        fi
     else
         echo -e "${YELLOW}⚠${RESET} Preview niet beschikbaar (toilet niet geïnstalleerd)"
         style_choice="1"
@@ -843,7 +855,11 @@ echo -e "  Location: ${CYAN}$TEMPLATES_DIR/$SERVICE.sh${RESET}"
 echo ""
 
 # Vraag of meteen deployen (default = y)
-read -p "$(echo -e ${YELLOW}Deploy now? \(Y/n\):${RESET} )" deploy_now
+read -p "$(echo -e ${YELLOW}Deploy now? \(Y/n/q=cancel\):${RESET} )" deploy_now
+if [[ "$deploy_now" == "q" || "$deploy_now" == "Q" ]]; then
+    echo -e "${YELLOW}Skipped deployment${RESET}"
+    exit 0
+fi
 deploy_now=${deploy_now:-y}
 
 if [[ "$deploy_now" == "y" ]] || [[ "$deploy_now" == "Y" ]]; then

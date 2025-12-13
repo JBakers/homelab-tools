@@ -136,25 +136,46 @@ echo ""
 # 3. Configure PATH
 echo -e "${YELLOW}[3/5]${RESET} Configuring PATH..."
 
-# Clean up old homelab-tools references in .bashrc (maar niet .ssh!)
+# Clean up old homelab-tools references in .bashrc (but not .ssh!)
 if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
-    echo -e "${YELLOW}  →${RESET} Checking .bashrc for old references..."
+    echo -e "${YELLOW}  →${RESET} Checking .bashrc for old/duplicate HLT references..."
     
-    # Check for old PATH exports or aliases pointing to ~/homelab-tools
-    if grep -E "homelab-tools|PATH.*homelab" "$ACTUAL_HOME/.bashrc" | grep -v "Tip: Type.*homelab" | grep -qv "^#"; then
-        echo -e "${YELLOW}  ⚠${RESET} Old homelab-tools references found in .bashrc"
+    # Count duplicate HLT tip lines
+    tip_count=$(grep -c "Tip: Type.*homelab" "$ACTUAL_HOME/.bashrc" 2>/dev/null || echo "0")
+    
+    # Check for old PATH exports or duplicates
+    needs_cleanup=false
+    
+    if grep -E "homelab-tools|PATH.*homelab" "$ACTUAL_HOME/.bashrc" 2>/dev/null | grep -v "Tip: Type.*homelab" | grep -qv "^#"; then
+        needs_cleanup=true
+    fi
+    
+    if [[ "$tip_count" -gt 1 ]]; then
+        needs_cleanup=true
+        echo -e "${YELLOW}  ⚠${RESET} Found $tip_count duplicate HLT tip lines"
+    fi
+    
+    if [[ "$needs_cleanup" == "true" ]]; then
+        echo -e "${YELLOW}  ⚠${RESET} Cleaning up old/duplicate HLT references..."
         
         # Create backup
         cp "$ACTUAL_HOME/.bashrc" "$ACTUAL_HOME/.bashrc.backup.$(date +%Y%m%d_%H%M%S)"
         
-        # Remove old homelab-tools lines (but keep .ssh lines)
+        # Remove old homelab-tools PATH lines (but keep .ssh lines)
         sed -i '/export PATH.*homelab-tools/d' "$ACTUAL_HOME/.bashrc"
         sed -i '/PATH=.*homelab-tools/d' "$ACTUAL_HOME/.bashrc"
         sed -i '/alias.*homelab-tools/d' "$ACTUAL_HOME/.bashrc"
         
-        echo -e "${GREEN}  ✓${RESET} Old references removed (backup created)"
+        # Remove duplicate HLT tip lines (keep only lines inside the banner block)
+        # First remove standalone tip lines (not inside the banner block)
+        sed -i '/^# Homelab Tools tip$/,/^echo.*homelab.*commands"$/d' "$ACTUAL_HOME/.bashrc"
+        
+        # Remove empty lines that may have accumulated
+        sed -i '/^$/N;/^\n$/d' "$ACTUAL_HOME/.bashrc"
+        
+        echo -e "${GREEN}  ✓${RESET} Cleanup complete (backup created)"
     else
-        echo -e "${GREEN}  ✓${RESET} No old references found"
+        echo -e "${GREEN}  ✓${RESET} No cleanup needed"
     fi
 fi
 
@@ -182,27 +203,31 @@ if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
         echo -e "${GREEN}  ✓${RESET} ~/.local/bin already in PATH"
     else
         echo "" >> "$ACTUAL_HOME/.bashrc"
-        echo "# Homelab Management Tools" >> "$ACTUAL_HOME/.bashrc"
+        echo "# Homelab Management Tools - PATH" >> "$ACTUAL_HOME/.bashrc"
         echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$ACTUAL_HOME/.bashrc"
         echo -e "${GREEN}  ✓${RESET} PATH added to ~/.bashrc"
     fi
 else
     echo -e "${YELLOW}  ⚠${RESET} No .bashrc found, creating new one"
-    echo '# Homelab Management Tools' > "$ACTUAL_HOME/.bashrc"
+    echo '# Homelab Management Tools - PATH' > "$ACTUAL_HOME/.bashrc"
     echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$ACTUAL_HOME/.bashrc"
     echo -e "${GREEN}  ✓${RESET} .bashrc created with PATH"
 fi
 
-# Voeg MOTD tip toe aan bashrc (alleen als nog niet aanwezig)
-if ! grep -q "Tip: Type.*homelab" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
+# Add MOTD tip to bashrc (only if not already present)
+if grep -q "Tip: Type.*homelab" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
+    echo -e "${GREEN}  ✓${RESET} MOTD tip already present"
+else
     echo "" >> "$ACTUAL_HOME/.bashrc"
     echo "# Homelab Tools tip" >> "$ACTUAL_HOME/.bashrc"
     echo 'echo -e "\033[0;36mTip:\033[0m Type \033[1mhomelab\033[0m for available commands"' >> "$ACTUAL_HOME/.bashrc"
     echo -e "${GREEN}  ✓${RESET} MOTD tip added to ~/.bashrc"
 fi
 
-# Add optional welcome banner
-if ! grep -q "HLT_BANNER" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
+# Add optional welcome banner (only if not already present)
+if grep -q "HLT_BANNER" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
+    echo -e "${GREEN}  ✓${RESET} Welcome banner already configured"
+else
     echo ""
     read -p "Add a welcome banner to your shell? (Y/n): " add_banner
     add_banner=${add_banner:-y}

@@ -25,6 +25,30 @@ RED="$MENU_RED"
 BOLD="$MENU_BOLD"
 RESET="$MENU_RESET"
 
+# Read choice with q to cancel - returns to menu
+# Usage: read_choice "prompt" variable default [valid_pattern]
+# Returns 1 if cancelled (q pressed), 0 otherwise
+read_choice() {
+    local prompt="$1"
+    local var_name="$2"
+    local default="${3:-}"
+    local input
+    
+    read -p "$(echo -e "${CYAN}${prompt}${RESET} ${YELLOW}(q=cancel)${RESET}: ")" input
+    
+    if [[ "$input" == "q" || "$input" == "Q" ]]; then
+        return 1
+    fi
+    
+    # Use default if empty
+    if [[ -z "$input" && -n "$default" ]]; then
+        input="$default"
+    fi
+    
+    eval "$var_name=\"\$input\""
+    return 0
+}
+
 SSH_CONFIG="$HOME/.ssh/config"
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 
@@ -104,8 +128,9 @@ while true; do
     echo -e "  ${YELLOW}2${RESET}) ${BOLD}ASCII Art MOTD${RESET}"
     echo -e "     ${YELLOW}→${RESET} Choose from 6 artistic styles"
     echo ""
-    read -p "$(echo -e ${CYAN}Choice \(1/2\):${RESET} )" style_type
-    style_type=${style_type:-1}
+    if ! read_choice "Choice (1/2)" style_type "1"; then
+        break  # Return to homelab menu
+    fi
 
     # ASCII style selection with preview
     ascii_style=""
@@ -123,8 +148,14 @@ while true; do
                 echo -e "  ${CYAN}5${RESET}) Big Mono          ${YELLOW}(Large, bold)${RESET}"
                 echo -e "  ${CYAN}6${RESET}) Small/Smblock     ${YELLOW}(Compact)${RESET}"
                 echo ""
-                read -p "$(echo -e ${CYAN}Choose ASCII style \(1-6, p for preview\):${RESET} )" ascii_choice
+                read -p "$(echo -e ${CYAN}Choose ASCII style \(1-6, p=preview, q=cancel\):${RESET} )" ascii_choice
                 ascii_choice=${ascii_choice:-1}
+                
+                # Handle cancel
+                if [[ "$ascii_choice" == "q" ]] || [[ "$ascii_choice" == "Q" ]]; then
+                    ascii_style=""
+                    break 2  # Break out of both loops, return to main menu
+                fi
 
                 # Handle preview
                 if [[ "$ascii_choice" == "p" ]] || [[ "$ascii_choice" == "P" ]]; then
@@ -141,7 +172,11 @@ while true; do
                     echo ""
                     toilet -f smblock "TEST" 2>/dev/null || echo "Style 6: Small/Smblock"
                     echo ""
-                    read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                    echo -e "${YELLOW}Press Enter to continue (q=cancel)...${RESET}"
+                    read -rsn1 preview_key < /dev/tty 2>/dev/null || true
+                    if [[ "$preview_key" == "q" || "$preview_key" == "Q" ]]; then
+                        break 2  # Return to main menu
+                    fi
                     clear
                     echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
                     echo ""
@@ -188,8 +223,9 @@ while true; do
     echo -e "     ${YELLOW}→${RESET} Uses chosen style with auto-detected settings"
     echo -e "     ${YELLOW}→${RESET} No prompts per host"
     echo ""
-    read -p "$(echo -e ${CYAN}Choice \(1/2\):${RESET} )" gen_mode
-    gen_mode=${gen_mode:-2}
+    if ! read_choice "Choice (1/2)" gen_mode "2"; then
+        break  # Return to homelab menu
+    fi
 
     echo ""
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
@@ -266,7 +302,11 @@ while true; do
             else
                 # Interactive mode: ask
                 echo -e "  ${YELLOW}⚠${RESET} Template already exists"
-                read -p "  Overwrite? (1=Yes, 2=No): " overwrite
+                read -p "  Overwrite? (1=Yes, 2=No, q=cancel): " overwrite
+                if [[ "$overwrite" == "q" || "$overwrite" == "Q" ]]; then
+                    echo -e "\n${YELLOW}→${RESET} Cancelled by user"
+                    break 2  # Return to main menu
+                fi
                 overwrite=${overwrite:-1}
                 if [[ "$overwrite" != "1" ]]; then
                     echo -e "  ${YELLOW}→${RESET} Skipped"
@@ -344,7 +384,10 @@ while true; do
         echo -e "  ${YELLOW}1${RESET}) Yes, deploy now via SSH"
         echo -e "  ${YELLOW}2${RESET}) No, I'll deploy manually later"
         echo ""
-        read -p "$(echo -e ${CYAN}Choice \(1/2\):${RESET} )" deploy_all
+        read -p "$(echo -e ${CYAN}Choice \(1/2, q=cancel\):${RESET} )" deploy_all
+        if [[ "$deploy_all" == "q" || "$deploy_all" == "Q" ]]; then
+            break  # Return to main menu
+        fi
         deploy_all=${deploy_all:-1}
 
         if [[ "$deploy_all" == "1" ]]; then
@@ -416,7 +459,10 @@ while true; do
     echo -e "  ${YELLOW}2${RESET}) Generate more (restart bulk-generate)"
     echo -e "  ${YELLOW}3${RESET}) Quit"
     echo ""
-    read -p "$(echo -e ${CYAN}Choice \(1/2/3\):${RESET} )" next_action
+    read -p "$(echo -e ${CYAN}Choice \(1/2/3, q=back\):${RESET} )" next_action
+    if [[ "$next_action" == "q" || "$next_action" == "Q" ]]; then
+        break  # Return to homelab menu
+    fi
     next_action=${next_action:-1}
 
     case "$next_action" in

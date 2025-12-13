@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Copy SSH key to remote hosts
 # Author: J.Bakers
-# Version: 3.5.0-dev.29
+# Version: 3.5.0-dev.30
 
 # Kleuren
 CYAN='\033[0;36m'

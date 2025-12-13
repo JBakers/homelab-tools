@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Bulk generate MOTD templates for all hosts
 # Author: J.Bakers
-# Version: 3.5.0-dev.29
+# Version: 3.5.0-dev.30
 
 # Load shared menu helper library
 # Resolve symlinks to find the actual installation directory
@@ -249,10 +249,12 @@ while true; do
     fi
     echo ""
 
-    # Counters
+    # Counters and tracking
     generated=0
     skipped=0
     failed=0
+    declare -a skipped_hosts=()
+    declare -a skipped_reasons=()
 
     # Initialize progress display for Smart-detect mode
     current=0
@@ -290,6 +292,8 @@ while true; do
                     echo ""
                 fi
                 skipped=$((skipped + 1))
+                skipped_hosts+=("$hostname")
+                skipped_reasons+=("System doesn't support MOTD")
                 is_unsupported=true
                 break
             fi
@@ -317,6 +321,8 @@ while true; do
                 if [[ "$overwrite" != "1" ]]; then
                     echo -e "  ${YELLOW}→${RESET} Skipped"
                     skipped=$((skipped + 1))
+                    skipped_hosts+=("$hostname")
+                    skipped_reasons+=("Template exists - user declined overwrite")
                     echo ""
                     continue
                 fi
@@ -364,6 +370,8 @@ while true; do
             else
                 echo -e "  ${YELLOW}→${RESET} Skipped or failed"
                 skipped=$((skipped + 1))
+                skipped_hosts+=("$hostname")
+                skipped_reasons+=("Generation skipped or failed")
             fi
             echo ""
         fi
@@ -389,6 +397,16 @@ while true; do
     if [[ $failed -gt 0 ]]; then
         echo -e "${RED}✗ Failed:${RESET}    $failed"
     fi
+    
+    # Show skipped hosts with reasons
+    if [[ $skipped -gt 0 ]]; then
+        echo ""
+        echo -e "${BOLD}${YELLOW}Skipped Hosts:${RESET}"
+        for ((i=0; i<${#skipped_hosts[@]}; i++)); do
+            echo -e "  ${YELLOW}→${RESET} ${skipped_hosts[$i]}: ${skipped_reasons[$i]}"
+        done
+    fi
+    
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
     echo ""
 

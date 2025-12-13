@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Delete MOTD Template
 # Author: J.Bakers
-# Version: 3.5.0-dev.29
+# Version: 3.5.0-dev.30
 
 # Colors
 CYAN='\033[0;36m'

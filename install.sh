@@ -337,6 +337,7 @@ EOF
     echo -e "${GREEN}  ✓${RESET} Configuration saved: ${CYAN}$domain_suffix${RESET}"
 else
     echo -e "${GREEN}  ✓${RESET} Configuration already exists"
+    # shellcheck source=/dev/null
     source "$CONFIG_FILE"
     echo -e "    Domain: ${CYAN}${DOMAIN_SUFFIX}${RESET}"
 fi

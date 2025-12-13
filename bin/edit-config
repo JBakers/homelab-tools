@@ -22,6 +22,7 @@ echo ""
 
 # Load current config
 if [[ -f "$CONFIG_FILE" ]]; then
+    # shellcheck source=/dev/null
     source "$CONFIG_FILE"
 else
     echo -e "${YELLOW}⚠${RESET} No configuration found, using defaults"

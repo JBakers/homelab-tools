@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Bulk generate MOTD templates for all hosts
 # Author: J.Bakers
-# Version: 3.5.0-dev.28
+# Version: 3.5.0-dev.29
 
 # Load shared menu helper library
 # Resolve symlinks to find the actual installation directory
@@ -256,6 +256,8 @@ while true; do
 
     # Initialize progress display for Smart-detect mode
     current=0
+    # Disable -e during bulk generation to tolerate non-critical failures and EOF on non-tty
+    set +e
     if [[ "$gen_mode" == "2" ]]; then
         # Smart-detect mode will show progress bar
         :
@@ -328,9 +330,11 @@ while true; do
 
             # Prepare input for generate-motd; guard against non-zero exit so loop continues
             set +e
+            set +o pipefail
             echo -e "n\n${ascii_style}\nn\n" | generate-motd "$hostname" &>/dev/null
-            gen_status=$?
+            gen_status=${PIPESTATUS[1]:-0}
             set -e
+            set -o pipefail
 
             if [[ $gen_status -eq 0 && -f "$template_file" ]]; then
                 show_progress "$current" "$host_count" "$hostname" "${GREEN}✓ Generated successfully${RESET}"
@@ -347,9 +351,14 @@ while true; do
             echo ""
 
             # Pre-fill with chosen ASCII style
+            set +e
+            set +o pipefail
             echo -e "y\n${ascii_style}\nn\n" | generate-motd "$hostname"
+            gen_status=${PIPESTATUS[1]:-0}
+            set -e
+            set -o pipefail
 
-            if [[ -f "$template_file" ]]; then
+            if [[ $gen_status -eq 0 && -f "$template_file" ]]; then
                 echo -e "  ${GREEN}✓${RESET} Generated"
                 generated=$((generated + 1))
             else
@@ -359,6 +368,9 @@ while true; do
             echo ""
         fi
     done
+
+    # Restore -e after generation loop
+    set -e
 
     # Finish progress display for Smart-detect mode
     if [[ "$gen_mode" == "2" ]]; then
@@ -380,6 +392,11 @@ while true; do
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
     echo ""
 
+    # If running non-interactively (piped input), stop here with success
+    if [[ ! -t 0 ]]; then
+        exit 0
+    fi
+
     # Bulk deploy option
     if [[ $generated -gt 0 ]]; then
         echo -e "${BOLD}${CYAN}Step 3: Deployment${RESET}"
@@ -391,11 +408,15 @@ while true; do
         echo -e "  ${YELLOW}1${RESET}) Yes, deploy now via SSH"
         echo -e "  ${YELLOW}2${RESET}) No, I'll deploy manually later"
         echo ""
-        read -p "$(echo -e ${CYAN}Choice \(1/2, q=cancel\):${RESET} )" deploy_all
-        if [[ "$deploy_all" == "q" || "$deploy_all" == "Q" ]]; then
-            break  # Return to main menu
+        if [[ ! -t 0 ]]; then
+            deploy_all="2"  # default to No when non-interactive
+        else
+            read -r -p "$(echo -e ${CYAN}Choice \(1/2, q=cancel\):${RESET} )" deploy_all
+            if [[ "$deploy_all" == "q" || "$deploy_all" == "Q" ]]; then
+                break  # Return to main menu
+            fi
+            deploy_all=${deploy_all:-1}
         fi
-        deploy_all=${deploy_all:-1}
 
         if [[ "$deploy_all" == "1" ]]; then
             echo ""

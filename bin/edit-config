@@ -34,7 +34,11 @@ echo -e "${BOLD}Huidige instellingen:${RESET}"
 echo -e "  Domain: ${CYAN}${DOMAIN_SUFFIX:-<none>}${RESET}  |  IP methode: ${CYAN}${IP_METHOD}${RESET}"
 echo ""
 
-read -p "Domain suffix [${DOMAIN_SUFFIX}]: " new_domain
+read -p "Domain suffix [${DOMAIN_SUFFIX}] (q=cancel): " new_domain
+if [[ "$new_domain" == "q" || "$new_domain" == "Q" ]]; then
+    echo -e "${YELLOW}Cancelled${RESET}"
+    exit 0
+fi
 new_domain=${new_domain:-$DOMAIN_SUFFIX}
 
 # Validate domain starts with dot if not empty
@@ -43,7 +47,11 @@ if [[ -n "$new_domain" ]] && [[ ! "$new_domain" =~ ^\. ]]; then
     exit 1
 fi
 
-read -p "IP methode (hostname/ip) [${IP_METHOD}]: " new_ip_method
+read -p "IP methode (hostname/ip) [${IP_METHOD}] (q=cancel): " new_ip_method
+if [[ "$new_ip_method" == "q" || "$new_ip_method" == "Q" ]]; then
+    echo -e "${YELLOW}Cancelled${RESET}"
+    exit 0
+fi
 new_ip_method=${new_ip_method:-$IP_METHOD}
 
 # Validate IP method

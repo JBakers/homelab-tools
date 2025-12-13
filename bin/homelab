@@ -26,6 +26,96 @@ MAGENTA="$MENU_MAGENTA"
 BOLD="$MENU_BOLD"
 RESET="$MENU_RESET"
 
+# Fallback simple menu (numbered) for terminals where arrow navigation fails.
+# Trigger with HLT_MENU_SIMPLE=1 or when stdin is not a TTY.
+simple_menu() {
+    local title="$1"
+    shift
+    local -a options=("$@")
+
+    echo "" >&2
+    echo -e "${BOLD}${CYAN}${title}${RESET}" >&2
+    local idx=1
+    for option in "${options[@]}"; do
+        local label desc
+        if [[ "$option" =~ \| ]]; then
+            label="${option%%|*}"
+            desc="${option##*|}"
+        else
+            label="$option"
+            desc=""
+        fi
+        echo "  ${idx}) ${label}${desc:+ - ${desc}}" >&2
+        ((idx++))
+    done
+    echo "" >&2
+
+    local choice
+    while true; do
+        read -rp "Select an option [1-${#options[@]}] (q to quit): " choice < /dev/tty || return 1
+        if [[ "$choice" =~ ^[Qq]$ ]]; then
+            # Map quit to last index if present, else return -1
+            if [[ "${options[-1]}" == "QUIT" ]]; then
+                echo "$((${#options[@]} - 1))"
+            else
+                echo "-1"
+            fi
+            return 0
+        elif [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#options[@]} )); then
+            echo "$((choice - 1))"
+            return 0
+        else
+            echo "Invalid choice. Try again." >&2
+        fi
+    done
+}
+
+# Wrapper to choose arrow menu or simple menu
+# Sets global MENU_RESULT variable with the selection
+choose_menu() {
+    local title="$1"
+    shift
+    if [[ "${HLT_MENU_SIMPLE:-0}" == "1" ]]; then
+        simple_menu "$title" "$@"
+        # simple_menu echoes result, capture it
+        return
+    else
+        show_arrow_menu "$title" "$@"
+        # show_arrow_menu sets MENU_RESULT
+    fi
+}
+
+# Read user input with q to cancel
+# Usage: read_input "prompt" variable_name
+# Returns: 0 if input provided, 1 if cancelled (q pressed)
+# Sets the variable to the input value
+read_input() {
+    local prompt="$1"
+    local var_name="$2"
+    local input
+    
+    read -p "$(echo -e "${CYAN}${prompt}${RESET} ${YELLOW}(q=cancel)${RESET}: ")" input
+    
+    if [[ "$input" == "q" || "$input" == "Q" ]]; then
+        return 1
+    fi
+    
+    eval "$var_name=\"\$input\""
+    return 0
+}
+
+# Wait for user to press Enter or q to continue
+# Returns: 0 if Enter, 1 if q pressed
+wait_for_continue() {
+    local key
+    echo -e "${YELLOW}Press Enter to continue (q=back)...${RESET}"
+    read -rsn1 key < /dev/tty 2>/dev/null || true
+    if [[ "$key" == "q" || "$key" == "Q" ]]; then
+        return 1
+    fi
+    return 0
+}
+
 # Help functie (kort overzicht)
 show_help() {
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
@@ -53,7 +143,7 @@ show_help() {
 # Gedetailleerde help
 show_detailed_help() {
     echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 Homelab Tools - Detailed Help                  ║"
+    echo -e "║         🏠 Homelab Tools - Detailed Help                   ║"
     echo -e "╚════════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "${BOLD}${CYAN}MOTD (Message of the Day) system:${RESET}"
@@ -138,14 +228,14 @@ show_motd_help() {
     echo ""
     echo -e "${CYAN}════════════════════════════════════════════════════════════${RESET}"
     echo ""
-    read -p "$(echo -e ${YELLOW}Press Enter to return to menu...${RESET})"
+    wait_for_continue
 }
 
 # Configuration submenu help
 show_config_help() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         ⚙️  Configuration - Help                         ║"
+    echo -e "║         ⚙️  Configuration - Help                           ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "${BOLD}${CYAN}Available Commands:${RESET}"
@@ -160,9 +250,14 @@ show_config_help() {
     echo -e "   Set domain suffix (.home, .local) and IP detection method."
     echo -e "   ${GREEN}Usage:${RESET} Select option 2, enter new settings"
     echo ""
+    echo -e "${BOLD}3. Uninstall${RESET}"
+    echo -e "   Remove homelab-tools from your system."
+    echo -e "   Your templates and SSH config will be preserved."
+    echo -e "   ${GREEN}Usage:${RESET} Select option 3, confirm uninstall"
+    echo ""
     echo -e "${CYAN}════════════════════════════════════════════════════════════${RESET}"
     echo ""
-    read -p "$(echo -e ${YELLOW}Press Enter to return to menu...${RESET})"
+    wait_for_continue
 }
 
 # SSH submenu help
@@ -186,7 +281,7 @@ show_ssh_help() {
     echo ""
     echo -e "${CYAN}════════════════════════════════════════════════════════════${RESET}"
     echo ""
-    read -p "$(echo -e ${YELLOW}Press Enter to return to menu...${RESET})"
+    wait_for_continue
 }
 
 # Note: Menu display functions removed - now using show_arrow_menu from lib/menu-helpers.sh
@@ -203,55 +298,49 @@ fi
 # Interactief menu met arrow navigation
 while true; do
     # Show main menu with arrow navigation
-    result=$(show_arrow_menu "🏠 Homelab Management Tools v3.5.0-dev" \
+    choose_menu "🏠 Homelab Management Tools v3.5.0-dev" \
         "📝 MOTD Tools|Generate/deploy/list MOTDs" \
         "⚙️  Configuration|Edit hosts & settings" \
         "🔑 SSH Management|Keys & cleanup" \
-        "HELP" "QUIT")
+        "HELP" "QUIT"
+    result="$MENU_RESULT"
 
     case "$result" in
         0)
             # MOTD submenu
             while true; do
-                submenu_result=$(show_arrow_menu "📝 MOTD Tools" \
+                choose_menu "📝 MOTD Tools" \
                     "Generate MOTD|Create template for one host" \
                     "Bulk Generate|Create for all hosts" \
                     "Deploy MOTD|Upload to host" \
                     "List Templates|View all templates" \
-                    "HELP" "BACK")
+                    "HELP" "BACK"
+                submenu_result="$MENU_RESULT"
 
                 case "$submenu_result" in
                     0)
                         # Generate MOTD
                         clear
                         echo ""
-                        read -p "$(echo -e ${CYAN}Service name:${RESET} )" service
-                        if [[ -n "$service" ]]; then
+                        if read_input "Service name" service && [[ -n "$service" ]]; then
                             generate-motd "$service"
                             echo ""
-                            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
-                        else
-                            echo -e "${RED}✗ No service name provided${RESET}"
-                            sleep 2
+                            wait_for_continue
                         fi
                         ;;
                     1)
                         # Bulk Generate
                         bulk-generate-motd
-                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        wait_for_continue
                         ;;
                     2)
                         # Deploy MOTD
                         clear
                         echo ""
-                        read -p "$(echo -e ${CYAN}Service name:${RESET} )" service
-                        if [[ -n "$service" ]]; then
+                        if read_input "Service name" service && [[ -n "$service" ]]; then
                             deploy-motd "$service"
                             echo ""
-                            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
-                        else
-                            echo -e "${RED}✗ No service name provided${RESET}"
-                            sleep 2
+                            wait_for_continue
                         fi
                         ;;
                     3)
@@ -259,7 +348,7 @@ while true; do
                         clear
                         list-templates
                         echo ""
-                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        wait_for_continue
                         ;;
                     4)
                         # Help
@@ -275,10 +364,12 @@ while true; do
         1)
             # Configuration submenu
             while true; do
-                submenu_result=$(show_arrow_menu "⚙️  Configuration" \
+                choose_menu "⚙️  Configuration" \
                     "Edit Hosts|Manage host list (~/.ssh/config)" \
                     "Edit Settings|Configure homelab tools" \
-                    "HELP" "BACK")
+                    "🗑️  Uninstall|Remove homelab-tools" \
+                    "HELP" "BACK"
+                submenu_result="$MENU_RESULT"
 
                 case "$submenu_result" in
                     0)
@@ -286,20 +377,48 @@ while true; do
                         clear
                         edit-hosts
                         echo ""
-                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        wait_for_continue
                         ;;
                     1)
                         # Edit Settings
                         clear
                         edit-config
                         echo ""
-                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        wait_for_continue
                         ;;
                     2)
+                        # Uninstall
+                        clear
+                        echo ""
+                        echo -e "${RED}${BOLD}⚠️  Uninstall Homelab Tools${RESET}"
+                        echo ""
+                        echo -e "This will remove homelab-tools from your system."
+                        echo -e "Your templates and SSH config will be preserved."
+                        echo ""
+                        echo -e "${YELLOW}Are you sure?${RESET}"
+                        echo ""
+                        echo -e "  ${YELLOW}1${RESET}) Yes, uninstall"
+                        echo -e "  ${YELLOW}2${RESET}) No, cancel"
+                        echo ""
+                        read -p "$(echo -e ${CYAN}Choice \(1/2\):${RESET} )" uninstall_choice
+                        if [[ "$uninstall_choice" == "1" ]]; then
+                            echo ""
+                            if [[ -f "/opt/homelab-tools/uninstall.sh" ]]; then
+                                /opt/homelab-tools/uninstall.sh
+                            elif [[ -f "$SCRIPT_DIR/../uninstall.sh" ]]; then
+                                "$SCRIPT_DIR/../uninstall.sh"
+                            else
+                                echo -e "${RED}✗ Uninstall script not found${RESET}"
+                                echo -e "  Run manually: ${GREEN}sudo rm -rf /opt/homelab-tools${RESET}"
+                            fi
+                            exit 0
+                        fi
+                        ;;
+                    3)
                         # Help
                         show_config_help
                         ;;
-                    3|-1)
+                    4|-1)
                         # Back (selected or ESC)
                         break
                         ;;
@@ -309,10 +428,11 @@ while true; do
         2)
             # SSH submenu
             while true; do
-                submenu_result=$(show_arrow_menu "🔑 SSH Tools" \
+                choose_menu "🔑 SSH Tools" \
                     "Copy SSH Key|Distribute key to hosts" \
                     "Cleanup Old Keys|Remove outdated host keys" \
-                    "HELP" "BACK")
+                    "HELP" "BACK"
+                submenu_result="$MENU_RESULT"
 
                 case "$submenu_result" in
                     0)
@@ -320,20 +440,16 @@ while true; do
                         clear
                         copykey
                         echo ""
-                        read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+                        wait_for_continue
                         ;;
                     1)
                         # Cleanup Old Keys
                         clear
                         echo ""
-                        read -p "$(echo -e ${CYAN}IP address or hostname:${RESET} )" host
-                        if [[ -n "$host" ]]; then
+                        if read_input "IP address or hostname" host && [[ -n "$host" ]]; then
                             cleanup-keys "$host"
                             echo ""
-                            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
-                        else
-                            echo -e "${RED}✗ No host provided${RESET}"
-                            sleep 2
+                            wait_for_continue
                         fi
                         ;;
                     2)
@@ -351,7 +467,7 @@ while true; do
             # Help
             show_detailed_help
             echo ""
-            read -p "$(echo -e ${YELLOW}Press Enter to continue...${RESET})"
+            wait_for_continue
             ;;
         4|-1)
             # Quit (selected or ESC)

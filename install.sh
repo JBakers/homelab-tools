@@ -142,6 +142,8 @@ if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
     
     # Count duplicate HLT tip lines
     tip_count=$(grep -c "Tip: Type.*homelab" "$ACTUAL_HOME/.bashrc" 2>/dev/null || echo "0")
+    # Remove any whitespace/newlines
+    tip_count=$(echo "$tip_count" | tr -d '[:space:]')
     
     # Check for old PATH exports or duplicates
     needs_cleanup=false

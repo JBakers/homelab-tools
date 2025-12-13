@@ -18,11 +18,9 @@ LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
 source "$LIB_DIR/menu-helpers.sh"
 
 # Kleuren (from menu-helpers.sh, but keep for backwards compat)
-CYAN="$MENU_CYAN"
 GREEN="$MENU_GREEN"
 YELLOW="$MENU_YELLOW"
 RED="$MENU_RED"
-MAGENTA="$MENU_MAGENTA"
 BOLD="$MENU_BOLD"
 RESET="$MENU_RESET"
 

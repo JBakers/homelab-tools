@@ -134,6 +134,7 @@ while true; do
 
     # ASCII style selection with preview
     ascii_style=""
+    # shellcheck disable=SC2154
     if [[ "$style_type" == "2" ]]; then
         echo ""
         echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
@@ -232,6 +233,7 @@ while true; do
     echo ""
 
     # Show what will happen
+    # shellcheck disable=SC2154
     if [[ "$gen_mode" == "1" ]]; then
         echo -e "${YELLOW}→${RESET} ${BOLD}Starting Interactive Mode...${RESET}"
         echo -e "  You will be prompted to customize each host individually"
@@ -252,12 +254,13 @@ while true; do
     failed=0
 
     # Initialize progress display for Smart-detect mode
+    current=0
     if [[ "$gen_mode" == "2" ]]; then
-        init_progress
+        # Smart-detect mode will show progress bar
+        :
     fi
 
     # Loop through hosts
-    local current=0
     for hostname in $hosts; do
         template_file="$TEMPLATES_DIR/${hostname}.sh"
         ((current++))

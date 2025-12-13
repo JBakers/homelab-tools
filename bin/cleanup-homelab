@@ -25,7 +25,8 @@ find_orphaned_templates() {
     fi
     
     # Haal alle hosts uit SSH config
-    local active_hosts=$(grep "^Host " "$CONFIG_FILE" | awk '{print $2}' | grep -v '\*' | sort -u)
+    local active_hosts
+    active_hosts=$(grep "^Host " "$CONFIG_FILE" | awk '{print $2}' | grep -v '\*' | sort -u)
     
     # Loop door alle MOTD templates
     for template in "$MOTD_DIR"/*.sh; do

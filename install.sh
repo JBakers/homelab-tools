@@ -149,6 +149,67 @@ fi
 # 1. Install files to /opt
 echo -e "${YELLOW}[1/5]${RESET} Installing to /opt (requires sudo)..."
 
+# Helper: remove symlinks in ~/.local/bin
+remove_symlinks() {
+    if [[ -d "$ACTUAL_HOME/.local/bin" ]]; then
+        find "$ACTUAL_HOME/.local/bin" -maxdepth 1 -type l -lname "$INSTALL_DIR/*" -exec rm -f {} \; 2>/dev/null || true
+    fi
+}
+
+# Helper: clean user configs/templates and bashrc entries
+clean_user_data() {
+    rm -rf "$ACTUAL_HOME/.local/share/homelab-tools" 2>/dev/null || true
+    if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
+        sed -i '/homelab-tools/d' "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
+        sed -i '/HLT_BANNER/d' "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
+        sed -i '/Tip:.*homelab/d' "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
+    fi
+}
+
+# If an existing install is present, ask what to do
+if [[ -d "$INSTALL_DIR" ]]; then
+    echo -e "${YELLOW}⚠ Existing installation detected at ${CYAN}$INSTALL_DIR${RESET}"
+    echo -e "${BOLD}Choose an action:${RESET}"
+    echo -e "  ${CYAN}1${RESET}) Update (backup old, then install) ${YELLOW}(default)${RESET}"
+    echo -e "  ${CYAN}2${RESET}) Remove and exit (keep user configs/templates)"
+    echo -e "  ${CYAN}3${RESET}) Full uninstall and exit (remove configs/templates)"
+    echo -e "  ${CYAN}4${RESET}) Remove and clean install (wipe configs/templates, then install)"
+    echo ""
+    existing_choice=$(read_input "Choice (1/2/3/4): ")
+    existing_choice=${existing_choice:-1}
+
+    case "$existing_choice" in
+        1)
+            echo -e "${YELLOW}→${RESET} Proceeding with update (will backup old install)"
+            ;;
+        2)
+            echo -e "${YELLOW}→${RESET} Removing existing installation..."
+            run_sudo rm -rf "$INSTALL_DIR"
+            remove_symlinks
+            echo -e "${GREEN}✓${RESET} Removed. Exiting per selection."
+            exit 0
+            ;;
+        3)
+            echo -e "${YELLOW}→${RESET} Performing full uninstall..."
+            run_sudo rm -rf "$INSTALL_DIR"
+            remove_symlinks
+            clean_user_data
+            echo -e "${GREEN}✓${RESET} Fully uninstalled. Exiting per selection."
+            exit 0
+            ;;
+        4)
+            echo -e "${YELLOW}→${RESET} Removing existing installation for clean install..."
+            run_sudo rm -rf "$INSTALL_DIR"
+            remove_symlinks
+            clean_user_data
+            echo -e "${GREEN}✓${RESET} Old installation removed; continuing with clean install."
+            ;;
+        *)
+            echo -e "${YELLOW}→${RESET} Invalid choice; defaulting to Update"
+            ;;
+    esac
+fi
+
 # Backup old installation
 if [[ -d "$INSTALL_DIR" ]]; then
     backup_dir="$INSTALL_DIR.backup.$(date +%Y%m%d_%H%M%S)"

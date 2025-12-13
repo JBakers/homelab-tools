@@ -15,6 +15,8 @@
 - [ ] Test bulk-generate-motd modes (interactive, smart-detect, yes-to-all)
 - [ ] Test uninstall.sh thoroughly
 - [ ] Review cleanup-homelab script
+- [ ] Add install-time prompt to run uninstall if existing install is detected
+- [ ] Install menu: when existing HLT detected, prompt for update / remove / full uninstall / remove+clean install (wipe HLT configs)
 
 **After High Priority:** Commit all fixes, then move to Testing phase
 

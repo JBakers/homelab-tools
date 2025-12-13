@@ -1,6 +1,6 @@
-# 🏠 Homelab Management Tools v3.4.0 
+# 🏠 Homelab Management Tools v3.5.0-dev.24
 
-[![Version](https://img.shields.io/badge/version-3.4.0-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
+[![Version](https://img.shields.io/badge/version-3.5.0--dev.24-orange.svg)](https://github.com/JBakers/homelab-tools/releases)
 [![License](https://img.shields.io/badge/license-GPL--v3-blue.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/shell-bash-lightgrey.svg)](https://www.gnu.org/software/bash/)
 
@@ -18,10 +18,13 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
 
 ### 🎨 Beautiful Interface
 
+### 🎨 Beautiful Interface
+
 - **Clean & Functional MOTDs** - Professional login screens with system info (default)
 - **Optional ASCII Art** - 5 colorful styles including rainbow banners with `toilet -F gay`
 - **Color-Coded Output** - Clear visual feedback with ANSI colors
-- **Interactive Menus** - Intuitive TUI for all operations
+- **Interactive Menus** - Arrow key navigation, q=cancel on all prompts
+- **Uninstall from Menu** - Easy removal via Configuration menu
 
 ### ⚡ Automation & Efficiency
 

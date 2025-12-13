@@ -52,6 +52,38 @@ After v3.4.0 release, multiple critical bugs were discovered. Development was ro
 - **dev.23** - Improve uninstall.sh flow and user prompts
 - **dev.23** - Mark migrate-to-opt.sh for removal (functionality now in install.sh)
 
+### ✨ New Features (dev.24)
+
+#### Interactive Menu System
+- **dev.24** - Fix arrow key navigation in xfce4-terminal (read from /dev/tty)
+- **dev.24** - Fix timeout handling with set -e (proper set +e around read)
+- **dev.24** - Add global MENU_RESULT variable to avoid subshell issues
+- **dev.24** - Add q=cancel support to all user input prompts
+- **dev.24** - Add wait_for_continue helper with q=back option
+
+#### Configuration Menu
+- **dev.24** - Add Uninstall option to Configuration menu
+- **dev.24** - Update Configuration help with Uninstall documentation
+
+#### Installation & Cleanup
+- **dev.24** - Add duplicate HLT section detection in .bashrc
+- **dev.24** - Skip adding sections if already present (PATH, tip, banner)
+- **dev.24** - Clean up duplicate tip lines on re-install
+- **dev.24** - Always create backup before .bashrc modifications
+
+#### Code Cleanup
+- **dev.24** - Remove migrate-to-opt.sh (integrated into install.sh)
+- **dev.24** - Remove .todos.md (superseded by TODO.md)
+- **dev.24** - Remove config/hosts.txt.example (obsolete, using ~/.ssh/config)
+- **dev.24** - Remove config/server-motd/test.sh (obsolete test template)
+- **dev.24** - Fix all ShellCheck warnings (unused vars, non-constant source)
+- **dev.24** - Add shellcheck directives for false positives
+
+### 📝 Documentation (dev.24)
+- **dev.24** - Complete file audit in TODO.md with status for all files
+- **dev.24** - Mark completed HIGH PRIORITY items
+- **dev.24** - Document all removed/obsolete files
+
 ### 📝 Changes from Previous Session
 - Version display in install menu (version/branch/date)
 - Bashrc tip now works correctly with sudo user detection

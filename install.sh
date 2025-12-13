@@ -33,27 +33,76 @@ BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 INSTALL_DATE=$(date '+%Y-%m-%d %H:%M:%S')
 
 echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗"
-echo -e "║         🏠 HOMELAB TOOLS - INSTALLATIE                    ║"
+echo -e "║         🏠 HOMELAB TOOLS - INSTALLATION                   ║"
 echo -e "╚════════════════════════════════════════════════════════════╝${RESET}"
 echo ""
-echo -e "${BOLD}Installatie Info:${RESET}"
-echo -e "  Versie:  ${CYAN}$VERSION${RESET}"
+echo -e "${BOLD}Installation Info:${RESET}"
+echo -e "  Version: ${CYAN}$VERSION${RESET}"
 echo -e "  Branch:  ${CYAN}$BRANCH${RESET}"
-echo -e "  Datum:   ${CYAN}$INSTALL_DATE${RESET}"
+echo -e "  Date:    ${CYAN}$INSTALL_DATE${RESET}"
 echo -e "  User:    ${CYAN}$ACTUAL_USER${RESET}"
 echo ""
 
-# Check of we in de juiste directory zijn
+# Check if we're in the correct directory
 if [[ ! -f "$(pwd)/bin/homelab" ]]; then
-    echo -e "${RED}✗ Fout: Run dit script vanuit de homelab-tools directory${RESET}"
+    echo -e "${RED}✗ Error: Run this script from the homelab-tools directory${RESET}"
     echo -e "  ${YELLOW}cd ~/homelab-tools && ./install.sh${RESET}"
     exit 1
 fi
 
 INSTALL_DIR="/opt/homelab-tools"
 
-echo -e "${BOLD}Installatie directory: ${CYAN}$INSTALL_DIR${RESET}"
+echo -e "${BOLD}Installation directory: ${CYAN}$INSTALL_DIR${RESET}"
 echo ""
+
+# Check for legacy installation in ~/homelab-tools
+LEGACY_DIR="$ACTUAL_HOME/homelab-tools"
+if [[ -d "$LEGACY_DIR" ]] && [[ "$LEGACY_DIR" != "$(pwd)" ]]; then
+    echo -e "${YELLOW}⚠ Old installation found in ~/homelab-tools${RESET}"
+    echo ""
+    echo -e "${BOLD}What do you want to do with the old installation?${RESET}"
+    echo -e "  ${CYAN}1${RESET}) Backup and remove ${YELLOW}(recommended)${RESET}"
+    echo -e "  ${CYAN}2${RESET}) Backup only"
+    echo -e "  ${CYAN}3${RESET}) Keep it"
+    echo ""
+    read -p "Choice (1/2/3): " legacy_choice
+    legacy_choice=${legacy_choice:-1}
+    
+    case "$legacy_choice" in
+        1)
+            # Backup and remove
+            BACKUP_DIR="$ACTUAL_HOME/homelab-tools.backup.$(date +%Y%m%d_%H%M%S)"
+            echo -e "${YELLOW}→${RESET} Creating backup to $BACKUP_DIR..."
+            cp -r "$LEGACY_DIR" "$BACKUP_DIR"
+            chown -R "$ACTUAL_USER:$ACTUAL_USER" "$BACKUP_DIR"
+            echo -e "${GREEN}✓${RESET} Backup created"
+            
+            echo -e "${YELLOW}→${RESET} Removing old installation..."
+            rm -rf "$LEGACY_DIR"
+            echo -e "${GREEN}✓${RESET} Old installation removed"
+            echo ""
+            ;;
+        2)
+            # Backup only
+            BACKUP_DIR="$ACTUAL_HOME/homelab-tools.backup.$(date +%Y%m%d_%H%M%S)"
+            echo -e "${YELLOW}→${RESET} Creating backup to $BACKUP_DIR..."
+            cp -r "$LEGACY_DIR" "$BACKUP_DIR"
+            chown -R "$ACTUAL_USER:$ACTUAL_USER" "$BACKUP_DIR"
+            echo -e "${GREEN}✓${RESET} Backup created"
+            echo -e "${YELLOW}⚠${RESET} Old installation kept in ~/homelab-tools"
+            echo ""
+            ;;
+        3)
+            # Keep
+            echo -e "${YELLOW}⚠${RESET} Old installation kept"
+            echo ""
+            ;;
+        *)
+            echo -e "${RED}✗${RESET} Invalid choice, old installation kept"
+            echo ""
+            ;;
+    esac
+fi
 
 # 1. Installeer bestanden naar /opt
 echo -e "${YELLOW}[1/5]${RESET} Installeer naar /opt (vereist sudo)..."
@@ -86,6 +135,28 @@ echo ""
 
 # 3. Configureer PATH
 echo -e "${YELLOW}[3/5]${RESET} Configureer PATH..."
+
+# Clean up old homelab-tools references in .bashrc (maar niet .ssh!)
+if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
+    echo -e "${YELLOW}  →${RESET} Controleer .bashrc op oude verwijzingen..."
+    
+    # Check for old PATH exports or aliases pointing to ~/homelab-tools
+    if grep -E "homelab-tools|PATH.*homelab" "$ACTUAL_HOME/.bashrc" | grep -v "Tip: Type.*homelab" | grep -qv "^#"; then
+        echo -e "${YELLOW}  ⚠${RESET} Oude homelab-tools verwijzingen gevonden in .bashrc"
+        
+        # Create backup
+        cp "$ACTUAL_HOME/.bashrc" "$ACTUAL_HOME/.bashrc.backup.$(date +%Y%m%d_%H%M%S)"
+        
+        # Remove old homelab-tools lines (but keep .ssh lines)
+        sed -i '/export PATH.*homelab-tools/d' "$ACTUAL_HOME/.bashrc"
+        sed -i '/PATH=.*homelab-tools/d' "$ACTUAL_HOME/.bashrc"
+        sed -i '/alias.*homelab-tools/d' "$ACTUAL_HOME/.bashrc"
+        
+        echo -e "${GREEN}  ✓${RESET} Oude verwijzingen verwijderd (backup gemaakt)"
+    else
+        echo -e "${GREEN}  ✓${RESET} Geen oude verwijzingen gevonden"
+    fi
+fi
 
 # Maak ~/.local/bin directory
 BIN_DIR="$ACTUAL_HOME/.local/bin"
@@ -128,6 +199,52 @@ if ! grep -q "Tip: Type.*homelab" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
     echo "# Homelab Tools tip" >> "$ACTUAL_HOME/.bashrc"
     echo 'echo -e "\033[0;36mTip:\033[0m Type \033[1mhomelab\033[0m for available commands"' >> "$ACTUAL_HOME/.bashrc"
     echo -e "${GREEN}  ✓${RESET} MOTD tip toegevoegd aan ~/.bashrc"
+fi
+
+# Add optional welcome banner
+if ! grep -q "HLT_BANNER" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
+    echo ""
+    read -p "Wil je een welkomstbanner toevoegen aan je shell? (Y/n): " add_banner
+    add_banner=${add_banner:-y}
+    
+    if [[ "$add_banner" =~ ^[Yy]$ ]]; then
+        cat >> "$ACTUAL_HOME/.bashrc" << 'BANNER_EOF'
+
+# ===============================================
+# Homelab Tools Welcome Banner
+# Set HLT_BANNER=0 to disable
+# ===============================================
+if [[ -z "$HLT_BANNER" ]] || [[ "$HLT_BANNER" != "0" ]]; then
+    # Show banner only for interactive shells, not in VS Code
+    if [[ $- == *i* ]] && [[ -z "$VSCODE_INJECTION" ]] && [[ -z "$TERM_PROGRAM" ]]; then
+        cat << "EOF"
+
+  _   _                      _       _       _____           _     
+ | | | | ___  _ __ ___   ___| | __ _| |__   |_   _|__   ___ | |___ 
+ | |_| |/ _ \| '_ ` _ \ / _ \ |/ _` | '_ \    | |/ _ \ / _ \| / __|
+ |  _  | (_) | | | | | |  __/ | (_| | |_) |   | | (_) | (_) | \__ \
+ |_| |_|\___/|_| |_| |_|\___|_|\__,_|_.__/    |_|\___/ \___/|_|___/
+
+EOF
+        echo -e "\033[0;36m------------------------------------------------------------\033[0m"
+        echo -e "\033[0;32mWelkom terug, $USER!\033[0m"
+        echo "Hostname: $HOSTNAME"
+        echo "$(date +'%A %d %B %Y, %H:%M')"
+        
+        # Show version if available
+        if [[ -f /opt/homelab-tools/VERSION ]]; then
+            HLT_VERSION=$(cat /opt/homelab-tools/VERSION)
+            echo -e "Homelab Tools: \033[0;36mv${HLT_VERSION}\033[0m"
+        fi
+        
+        echo -e "\033[0;36m------------------------------------------------------------\033[0m"
+        echo ""
+    fi
+fi
+BANNER_EOF
+        echo -e "${GREEN}  ✓${RESET} Welkomstbanner toegevoegd aan ~/.bashrc"
+        echo -e "${YELLOW}  →${RESET} Zet HLT_BANNER=0 in ~/.bashrc om uit te schakelen"
+    fi
 fi
 echo ""
 

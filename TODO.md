@@ -80,10 +80,10 @@
 
 ---
 
-## ✅ v3.5.0-dev.25 Done
+## ✅ v3.5.0-dev.28 Done
 - All ShellCheck warnings fixed
 - Complete English translation of all scripts
-- Version sync: VERSION file 3.5.0-dev.25
+- Version sync: VERSION file 3.5.0-dev.28
 - Fixed install.sh tip_count syntax error
 
 ## ✅ v3.5.0-dev.24 Done

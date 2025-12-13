@@ -12,7 +12,8 @@ todo*.md
 GESPREK.md
 .markdownlint.json
 TESTING_GUIDE.md
-
+test-checklist.sh
+.homelab-test-progress
 
 # Development tracking (private)
 .notes.md

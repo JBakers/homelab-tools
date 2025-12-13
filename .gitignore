@@ -11,6 +11,8 @@ todo*.md
 .todos.md
 GESPREK.md
 .markdownlint.json
+TESTING_GUIDE.md
+
 
 # Development tracking (private)
 .notes.md

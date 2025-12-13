@@ -48,7 +48,7 @@ if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
 fi
 
 echo ""
-echo -e "${YELLOW}[1/4]${RESET} Verwijder symlinks uit ~/.local/bin/..."
+echo -e "${YELLOW}[1/4]${RESET} Removing symlinks from ~/.local/bin/..."
 
 # Remove symlinks from ~/.local/bin
 BIN_DIR="$HOME/.local/bin"
@@ -73,63 +73,63 @@ for script in "${scripts[@]}"; do
     fi
 done
 
-echo -e "${GREEN}  ✓${RESET} Verwijderd $removed symlink(s)"
+echo -e "${GREEN}  ✓${RESET} Removed $removed symlink(s)"
 echo ""
 
 # Templates
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 
-echo -e "${YELLOW}[2/5]${RESET} Check MOTD templates..."
+echo -e "${YELLOW}[2/5]${RESET} Checking MOTD templates..."
 if [[ -d "$TEMPLATES_DIR" ]]; then
     template_count=$(find "$TEMPLATES_DIR" -name "*.sh" 2>/dev/null | wc -l)
 
     if [[ $template_count -gt 0 ]]; then
-        echo -e "${YELLOW}  →${RESET} Gevonden $template_count template(s)"
+        echo -e "${YELLOW}  →${RESET} Found $template_count template(s)"
         read -p "  Remove templates? (Y/n): " remove_templates
         remove_templates=${remove_templates:-y}
 
         if [[ "$remove_templates" =~ ^[Yy]$ ]]; then
             rm -rf "$TEMPLATES_DIR"
-            echo -e "${GREEN}  ✓${RESET} Templates verwijderd"
+            echo -e "${GREEN}  ✓${RESET} Templates removed"
         else
-            echo -e "${YELLOW}  →${RESET} Templates behouden"
+            echo -e "${YELLOW}  →${RESET} Templates kept"
         fi
     else
-        echo -e "${GREEN}  ✓${RESET} Geen templates gevonden"
+        echo -e "${GREEN}  ✓${RESET} No templates found"
     fi
 else
-    echo -e "${GREEN}  ✓${RESET} Geen templates directory"
+    echo -e "${GREEN}  ✓${RESET} No templates directory"
 fi
 echo ""
 
 # Backup directories in /opt
-echo -e "${YELLOW}[3/5]${RESET} Check backup directories..."
+echo -e "${YELLOW}[3/5]${RESET} Checking backup directories..."
 backup_count=$(sudo find /opt -maxdepth 1 -name "homelab-tools.backup.*" -type d 2>/dev/null | wc -l)
 if [[ $backup_count -gt 0 ]]; then
-    echo -e "${YELLOW}  →${RESET} Gevonden $backup_count backup director(y/ies)"
+    echo -e "${YELLOW}  →${RESET} Found $backup_count backup director(y/ies)"
     read -p "  Remove backups? (Y/n): " remove_backups
     remove_backups=${remove_backups:-y}
 
     if [[ "$remove_backups" =~ ^[Yy]$ ]]; then
         sudo rm -rf /opt/homelab-tools.backup.*
-        echo -e "${GREEN}  ✓${RESET} Backups verwijderd"
+        echo -e "${GREEN}  ✓${RESET} Backups removed"
     else
-        echo -e "${YELLOW}  →${RESET} Backups behouden"
+        echo -e "${YELLOW}  →${RESET} Backups kept"
     fi
 else
-    echo -e "${GREEN}  ✓${RESET} Geen backups gevonden"
+    echo -e "${GREEN}  ✓${RESET} No backups found"
 fi
 echo ""
 
 # Remove MOTDs from remote hosts
-echo -e "${YELLOW}[4/6]${RESET} Check deployed MOTDs..."
+echo -e "${YELLOW}[4/6]${RESET} Checking deployed MOTDs..."
 SSH_CONFIG="$HOME/.ssh/config"
 if [[ -f "$SSH_CONFIG" ]]; then
     hosts=$(grep "^Host " "$SSH_CONFIG" | awk '{print $2}' | grep -v '\*' | sort -u)
     host_count=$(echo "$hosts" | wc -w)
 
     if [[ $host_count -gt 0 ]]; then
-        echo -e "${YELLOW}  →${RESET} Gevonden $host_count host(s) in SSH config"
+        echo -e "${YELLOW}  →${RESET} Found $host_count host(s) in SSH config"
         read -p "  Remove MOTDs from remote hosts? (Y/n): " remove_motds
         remove_motds=${remove_motds:-y}
 
@@ -141,43 +141,43 @@ if [[ -f "$SSH_CONFIG" ]]; then
             for hostname in $hosts; do
                 echo -e "  ${CYAN}$hostname${RESET}..."
                 if ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$hostname" "sudo rm -f /etc/update-motd.d/99-homelab" 2>/dev/null; then
-                    echo -e "    ${GREEN}✓${RESET} MOTD verwijderd"
+                    echo -e "    ${GREEN}✓${RESET} MOTD removed"
                     removed=$((removed + 1))
                 else
-                    echo -e "    ${YELLOW}→${RESET} Niet bereikbaar of geen MOTD"
+                    echo -e "    ${YELLOW}→${RESET} Not reachable or no MOTD"
                     failed=$((failed + 1))
                 fi
             done
 
             echo ""
-            echo -e "${GREEN}  ✓${RESET} Verwijderd van $removed host(s)"
+            echo -e "${GREEN}  ✓${RESET} Removed from $removed host(s)"
             if [[ $failed -gt 0 ]]; then
-                echo -e "${YELLOW}  →${RESET} $failed host(s) niet bereikbaar"
+                echo -e "${YELLOW}  →${RESET} $failed host(s) not reachable"
             fi
         else
-            echo -e "${YELLOW}  →${RESET} MOTDs behouden op remote hosts"
+            echo -e "${YELLOW}  →${RESET} MOTDs kept on remote hosts"
         fi
     else
-        echo -e "${GREEN}  ✓${RESET} Geen hosts gevonden in SSH config"
+        echo -e "${GREEN}  ✓${RESET} No hosts found in SSH config"
     fi
 else
-    echo -e "${GREEN}  ✓${RESET} Geen SSH config gevonden"
+    echo -e "${GREEN}  ✓${RESET} No SSH config found"
 fi
 echo ""
 
 # Remove /opt/homelab-tools directory
 INSTALL_DIR="/opt/homelab-tools"
-echo -e "${YELLOW}[5/6]${RESET} Verwijder /opt/homelab-tools/..."
+echo -e "${YELLOW}[5/6]${RESET} Removing /opt/homelab-tools/..."
 if [[ -d "$INSTALL_DIR" ]]; then
     sudo rm -rf "$INSTALL_DIR"
-    echo -e "${GREEN}  ✓${RESET} Directory verwijderd"
+    echo -e "${GREEN}  ✓${RESET} Directory removed"
 else
-    echo -e "${YELLOW}  →${RESET} Directory niet gevonden"
+    echo -e "${YELLOW}  →${RESET} Directory not found"
 fi
 echo ""
 
 # Remove from bashrc
-echo -e "${YELLOW}[6/6]${RESET} Cleanup ~/.bashrc..."
+echo -e "${YELLOW}[6/6]${RESET} Cleaning up ~/.bashrc..."
 if [[ -f "$HOME/.bashrc" ]] && grep -qi "homelab" "$HOME/.bashrc" 2>/dev/null; then
     # Create backup
     cp "$HOME/.bashrc" "$HOME/.bashrc.backup.$(date +%Y%m%d_%H%M%S)"
@@ -191,27 +191,27 @@ if [[ -f "$HOME/.bashrc" ]] && grep -qi "homelab" "$HOME/.bashrc" 2>/dev/null; t
     sed -i '\|Type.*homelab.*for available commands|d' "$HOME/.bashrc"
     sed -i '\|Type.*homelab.*voor beschikbare|d' "$HOME/.bashrc"
 
-    echo -e "${GREEN}  ✓${RESET} PATH entry verwijderd"
+    echo -e "${GREEN}  ✓${RESET} PATH entry removed"
     echo -e "${YELLOW}  →${RESET} Backup: ${CYAN}~/.bashrc.backup.*${RESET}"
 else
-    echo -e "${GREEN}  ✓${RESET} Geen entries in ~/.bashrc"
+    echo -e "${GREEN}  ✓${RESET} No entries in ~/.bashrc"
 fi
 echo ""
 
 # Summary
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         ✅ UNINSTALL VOLTOOID                        ║"
+echo -e "║         ✅ UNINSTALL COMPLETE                        ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
-echo -e "${GREEN}✓ Homelab Tools succesvol verwijderd!${RESET}"
+echo -e "${GREEN}✓ Homelab Tools successfully removed!${RESET}"
 echo ""
-echo -e "${BOLD}${GREEN}Belangrijke informatie:${RESET}"
-echo -e "  • SSH keys:       ${CYAN}Behouden in ~/.ssh/${RESET}"
-echo -e "  • SSH config:     ${CYAN}Behouden in ~/.ssh/config${RESET}"
+echo -e "${BOLD}${GREEN}Important information:${RESET}"
+echo -e "  • SSH keys:       ${CYAN}Kept in ~/.ssh/${RESET}"
+echo -e "  • SSH config:     ${CYAN}Kept in ~/.ssh/config${RESET}"
 
 # Only show remote MOTDs message if they weren't removed
 if [[ "${remove_motds:-n}" != "y" ]]; then
-    echo -e "  • Remote MOTDs:   ${YELLOW}Nog steeds deployed op hosts${RESET}"
+    echo -e "  • Remote MOTDs:   ${YELLOW}Still deployed on hosts${RESET}"
 fi
 
 if [[ -n "${backup_dir:-}" ]] && [[ -d "${backup_dir}" ]]; then
@@ -219,8 +219,8 @@ if [[ -n "${backup_dir:-}" ]] && [[ -d "${backup_dir}" ]]; then
 fi
 
 echo ""
-echo -e "${YELLOW}Note:${RESET} Herlaad je shell:"
+echo -e "${YELLOW}Note:${RESET} Reload your shell:"
 echo -e "  ${GREEN}source ~/.bashrc${RESET}"
 echo ""
-echo -e "${CYAN}Bedankt voor het gebruiken van Homelab Tools! 👋${RESET}"
+echo -e "${CYAN}Thank you for using Homelab Tools! 👋${RESET}"
 echo ""

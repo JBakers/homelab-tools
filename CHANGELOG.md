@@ -40,6 +40,18 @@ After v3.4.0 release, multiple critical bugs were discovered. Development was ro
 #### Internationalization
 - **dev.23** - Add i18n roadmap to TODO.md (support for en/nl/de/fr/es planned)
 
+#### Security & Privacy
+- **dev.23** - Create SECURITY.md with security policy and responsible disclosure
+- **dev.23** - Remove broken reference to claude.md from README
+- **dev.23** - Add security warning to config.sh.example (DO NOT commit sensitive data)
+- **dev.23** - Translate config.sh.example comments to English
+- **dev.23** - Audit example configs (all safe - only generic usernames)
+
+#### Uninstall & Migration
+- **dev.23** - Complete English translation of uninstall.sh
+- **dev.23** - Improve uninstall.sh flow and user prompts
+- **dev.23** - Mark migrate-to-opt.sh for removal (functionality now in install.sh)
+
 ### 📝 Changes from Previous Session
 - Version display in install menu (version/branch/date)
 - Bashrc tip now works correctly with sudo user detection

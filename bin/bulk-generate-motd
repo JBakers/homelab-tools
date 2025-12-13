@@ -3,10 +3,11 @@ set -euo pipefail
 
 # Bulk generate MOTD templates for all hosts
 # Author: J.Bakers
-# Version: 3.5.0-dev.24
+# Version: 3.5.0-dev.31
 
 # Load shared menu helper library
 # Resolve symlinks to find the actual installation directory
+# shellcheck source=../lib/menu-helpers.sh
 SCRIPT_PATH="${BASH_SOURCE[0]}"
 while [[ -L "$SCRIPT_PATH" ]]; do
     SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
@@ -34,7 +35,7 @@ read_choice() {
     local default="${3:-}"
     local input
     
-    read -p "$(echo -e "${CYAN}${prompt}${RESET} ${YELLOW}(q=cancel)${RESET}: ")" input
+    read -r -p "$(echo -e "${CYAN}${prompt}${RESET} ${YELLOW}(q=cancel)${RESET}: ")" input
     
     if [[ "$input" == "q" || "$input" == "Q" ]]; then
         return 1
@@ -149,7 +150,7 @@ while true; do
                 echo -e "  ${CYAN}5${RESET}) Big Mono          ${YELLOW}(Large, bold)${RESET}"
                 echo -e "  ${CYAN}6${RESET}) Small/Smblock     ${YELLOW}(Compact)${RESET}"
                 echo ""
-                read -p "$(echo -e ${CYAN}Choose ASCII style \(1-6, p=preview, q=cancel\):${RESET} )" ascii_choice
+                read -r -p "$(echo -e "${CYAN}Choose ASCII style \(1-6, p=preview, q=cancel\):${RESET} ")" ascii_choice
                 ascii_choice=${ascii_choice:-1}
                 
                 # Handle cancel
@@ -248,13 +249,17 @@ while true; do
     fi
     echo ""
 
-    # Counters
+    # Counters and tracking
     generated=0
     skipped=0
     failed=0
+    declare -a skipped_hosts=()
+    declare -a skipped_reasons=()
 
     # Initialize progress display for Smart-detect mode
     current=0
+    # Disable -e during bulk generation to tolerate non-critical failures and EOF on non-tty
+    set +e
     if [[ "$gen_mode" == "2" ]]; then
         # Smart-detect mode will show progress bar
         :
@@ -267,7 +272,7 @@ while true; do
 
         # Update progress bar for Smart-detect mode
         if [[ "$gen_mode" == "2" ]]; then
-            show_progress $current $host_count "$hostname" "${YELLOW}Processing...${RESET}"
+            show_progress "$current" "$host_count" "$hostname" "${YELLOW}Processing...${RESET}"
         else
             # Interactive mode: show traditional output
             echo -e "${BOLD}${CYAN}Host: ${hostname}${RESET}"
@@ -279,7 +284,7 @@ while true; do
         for unsupported in "${UNSUPPORTED_SYSTEMS[@]}"; do
             if [[ "$hostname_lower" == "$unsupported" ]]; then
                 if [[ "$gen_mode" == "2" ]]; then
-                    show_progress $current $host_count "$hostname" "${YELLOW}⚠ System doesn't support MOTD - Skipped${RESET}"
+                    show_progress "$current" "$host_count" "$hostname" "${YELLOW}⚠ System doesn't support MOTD - Skipped${RESET}"
                     sleep 0.5
                 else
                     echo -e "  ${YELLOW}⚠${RESET} System doesn't support MOTD"
@@ -287,6 +292,8 @@ while true; do
                     echo ""
                 fi
                 skipped=$((skipped + 1))
+                skipped_hosts+=("$hostname")
+                skipped_reasons+=("System doesn't support MOTD")
                 is_unsupported=true
                 break
             fi
@@ -301,11 +308,11 @@ while true; do
         if [[ -f "$template_file" ]]; then
             if [[ "$gen_mode" == "2" ]]; then
                 # Smart mode: always overwrite
-                show_progress $current $host_count "$hostname" "${YELLOW}Template exists - Overwriting${RESET}"
+                show_progress "$current" "$host_count" "$hostname" "${YELLOW}Template exists - Overwriting${RESET}"
             else
                 # Interactive mode: ask
                 echo -e "  ${YELLOW}⚠${RESET} Template already exists"
-                read -p "  Overwrite? (1=Yes, 2=No, q=cancel): " overwrite
+                read -r -p "  Overwrite? (1=Yes, 2=No, q=cancel): " overwrite
                 if [[ "$overwrite" == "q" || "$overwrite" == "Q" ]]; then
                     echo -e "\n${YELLOW}→${RESET} Cancelled by user"
                     break 2  # Return to main menu
@@ -314,6 +321,8 @@ while true; do
                 if [[ "$overwrite" != "1" ]]; then
                     echo -e "  ${YELLOW}→${RESET} Skipped"
                     skipped=$((skipped + 1))
+                    skipped_hosts+=("$hostname")
+                    skipped_reasons+=("Template exists - user declined overwrite")
                     echo ""
                     continue
                 fi
@@ -323,17 +332,22 @@ while true; do
         # Generate based on mode
         if [[ "$gen_mode" == "2" ]]; then
             # Smart-detect mode: auto-generate with chosen style
-            show_progress $current $host_count "$hostname" "${CYAN}Generating MOTD...${RESET}"
+            show_progress "$current" "$host_count" "$hostname" "${CYAN}Generating MOTD...${RESET}"
 
-            # Prepare input for generate-motd
+            # Prepare input for generate-motd; guard against non-zero exit so loop continues
+            set +e
+            set +o pipefail
             echo -e "n\n${ascii_style}\nn\n" | generate-motd "$hostname" &>/dev/null
+            gen_status=${PIPESTATUS[1]:-0}
+            set -e
+            set -o pipefail
 
-            if [[ -f "$template_file" ]]; then
-                show_progress $current $host_count "$hostname" "${GREEN}✓ Generated successfully${RESET}"
+            if [[ $gen_status -eq 0 && -f "$template_file" ]]; then
+                show_progress "$current" "$host_count" "$hostname" "${GREEN}✓ Generated successfully${RESET}"
                 generated=$((generated + 1))
                 sleep 0.3
             else
-                show_progress $current $host_count "$hostname" "${RED}✗ Generation failed${RESET}"
+                show_progress "$current" "$host_count" "$hostname" "${RED}✗ Generation failed${RESET}"
                 failed=$((failed + 1))
                 sleep 0.5
             fi
@@ -343,18 +357,28 @@ while true; do
             echo ""
 
             # Pre-fill with chosen ASCII style
+            set +e
+            set +o pipefail
             echo -e "y\n${ascii_style}\nn\n" | generate-motd "$hostname"
+            gen_status=${PIPESTATUS[1]:-0}
+            set -e
+            set -o pipefail
 
-            if [[ -f "$template_file" ]]; then
+            if [[ $gen_status -eq 0 && -f "$template_file" ]]; then
                 echo -e "  ${GREEN}✓${RESET} Generated"
                 generated=$((generated + 1))
             else
                 echo -e "  ${YELLOW}→${RESET} Skipped or failed"
                 skipped=$((skipped + 1))
+                skipped_hosts+=("$hostname")
+                skipped_reasons+=("Generation skipped or failed")
             fi
             echo ""
         fi
     done
+
+    # Restore -e after generation loop
+    set -e
 
     # Finish progress display for Smart-detect mode
     if [[ "$gen_mode" == "2" ]]; then
@@ -373,8 +397,23 @@ while true; do
     if [[ $failed -gt 0 ]]; then
         echo -e "${RED}✗ Failed:${RESET}    $failed"
     fi
+    
+    # Show skipped hosts with reasons
+    if [[ $skipped -gt 0 ]]; then
+        echo ""
+        echo -e "${BOLD}${YELLOW}Skipped Hosts:${RESET}"
+        for ((i=0; i<${#skipped_hosts[@]}; i++)); do
+            echo -e "  ${YELLOW}→${RESET} ${skipped_hosts[$i]}: ${skipped_reasons[$i]}"
+        done
+    fi
+    
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
     echo ""
+
+    # If running non-interactively (piped input), stop here with success
+    if [[ ! -t 0 ]]; then
+        exit 0
+    fi
 
     # Bulk deploy option
     if [[ $generated -gt 0 ]]; then
@@ -387,11 +426,15 @@ while true; do
         echo -e "  ${YELLOW}1${RESET}) Yes, deploy now via SSH"
         echo -e "  ${YELLOW}2${RESET}) No, I'll deploy manually later"
         echo ""
-        read -p "$(echo -e ${CYAN}Choice \(1/2, q=cancel\):${RESET} )" deploy_all
-        if [[ "$deploy_all" == "q" || "$deploy_all" == "Q" ]]; then
-            break  # Return to main menu
+        if [[ ! -t 0 ]]; then
+            deploy_all="2"  # default to No when non-interactive
+        else
+            read -r -p "$(echo -e ${CYAN}Choice \(1/2, q=cancel\):${RESET} )" deploy_all
+            if [[ "$deploy_all" == "q" || "$deploy_all" == "Q" ]]; then
+                break  # Return to main menu
+            fi
+            deploy_all=${deploy_all:-1}
         fi
-        deploy_all=${deploy_all:-1}
 
         if [[ "$deploy_all" == "1" ]]; then
             echo ""

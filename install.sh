@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Installatie script voor Homelab Management Tools
 # Author: J.Bakers
-# Version: 3.5.0-dev.24
+# Version: 3.5.0-dev.31
 
 # Detect actual user (not root when using sudo)
 ACTUAL_USER="${SUDO_USER:-$USER}"
@@ -19,6 +19,22 @@ run_sudo() {
     fi
 }
 
+# Helper function for interactive read (works with curl|bash)
+# When stdin is piped, read from /dev/tty instead
+# Usage: value=$(read_input "prompt: ")
+read_input() {
+    local prompt="$1"
+    local input
+    if [[ -t 0 ]]; then
+        # stdin is a terminal, read normally
+        read -r -p "$prompt" input
+    else
+        # stdin is piped (curl|bash), read from /dev/tty
+        read -r -p "$prompt" input </dev/tty
+    fi
+    echo "$input"
+}
+
 # Kleuren
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
@@ -27,8 +43,41 @@ RED='\033[0;31m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
+# GitHub repo info
+GITHUB_REPO="https://github.com/JBakers/homelab-tools.git"
+DEFAULT_BRANCH="main"
+
+# Parse command line arguments
+INSTALL_BRANCH="${1:-$DEFAULT_BRANCH}"
+if [[ "$INSTALL_BRANCH" == "--branch" ]] && [[ -n "${2:-}" ]]; then
+    INSTALL_BRANCH="$2"
+fi
+
+# Check if we're in a homelab-tools directory or need to clone
+if [[ ! -f "$(pwd)/bin/homelab" ]]; then
+    echo -e "${CYAN}Cloning homelab-tools from GitHub (branch: $INSTALL_BRANCH)...${RESET}"
+    TEMP_DIR=$(mktemp -d)
+    git clone -b "$INSTALL_BRANCH" --depth 1 "$GITHUB_REPO" "$TEMP_DIR" || {
+        echo -e "${RED}✗ Error: Failed to clone repository${RESET}"
+        rm -rf "$TEMP_DIR"
+        exit 1
+    }
+    cd "$TEMP_DIR"
+    echo -e "${GREEN}✓${RESET} Cloned to temporary directory"
+    echo ""
+    # Re-run install from cloned directory
+    exec bash "$TEMP_DIR/install.sh" "--from-clone"
+fi
+
 # Get version and branch info
-VERSION=$(grep -m1 "Version: " bin/homelab | sed 's/.*Version: //')
+# Use VERSION file as primary source, fallback to bin/homelab header
+if [[ -f "VERSION" ]]; then
+    VERSION=$(cat VERSION)
+elif [[ -f "bin/homelab" ]]; then
+    VERSION=$(grep -m1 "Version: " bin/homelab | sed 's/.*Version: //')
+else
+    VERSION="unknown"
+fi
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 INSTALL_DATE=$(date '+%Y-%m-%d %H:%M:%S')
 
@@ -43,13 +92,6 @@ echo -e "  Date:    ${CYAN}$INSTALL_DATE${RESET}"
 echo -e "  User:    ${CYAN}$ACTUAL_USER${RESET}"
 echo ""
 
-# Check if we're in the correct directory
-if [[ ! -f "$(pwd)/bin/homelab" ]]; then
-    echo -e "${RED}✗ Error: Run this script from the homelab-tools directory${RESET}"
-    echo -e "  ${YELLOW}cd ~/homelab-tools && ./install.sh${RESET}"
-    exit 1
-fi
-
 INSTALL_DIR="/opt/homelab-tools"
 
 echo -e "${BOLD}Installation directory: ${CYAN}$INSTALL_DIR${RESET}"
@@ -63,10 +105,10 @@ if [[ -d "$LEGACY_DIR" ]] && [[ "$LEGACY_DIR" != "$(pwd)" ]]; then
     echo -e "${BOLD}What do you want to do with the old installation?${RESET}"
     echo -e "  ${CYAN}1${RESET}) Backup and remove ${YELLOW}(recommended)${RESET}"
     echo -e "  ${CYAN}2${RESET}) Backup only"
-    echo -e "  ${CYAN}3${RESET}) Keep it"
-    echo ""
-    read -p "Choice (1/2/3): " legacy_choice
-    legacy_choice=${legacy_choice:-1}
+echo -e "  ${CYAN}3${RESET}) Keep it"
+echo ""
+legacy_choice="$(read_input "Choice (1/2/3): ")"
+legacy_choice=${legacy_choice:-1}
     
     case "$legacy_choice" in
         1)
@@ -107,6 +149,68 @@ fi
 # 1. Install files to /opt
 echo -e "${YELLOW}[1/5]${RESET} Installing to /opt (requires sudo)..."
 
+# Helper: remove symlinks in ~/.local/bin
+remove_symlinks() {
+    if [[ -d "$ACTUAL_HOME/.local/bin" ]]; then
+        find "$ACTUAL_HOME/.local/bin" -maxdepth 1 -type l -lname "$INSTALL_DIR/*" -exec rm -f {} \; 2>/dev/null || true
+    fi
+}
+
+# Helper: clean user configs/templates and bashrc entries
+clean_user_data() {
+    rm -rf "$ACTUAL_HOME/.local/share/homelab-tools" 2>/dev/null || true
+    if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
+        sed -i '/homelab-tools/d' "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
+        sed -i '/HLT_BANNER/d' "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
+        sed -i '/Tip:.*homelab/d' "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
+    fi
+}
+
+# If an existing install is present, ask what to do
+if [[ -d "$INSTALL_DIR" ]]; then
+    echo -e "${YELLOW}⚠ Existing installation detected at ${CYAN}$INSTALL_DIR${RESET}"
+    echo ""
+    echo -e "${BOLD}Choose an action:${RESET}"
+    echo -e "  ${CYAN}1${RESET}) Update (backup old, then install) ${YELLOW}(default)${RESET}"
+    echo -e "  ${CYAN}2${RESET}) Clean install (remove old, wipe configs, then install) ${RED}(removes templates/configs)${RESET}"
+    echo -e "  ${CYAN}3${RESET}) Remove only (keep templates/configs)"
+    echo -e "  ${CYAN}4${RESET}) Complete uninstall ${RED}(removes everything including templates/configs)${RESET}"
+    echo ""
+    existing_choice=$(read_input "Choice (1/2/3/4): ")
+    existing_choice=${existing_choice:-1}
+
+    case "$existing_choice" in
+        1)
+            echo -e "${YELLOW}→${RESET} Proceeding with update (will backup old install)"
+            ;;
+        2)
+            echo -e "${YELLOW}→${RESET} Performing clean install (removing old data)..."
+            run_sudo rm -rf "$INSTALL_DIR"
+            remove_symlinks
+            clean_user_data
+            echo -e "${GREEN}✓${RESET} Old installation and user data removed; continuing with clean install."
+            ;;
+        3)
+            echo -e "${YELLOW}→${RESET} Removing existing installation..."
+            run_sudo rm -rf "$INSTALL_DIR"
+            remove_symlinks
+            echo -e "${GREEN}✓${RESET} Removed. Exiting per selection."
+            exit 0
+            ;;
+        4)
+            echo -e "${RED}→${RESET} Performing complete uninstall..."
+            run_sudo rm -rf "$INSTALL_DIR"
+            remove_symlinks
+            clean_user_data
+            echo -e "${GREEN}✓${RESET} Fully uninstalled. Exiting per selection."
+            exit 0
+            ;;
+        *)
+            echo -e "${YELLOW}→${RESET} Invalid choice; defaulting to Update"
+            ;;
+    esac
+fi
+
 # Backup old installation
 if [[ -d "$INSTALL_DIR" ]]; then
     backup_dir="$INSTALL_DIR.backup.$(date +%Y%m%d_%H%M%S)"
@@ -142,6 +246,8 @@ if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
     
     # Count duplicate HLT tip lines
     tip_count=$(grep -c "Tip: Type.*homelab" "$ACTUAL_HOME/.bashrc" 2>/dev/null || echo "0")
+    # Remove any whitespace/newlines
+    tip_count=$(echo "$tip_count" | tr -d '[:space:]')
     
     # Check for old PATH exports or duplicates
     needs_cleanup=false
@@ -165,6 +271,11 @@ if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
         sed -i '/export PATH.*homelab-tools/d' "$ACTUAL_HOME/.bashrc"
         sed -i '/PATH=.*homelab-tools/d' "$ACTUAL_HOME/.bashrc"
         sed -i '/alias.*homelab-tools/d' "$ACTUAL_HOME/.bashrc"
+
+        # Remove any old Homelab banner/tip blocks
+        sed -i '/^# Homelab Tools Welcome Banner$/,/^fi$/d' "$ACTUAL_HOME/.bashrc"
+        sed -i '/HLT_BANNER/d' "$ACTUAL_HOME/.bashrc"
+        sed -i '/Tip:.*homelab/d' "$ACTUAL_HOME/.bashrc"
         
         # Remove duplicate HLT tip lines (keep only lines inside the banner block)
         # First remove standalone tip lines (not inside the banner block)
@@ -229,7 +340,7 @@ if grep -q "HLT_BANNER" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
     echo -e "${GREEN}  ✓${RESET} Welcome banner already configured"
 else
     echo ""
-    read -p "Add a welcome banner to your shell? (Y/n): " add_banner
+    add_banner=$(read_input "Add a welcome banner to your shell? (Y/n): ")
     add_banner=${add_banner:-y}
     
     if [[ "$add_banner" =~ ^[Yy]$ ]]; then
@@ -242,7 +353,7 @@ else
 if [[ -z "$HLT_BANNER" ]] || [[ "$HLT_BANNER" != "0" ]]; then
     # Show banner only for interactive shells, not in VS Code
     if [[ $- == *i* ]] && [[ -z "$VSCODE_INJECTION" ]] && [[ -z "$TERM_PROGRAM" ]]; then
-        cat << "EOF"
+        cat << "ASCIIART"
 
   _   _                      _       _       _____           _     
  | | | | ___  _ __ ___   ___| | __ _| |__   |_   _|__   ___ | |___ 
@@ -250,18 +361,19 @@ if [[ -z "$HLT_BANNER" ]] || [[ "$HLT_BANNER" != "0" ]]; then
  |  _  | (_) | | | | | |  __/ | (_| | |_) |   | | (_) | (_) | \__ \
  |_| |_|\___/|_| |_| |_|\___|_|\__,_|_.__/    |_|\___/ \___/|_|___/
 
-EOF
+ASCIIART
         echo -e "\033[0;36m------------------------------------------------------------\033[0m"
-        echo -e "\033[0;32mWelkom terug, $USER!\033[0m"
+        echo -e "\033[0;32mWelcome back, $USER!\033[0m"
         echo "Hostname: $HOSTNAME"
         echo "$(date +'%A %d %B %Y, %H:%M')"
         
         # Show version if available
+        HLT_VERSION="unknown"
         if [[ -f /opt/homelab-tools/VERSION ]]; then
             HLT_VERSION=$(cat /opt/homelab-tools/VERSION)
-            echo -e "Homelab Tools: \033[0;36mv${HLT_VERSION}\033[0m"
         fi
-        
+        echo -e "Homelab Tools: \033[0;36mv${HLT_VERSION}\033[0m"
+
         echo -e "\033[0;36m------------------------------------------------------------\033[0m"
         echo ""
     fi
@@ -300,7 +412,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
     echo ""
     
     while true; do
-        read -p "  Domain suffix (e.g. .home): " domain_suffix
+        domain_suffix=$(read_input "  Domain suffix (e.g. .home): ")
         domain_suffix=${domain_suffix:-.home}
 
         # Validate domain starts with dot if not empty
@@ -319,7 +431,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Homelab Tools Installer
 # Installs to /opt/homelab-tools with system-wide access
 # Author: J.Bakers
-# Version: 3.5.0-dev.24
+# Version: 3.5.0-dev.31
 
 # Domain suffix for your homelab
 # Used for Web UI URLs
@@ -357,7 +469,7 @@ SSH_KEY="$SSH_DIR/id_ed25519"
 if [[ ! -d "$SSH_DIR" ]]; then
     echo -e "${YELLOW}⚠ SSH directory not found${RESET}"
     echo ""
-    read -p "Create SSH setup? (Y/n): " setup_ssh
+    setup_ssh=$(read_input "Create SSH setup? (Y/n): ")
     setup_ssh=${setup_ssh:-y}
     
     if [[ "$setup_ssh" =~ ^[Yy]$ ]]; then
@@ -374,13 +486,13 @@ fi
 if [[ -d "$SSH_DIR" ]] && [[ ! -f "$SSH_KEY" ]] && [[ ! -f "$SSH_DIR/id_rsa" ]]; then
     echo -e "${YELLOW}⚠ No SSH keys found${RESET}"
     echo ""
-    read -p "Generate SSH key? (Y/n): " gen_key
+    gen_key=$(read_input "Generate SSH key? (Y/n): ")
     gen_key=${gen_key:-y}
     
     if [[ "$gen_key" =~ ^[Yy]$ ]]; then
         echo ""
         echo -e "${YELLOW}→${RESET} Generating SSH key (ed25519)..."
-        read -p "Email for SSH key: " ssh_email
+        ssh_email=$(read_input "Email for SSH key: ")
         
         if [[ -n "$ssh_email" ]]; then
             ssh-keygen -t ed25519 -C "$ssh_email" -f "$SSH_KEY" -N ""
@@ -400,7 +512,7 @@ fi
 if [[ -d "$SSH_DIR" ]] && [[ ! -f "$SSH_CONFIG" ]]; then
     echo -e "${YELLOW}⚠ SSH config not found${RESET}"
     echo ""
-    read -p "Create SSH config? (Y/n): " create_config
+    create_config=$(read_input "Create SSH config? (Y/n): ")
     create_config=${create_config:-y}
     
     if [[ "$create_config" =~ ^[Yy]$ ]]; then
@@ -423,7 +535,7 @@ EOF
         echo -e "${GREEN}✓${RESET} SSH config created"
         echo ""
         echo -e "${BOLD}Add hosts now?${RESET}"
-        read -p "Edit SSH config? (Y/n): " edit_config
+        edit_config=$(read_input "Edit SSH config? (Y/n): ")
         edit_config=${edit_config:-y}
         
         if [[ "$edit_config" =~ ^[Yy]$ ]]; then
@@ -480,3 +592,9 @@ echo -e "   ${GREEN}generate-motd --help${RESET}"
 echo ""
 echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 echo ""
+
+# Cleanup temp directory if we cloned from GitHub
+if [[ "${1:-}" == "--from-clone" ]] && [[ "$(pwd)" == /tmp/* ]]; then
+    cd /
+    rm -rf "$(dirname "$0")" 2>/dev/null || true
+fi

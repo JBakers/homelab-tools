@@ -205,6 +205,7 @@ show_arrow_menu() {
 
                 # Check for easter egg
                 if [[ "$typed_buffer" == *"iddqd"* ]]; then
+                    # shellcheck disable=SC2034
                     MENU_RESULT="IDDQD"
                     return 0
                 fi
@@ -239,6 +240,11 @@ show_progress() {
     local hostname=$3
     local status=$4
 
+    # If not a TTY (e.g., piped input for automation), skip progress rendering
+    if [[ ! -t 1 ]]; then
+        return 0
+    fi
+
     # Calculate percentage
     local percent=$(( current * 100 / total ))
 
@@ -249,26 +255,35 @@ show_progress() {
     for ((i=0; i<filled; i++)); do bar="${bar}█"; done
     for ((i=0; i<empty; i++)); do bar="${bar}░"; done
 
-    # Move cursor to top and render
+    # Move cursor to top and render; clear each line to avoid text overlap
     tput cup 0 0
-    echo -e "${MENU_BOLD}${MENU_CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         📝 Processing MOTDs...                           ║"
-    echo -e "╚══════════════════════════════════════════════════════════╝${MENU_RESET}"
-    echo ""
-    echo -e "${MENU_BOLD}Progress:${MENU_RESET} [${MENU_CYAN}${bar}${MENU_RESET}] ${MENU_BOLD}${percent}%${MENU_RESET} (${current}/${total} hosts)"
-    echo ""
-    echo -e "${MENU_BOLD}Current:${MENU_RESET}  ${MENU_CYAN}${hostname}${MENU_RESET}"
-    echo -e "${MENU_BOLD}Status:${MENU_RESET}   ${status}"
-    echo ""
+    tput el; echo -e "${MENU_BOLD}${MENU_CYAN}╔══════════════════════════════════════════════════════════╗${MENU_RESET}"
+    tput el; echo -e "${MENU_BOLD}${MENU_CYAN}║         📝 Processing MOTDs...                           ║${MENU_RESET}"
+    tput el; echo -e "${MENU_BOLD}${MENU_CYAN}╚══════════════════════════════════════════════════════════╝${MENU_RESET}"
+    tput el; echo ""
+    tput el; echo -e "  ${MENU_YELLOW}→${MENU_RESET} Automatic generation for all hosts"
+    tput el; echo -e "${MENU_BOLD}Progress:${MENU_RESET} [${MENU_CYAN}${bar}${MENU_RESET}] ${MENU_BOLD}${percent}%${MENU_RESET} (${current}/${total} hosts)"
+    tput el; echo -e "  ${MENU_YELLOW}→${MENU_RESET} No prompts per host"
+    tput el; echo -e "${MENU_BOLD}Current:${MENU_RESET}  ${MENU_CYAN}${hostname}${MENU_RESET}"
+    tput el; echo -e "${MENU_BOLD}Status:${MENU_RESET}   ${status}"
+    tput el; echo ""
 }
 
 # Initialize progress display (clear screen, hide cursor)
 init_progress() {
+    # Skip when not a TTY
+    if [[ ! -t 1 ]]; then
+        return 0
+    fi
     clear
     tput civis  # Hide cursor
 }
 
 # Finalize progress display (show cursor)
 finish_progress() {
+    # Skip when not a TTY
+    if [[ ! -t 1 ]]; then
+        return 0
+    fi
     tput cnorm  # Show cursor
 }

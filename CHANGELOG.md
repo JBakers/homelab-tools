@@ -35,7 +35,7 @@ After v3.4.0 release, multiple critical bugs were discovered. Development was ro
 - **dev.23** - Detect and handle legacy ~/homelab-tools installations with user choice
 - **dev.23** - Clean up old homelab-tools references in .bashrc (keep .ssh untouched)
 - **dev.23** - Add optional ASCII welcome banner with version info (HLT_BANNER=0 to disable)
-- **dev.23** - Convert all Dutch text to English in install.sh
+- **dev.23** - Convert all Dutch text to English in install.sh (complete)
 
 #### Internationalization
 - **dev.23** - Add i18n roadmap to TODO.md (support for en/nl/de/fr/es planned)

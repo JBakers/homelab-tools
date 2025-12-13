@@ -107,7 +107,7 @@ read_input() {
 # Returns: 0 if Enter, 1 if q pressed
 wait_for_continue() {
     local key
-    echo -e "${YELLOW}Press Enter to continue (q=back)...${RESET}"
+    echo -e "${YELLOW}Press Enter to continue...${RESET}"
     read -rsn1 key < /dev/tty 2>/dev/null || true
     if [[ "$key" == "q" || "$key" == "Q" ]]; then
         return 1

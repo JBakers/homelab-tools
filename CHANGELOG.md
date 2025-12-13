@@ -1,5 +1,98 @@
 # Changelog - Homelab Tools
 
+## v3.5.0-dev (Unreleased)
+
+**Development builds - Not yet released**
+
+After v3.4.0 release, multiple critical bugs were discovered. Development was rolled back to the `develop` branch for systematic bugfixing before the next stable release.
+
+### 🐛 Bug Fixes
+
+#### Installation & Configuration
+- **dev.1** - Initial development build numbering system with bump-dev.sh
+- **dev.2** - Add run_sudo helper for root environments (container compatibility)
+- **dev.3** - Fix config.sh creation using temp file + proper sudo handling
+- **dev.4** - Fix templates directory ownership for actual user (not root)
+
+#### Bulk Generate & Loop Issues
+- **dev.5** - Remove conflicting stdin redirection in bulk-generate
+- **dev.6** - Replace `(())` arithmetic with `$(())`, fixes bulk-generate loop hang
+- **dev.11** - Replace all remaining `(())` arithmetic - fixes copykey & cleanup-keys loops
+
+#### Uninstall Improvements
+- **dev.7** - Improve bashrc cleanup + add backup removal option
+- **dev.8** - Simplify with numbered defaults (1/2) + fix backup removal
+- **dev.10** - Add remote MOTD removal option + fix menu borders
+
+#### MOTD Generation
+- **dev.9** - Remove duplicate help output + fix config write permissions + default hostname
+- **dev.12** - Fix grep exit code causing script hang with `set -e` (plex and others)
+- **dev.13** - Skip Home Assistant detection (Docker incompatible)
+- **dev.14** - Add global unsupported systems list for better service detection
+
+#### Installation & Migration
+- **dev.23** - Add VERSION file for centralized version management
+- **dev.23** - Detect and handle legacy ~/homelab-tools installations with user choice
+- **dev.23** - Clean up old homelab-tools references in .bashrc (keep .ssh untouched)
+- **dev.23** - Add optional ASCII welcome banner with version info (HLT_BANNER=0 to disable)
+- **dev.23** - Convert all Dutch text to English in install.sh (complete)
+
+#### Internationalization
+- **dev.23** - Add i18n roadmap to TODO.md (support for en/nl/de/fr/es planned)
+
+#### Security & Privacy
+- **dev.23** - Create SECURITY.md with security policy and responsible disclosure
+- **dev.23** - Remove broken reference to claude.md from README
+- **dev.23** - Add security warning to config.sh.example (DO NOT commit sensitive data)
+- **dev.23** - Translate config.sh.example comments to English
+- **dev.23** - Audit example configs (all safe - only generic usernames)
+
+#### Uninstall & Migration
+- **dev.23** - Complete English translation of uninstall.sh
+- **dev.23** - Improve uninstall.sh flow and user prompts
+- **dev.23** - Mark migrate-to-opt.sh for removal (functionality now in install.sh)
+
+### ✨ New Features (dev.24)
+
+#### Interactive Menu System
+- **dev.24** - Fix arrow key navigation in xfce4-terminal (read from /dev/tty)
+- **dev.24** - Fix timeout handling with set -e (proper set +e around read)
+- **dev.24** - Add global MENU_RESULT variable to avoid subshell issues
+- **dev.24** - Add q=cancel support to all user input prompts
+- **dev.24** - Add wait_for_continue helper with q=back option
+
+#### Configuration Menu
+- **dev.24** - Add Uninstall option to Configuration menu
+- **dev.24** - Update Configuration help with Uninstall documentation
+
+#### Installation & Cleanup
+- **dev.24** - Add duplicate HLT section detection in .bashrc
+- **dev.24** - Skip adding sections if already present (PATH, tip, banner)
+- **dev.24** - Clean up duplicate tip lines on re-install
+- **dev.24** - Always create backup before .bashrc modifications
+
+#### Code Cleanup
+- **dev.24** - Remove migrate-to-opt.sh (integrated into install.sh)
+- **dev.24** - Remove .todos.md (superseded by TODO.md)
+- **dev.24** - Remove config/hosts.txt.example (obsolete, using ~/.ssh/config)
+- **dev.24** - Remove config/server-motd/test.sh (obsolete test template)
+- **dev.24** - Fix all ShellCheck warnings (unused vars, non-constant source)
+- **dev.24** - Add shellcheck directives for false positives
+
+### 📝 Documentation (dev.24)
+- **dev.24** - Complete file audit in TODO.md with status for all files
+- **dev.24** - Mark completed HIGH PRIORITY items
+- **dev.24** - Document all removed/obsolete files
+
+### 📝 Changes from Previous Session
+- Version display in install menu (version/branch/date)
+- Bashrc tip now works correctly with sudo user detection
+- ASCII art preview menu in bulk-generate
+- All menu choices changed from letters (A/D/Y/N) to numbers (1/2/3)
+- Bulk-generate no longer stops after first server
+
+---
+
 ## v3.4.0 (16 November 2025)
 
 ### Major Changes

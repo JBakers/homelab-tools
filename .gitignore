@@ -8,8 +8,13 @@ claude.md
 conversation*.md
 notes*.md
 todo*.md
+.todos.md
 GESPREK.md
 .markdownlint.json
+
+# Development tracking (private)
+.notes.md
+.dev-*.md
 
 # Test files
 test.sh

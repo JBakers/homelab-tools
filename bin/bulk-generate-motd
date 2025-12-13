@@ -3,31 +3,77 @@ set -euo pipefail
 
 # Bulk generate MOTD templates for all hosts
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev.24
 
-# Kleuren
-CYAN='\033[0;36m'
-BLUE='\033[0;34m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BOLD='\033[1m'
-RESET='\033[0m'
+# Load shared menu helper library
+# Resolve symlinks to find the actual installation directory
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
+source "$LIB_DIR/menu-helpers.sh"
+
+# Colors (from menu-helpers.sh)
+CYAN="$MENU_CYAN"
+GREEN="$MENU_GREEN"
+YELLOW="$MENU_YELLOW"
+RED="$MENU_RED"
+BOLD="$MENU_BOLD"
+RESET="$MENU_RESET"
+
+# Read choice with q to cancel - returns to menu
+# Usage: read_choice "prompt" variable default [valid_pattern]
+# Returns 1 if cancelled (q pressed), 0 otherwise
+read_choice() {
+    local prompt="$1"
+    local var_name="$2"
+    local default="${3:-}"
+    local input
+    
+    read -p "$(echo -e "${CYAN}${prompt}${RESET} ${YELLOW}(q=cancel)${RESET}: ")" input
+    
+    if [[ "$input" == "q" || "$input" == "Q" ]]; then
+        return 1
+    fi
+    
+    # Use default if empty
+    if [[ -z "$input" && -n "$default" ]]; then
+        input="$default"
+    fi
+    
+    eval "$var_name=\"\$input\""
+    return 0
+}
 
 SSH_CONFIG="$HOME/.ssh/config"
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
+
+# Systems that don't support MOTD (appliances, Docker, non-Linux)
+UNSUPPORTED_SYSTEMS=(
+    "homeassistant" "hass" "ha"           # Home Assistant (Docker)
+    "truenas"                              # TrueNAS (FreeBSD appliance)
+    "pfsense" "opnsense"                   # Firewall appliances
+    "windows" "win"                        # Windows systems
+    "unraid"                               # Unraid (different MOTD)
+    "synology" "nas"                       # Synology NAS
+    "qnap"                                 # QNAP NAS
+)
 
 show_help() {
     echo -e "${BOLD}${CYAN}bulk-generate-motd - Generate MOTDs for all hosts${RESET}"
     echo ""
     echo -e "${BOLD}USAGE:${RESET}"
     echo "  bulk-generate-motd          # Interactive mode"
-    echo "  bulk-generate-motd --yes    # Auto-confirm overwrites"
-    echo "  bulk-generate-motd --all    # Fully automatic"
     echo ""
-    echo -e "${BOLD}OPTIONS:${RESET}"
-    echo "  --yes, -y    Auto-confirm overwrite prompts"
-    echo "  --all, -a    Generate all hosts automatically"
+    echo -e "${BOLD}DESCRIPTION:${RESET}"
+    echo "  Generates MOTD templates for all hosts in SSH config."
+    echo "  Choose between Default clean or ASCII art styles."
+    echo "  Use Interactive mode to customize each host individually,"
+    echo "  or Smart-detect mode for automatic generation."
     echo ""
 }
 
@@ -36,220 +82,407 @@ if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     exit 0
 fi
 
-# Check for --all flag
-AUTO_ALL=false
-AUTO_YES=false
-if [[ "${1:-}" == "--all" ]] || [[ "${1:-}" == "-a" ]]; then
-    AUTO_ALL=true
-elif [[ "${1:-}" == "--yes" ]] || [[ "${1:-}" == "-y" ]]; then
-    AUTO_YES=true
-fi
-
-echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║       📝 Bulk MOTD Generator                          ║"
-echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
-echo ""
-
-if [[ "$AUTO_ALL" == true ]]; then
-    echo -e "${GREEN}🚀 AUTO MODE:${RESET} Generating all hosts with auto-detection"
+# Main loop for returning to menu
+while true; do
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         📝 Bulk MOTD Generator                           ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-elif [[ "$AUTO_YES" == true ]]; then
-    echo -e "${GREEN}✓ YES MODE:${RESET} Auto-confirming overwrites"
-    echo ""
-fi
 
-# Check SSH config
-if [[ ! -f "$SSH_CONFIG" ]]; then
-    echo -e "${RED}✗ SSH config not found: $SSH_CONFIG${RESET}"
-    echo ""
-    echo -e "  Create it first with:"
-    echo -e "  ${GREEN}edit-ssh${RESET}"
-    exit 1
-fi
-
-# Maak templates directory
-mkdir -p "$TEMPLATES_DIR"
-
-# Lees alle hosts uit SSH config
-hosts=$(grep "^Host " "$SSH_CONFIG" | awk '{print $2}' | grep -v '\*' | sort -u)
-host_count=$(echo "$hosts" | wc -l)
-
-if [[ $host_count -eq 0 ]]; then
-    echo -e "${YELLOW}⚠ No hosts found in SSH config${RESET}"
-    echo ""
-    echo -e "  Add hosts with:"
-    echo -e "  ${GREEN}edit-ssh${RESET}"
-    exit 0
-fi
-
-echo -e "${BOLD}Found ${GREEN}$host_count${RESET} ${BOLD}hosts in SSH config${RESET}"
-echo ""
-
-# Counters
-generated=0
-skipped=0
-failed=0
-
-# Loop door hosts
-for hostname in $hosts; do
-    template_file="$TEMPLATES_DIR/${hostname}.sh"
-    
-    echo -e "${BOLD}${BLUE}Host: ${CYAN}$hostname${RESET}"
-    
-    # In AUTO_ALL mode: skip prompts, just generate
-    if [[ "$AUTO_ALL" == true ]]; then
-        echo -e "  ${YELLOW}→${RESET} Auto-generating with detection..."
-        
-        # Skip if exists unless we're in overwrite-all mode
-        if [[ -f "$template_file" ]]; then
-            echo -e "  ${YELLOW}⚠${RESET} Template exists, overwriting..."
-        fi
-        
-        # Generate with auto-detection (clean MOTD = style 1)
-        # Answers: customize=n, style=1 (clean), deploy=n (bulk deploys later)
-        echo -e "n\n1\nn\n" | generate-motd "$hostname" &>/dev/null
-        
-        if [[ -f "$template_file" ]]; then
-            echo -e "  ${GREEN}✓${RESET} Generated successfully"
-            ((generated++))
-        else
-            echo -e "  ${RED}✗${RESET} Generation failed"
-            ((failed++))
-        fi
+    # Check SSH config
+    if [[ ! -f "$SSH_CONFIG" ]]; then
+        echo -e "${RED}✗ SSH config not found: $SSH_CONFIG${RESET}"
         echo ""
-        continue
+        echo -e "  Create it first with:"
+        echo -e "  ${GREEN}edit-ssh${RESET}"
+        exit 1
     fi
-    
-    # Normal interactive mode
-    # Check of template al bestaat
-    if [[ -f "$template_file" ]]; then
-        echo -e "  ${YELLOW}⚠${RESET} Template already exists"
-        
-        if [[ "$AUTO_YES" == true ]]; then
-            echo -e "  ${GREEN}✓${RESET} Auto-confirming overwrite (--yes mode)"
-        else
-            read -p "  Overwrite? (Y/n): " overwrite
-            overwrite=${overwrite:-y}
-            if [[ ! "$overwrite" =~ ^[Yy]$ ]]; then
-                echo -e "  ${YELLOW}→${RESET} Skipped"
-                ((skipped++))
+
+    # Create templates directory
+    mkdir -p "$TEMPLATES_DIR"
+
+    # Read all hosts from SSH config
+    hosts=$(grep "^Host " "$SSH_CONFIG" | awk '{print $2}' | grep -v '\*' | sort -u)
+    host_count=$(echo "$hosts" | wc -l)
+
+    if [[ $host_count -eq 0 ]]; then
+        echo -e "${YELLOW}⚠ No hosts found in SSH config${RESET}"
+        echo ""
+        echo -e "  Add hosts with:"
+        echo -e "  ${GREEN}edit-ssh${RESET}"
+        exit 0
+    fi
+
+    echo -e "${BOLD}Found ${GREEN}$host_count${RESET} ${BOLD}hosts in SSH config${RESET}"
+    echo ""
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo ""
+
+    # Step 1: Choose style type
+    echo -e "${BOLD}${CYAN}Step 1: Choose MOTD Style${RESET}"
+    echo ""
+    echo -e "  ${YELLOW}1${RESET}) ${BOLD}Default Clean MOTD${RESET}"
+    echo -e "     ${YELLOW}→${RESET} Functional & informative, no ASCII art"
+    echo ""
+    echo -e "  ${YELLOW}2${RESET}) ${BOLD}ASCII Art MOTD${RESET}"
+    echo -e "     ${YELLOW}→${RESET} Choose from 6 artistic styles"
+    echo ""
+    if ! read_choice "Choice (1/2)" style_type "1"; then
+        break  # Return to homelab menu
+    fi
+
+    # ASCII style selection with preview
+    ascii_style=""
+    # shellcheck disable=SC2154
+    if [[ "$style_type" == "2" ]]; then
+        echo ""
+        echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
+        echo ""
+
+        if command -v toilet &> /dev/null; then
+            while true; do
+                echo -e "  ${CYAN}1${RESET}) Clean & Functional ${YELLOW}(No ASCII - Default)${RESET}"
+                echo -e "  ${CYAN}2${RESET}) Rainbow Future    ${YELLOW}(Colorful, modern)${RESET}"
+                echo -e "  ${CYAN}3${RESET}) Rainbow Standard  ${YELLOW}(Colorful, classic)${RESET}"
+                echo -e "  ${CYAN}4${RESET}) Mono Future       ${YELLOW}(Black & white, modern)${RESET}"
+                echo -e "  ${CYAN}5${RESET}) Big Mono          ${YELLOW}(Large, bold)${RESET}"
+                echo -e "  ${CYAN}6${RESET}) Small/Smblock     ${YELLOW}(Compact)${RESET}"
                 echo ""
-                continue
-            fi
-        fi
-    fi
-    
-    # Vraag hoe te genereren
-    echo -e "  Generate MOTD for ${CYAN}$hostname${RESET}?"
-    echo -e "    ${GREEN}y${RESET}) Yes, use auto-detection (clean MOTD)"
-    echo -e "    ${GREEN}i${RESET}) Interactive (choose style, details)"
-    echo -e "    ${GREEN}a${RESET}) Yes to all remaining (clean MOTDs)"
-    echo -e "    ${GREEN}n${RESET}) Skip"
-    read -p "  Choice (Y/i/a/n): " choice
-    choice=${choice:-y}
-
-    # Handle "yes to all" - switch to AUTO_ALL mode
-    if [[ "$choice" =~ ^[Aa]$ ]]; then
-        AUTO_ALL=true
-        echo -e "  ${GREEN}✓${RESET} Switching to auto-mode for remaining hosts"
-        choice="y"
-    fi
-    
-    case "$choice" in
-        y|Y)
-            # Gebruik auto-detection en defaults
-            echo -e "  ${YELLOW}→${RESET} Generating with auto-detection (clean MOTD)..."
-
-            # Call generate-motd met auto-detection
-            # Answers: customize=n, style=1 (clean), deploy=n (bulk deploys later)
-            echo -e "n\n1\nn\n" | generate-motd "$hostname" &>/dev/null
-            
-            if [[ -f "$template_file" ]]; then
-                echo -e "  ${GREEN}✓${RESET} Generated successfully"
-                ((generated++))
-            else
-                echo -e "  ${RED}✗${RESET} Generation failed"
-                ((failed++))
-            fi
-            ;;
-            
-        i|I)
-            # Interactive mode
-            echo -e "  ${YELLOW}→${RESET} Interactive mode..."
-            echo ""
-            generate-motd "$hostname"
-            
-            if [[ -f "$template_file" ]]; then
-                ((generated++))
-            else
-                ((failed++))
-            fi
-            ;;
-            
-        *)
-            echo -e "  ${YELLOW}→${RESET} Skipped"
-            ((skipped++))
-            ;;
-    esac
-    
-    echo ""
-done
-
-# Samenvatting
-echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
-echo -e "${GREEN}✓ Generated:${RESET} $generated"
-echo -e "${YELLOW}→ Skipped:${RESET}   $skipped"
-if [[ $failed -gt 0 ]]; then
-    echo -e "${RED}✗ Failed:${RESET}    $failed"
-fi
-echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
-echo ""
-
-# Bulk deploy optie
-if [[ $generated -gt 0 ]]; then
-    echo -e "${BOLD}Deploy all generated MOTDs to hosts?${RESET}"
-    read -p "Deploy now? (Y/n): " deploy_all
-    deploy_all=${deploy_all:-y}
-    
-    if [[ "$deploy_all" =~ ^[Yy]$ ]]; then
-        echo ""
-        echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
-        echo -e "${BOLD}${CYAN}           🚀 Deploying MOTDs...                         ${RESET}"
-        echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
-        echo ""
-        
-        deployed=0
-        deploy_failed=0
-        
-        for hostname in $hosts; do
-            template_file="$TEMPLATES_DIR/${hostname}.sh"
-            
-            # Deploy alleen als template bestaat en nieuw gegenereerd is
-            if [[ -f "$template_file" ]]; then
-                echo -e "${BOLD}${BLUE}Deploying to: ${CYAN}$hostname${RESET}"
+                read -p "$(echo -e ${CYAN}Choose ASCII style \(1-6, p=preview, q=cancel\):${RESET} )" ascii_choice
+                ascii_choice=${ascii_choice:-1}
                 
-                if deploy-motd "$hostname" &>/dev/null; then
-                    echo -e "  ${GREEN}✓${RESET} Deployed successfully"
-                    ((deployed++))
-                else
-                    echo -e "  ${RED}✗${RESET} Deployment failed"
-                    ((deploy_failed++))
+                # Handle cancel
+                if [[ "$ascii_choice" == "q" ]] || [[ "$ascii_choice" == "Q" ]]; then
+                    ascii_style=""
+                    break 2  # Break out of both loops, return to main menu
                 fi
+
+                # Handle preview
+                if [[ "$ascii_choice" == "p" ]] || [[ "$ascii_choice" == "P" ]]; then
+                    clear
+                    echo -e "${BOLD}${CYAN}ASCII Art Preview${RESET}"
+                    echo ""
+                    toilet -f future --gay "TEST" 2>/dev/null || echo "Style 2: Rainbow Future"
+                    echo ""
+                    toilet -f standard --gay "TEST" 2>/dev/null || echo "Style 3: Rainbow Standard"
+                    echo ""
+                    toilet -f future "TEST" 2>/dev/null || echo "Style 4: Mono Future"
+                    echo ""
+                    toilet -f bigmono9 "TEST" 2>/dev/null || echo "Style 5: Big Mono"
+                    echo ""
+                    toilet -f smblock "TEST" 2>/dev/null || echo "Style 6: Small/Smblock"
+                    echo ""
+                    echo -e "${YELLOW}Press Enter to continue (q=cancel)...${RESET}"
+                    read -rsn1 preview_key < /dev/tty 2>/dev/null || true
+                    if [[ "$preview_key" == "q" || "$preview_key" == "Q" ]]; then
+                        break 2  # Return to main menu
+                    fi
+                    clear
+                    echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
+                    echo ""
+                    continue
+                fi
+
+                # Validate choice
+                if [[ "$ascii_choice" =~ ^[1-6]$ ]]; then
+                    ascii_style="$ascii_choice"
+                    break
+                else
+                    echo -e "${RED}Invalid choice. Please enter 1-6 or 'p' for preview.${RESET}"
+                    sleep 1
+                    clear
+                    echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
+                    echo ""
+                fi
+            done
+        else
+            echo -e "${YELLOW}⚠ Toilet not installed - ASCII art not available${RESET}"
+            echo -e "  For ASCII art: ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
+            echo -e "  Falling back to Clean & Functional style"
+            echo ""
+            ascii_style="1"
+        fi
+    else
+        # Default style = style 1 (clean)
+        ascii_style="1"
+    fi
+
+    echo ""
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo ""
+
+    # Step 2: Choose generation mode
+    echo -e "${BOLD}${CYAN}Step 2: Choose Generation Mode${RESET}"
+    echo ""
+    echo -e "  ${YELLOW}1${RESET}) ${BOLD}Interactive Mode${RESET}"
+    echo -e "     ${YELLOW}→${RESET} Customize each host individually"
+    echo -e "     ${YELLOW}→${RESET} Choose service name, description, web UI per host"
+    echo ""
+    echo -e "  ${YELLOW}2${RESET}) ${BOLD}Smart-Detect Mode${RESET} ${GREEN}[Recommended]${RESET}"
+    echo -e "     ${YELLOW}→${RESET} Automatic generation for all hosts"
+    echo -e "     ${YELLOW}→${RESET} Uses chosen style with auto-detected settings"
+    echo -e "     ${YELLOW}→${RESET} No prompts per host"
+    echo ""
+    if ! read_choice "Choice (1/2)" gen_mode "2"; then
+        break  # Return to homelab menu
+    fi
+
+    echo ""
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo ""
+
+    # Show what will happen
+    # shellcheck disable=SC2154
+    if [[ "$gen_mode" == "1" ]]; then
+        echo -e "${YELLOW}→${RESET} ${BOLD}Starting Interactive Mode...${RESET}"
+        echo -e "  You will be prompted to customize each host individually"
+    else
+        echo -e "${GREEN}✓${RESET} ${BOLD}Starting Smart-Detect Mode...${RESET}"
+        if [[ "$ascii_style" == "1" ]]; then
+            echo -e "  Generating all hosts with ${CYAN}Clean & Functional${RESET} style"
+        else
+            echo -e "  Generating all hosts with ${CYAN}ASCII style $ascii_style${RESET}"
+        fi
+        echo -e "  Auto-detecting settings for each host"
+    fi
+    echo ""
+
+    # Counters
+    generated=0
+    skipped=0
+    failed=0
+
+    # Initialize progress display for Smart-detect mode
+    current=0
+    if [[ "$gen_mode" == "2" ]]; then
+        # Smart-detect mode will show progress bar
+        :
+    fi
+
+    # Loop through hosts
+    for hostname in $hosts; do
+        template_file="$TEMPLATES_DIR/${hostname}.sh"
+        ((current++))
+
+        # Update progress bar for Smart-detect mode
+        if [[ "$gen_mode" == "2" ]]; then
+            show_progress $current $host_count "$hostname" "${YELLOW}Processing...${RESET}"
+        else
+            # Interactive mode: show traditional output
+            echo -e "${BOLD}${CYAN}Host: ${hostname}${RESET}"
+        fi
+
+        # Check if system is unsupported
+        hostname_lower=$(echo "$hostname" | tr '[:upper:]' '[:lower:]')
+        is_unsupported=false
+        for unsupported in "${UNSUPPORTED_SYSTEMS[@]}"; do
+            if [[ "$hostname_lower" == "$unsupported" ]]; then
+                if [[ "$gen_mode" == "2" ]]; then
+                    show_progress $current $host_count "$hostname" "${YELLOW}⚠ System doesn't support MOTD - Skipped${RESET}"
+                    sleep 0.5
+                else
+                    echo -e "  ${YELLOW}⚠${RESET} System doesn't support MOTD"
+                    echo -e "  ${YELLOW}→${RESET} Skipped"
+                    echo ""
+                fi
+                skipped=$((skipped + 1))
+                is_unsupported=true
+                break
             fi
         done
-        
-        echo ""
-        echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
-        echo -e "${GREEN}✓ Deployed:${RESET} $deployed"
-        if [[ $deploy_failed -gt 0 ]]; then
-            echo -e "${RED}✗ Failed:${RESET}   $deploy_failed"
+
+        # Skip to next host if unsupported
+        if [[ "$is_unsupported" == "true" ]]; then
+            continue
         fi
-        echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
-        echo ""
-    else
-        echo -e "${YELLOW}Next steps:${RESET}"
-        echo -e "  ${GREEN}list-templates${RESET}  - View all templates"
-        echo -e "  ${GREEN}deploy-motd <host>${RESET} - Deploy to a specific host"
-        echo ""
+
+        # Check if template exists
+        if [[ -f "$template_file" ]]; then
+            if [[ "$gen_mode" == "2" ]]; then
+                # Smart mode: always overwrite
+                show_progress $current $host_count "$hostname" "${YELLOW}Template exists - Overwriting${RESET}"
+            else
+                # Interactive mode: ask
+                echo -e "  ${YELLOW}⚠${RESET} Template already exists"
+                read -p "  Overwrite? (1=Yes, 2=No, q=cancel): " overwrite
+                if [[ "$overwrite" == "q" || "$overwrite" == "Q" ]]; then
+                    echo -e "\n${YELLOW}→${RESET} Cancelled by user"
+                    break 2  # Return to main menu
+                fi
+                overwrite=${overwrite:-1}
+                if [[ "$overwrite" != "1" ]]; then
+                    echo -e "  ${YELLOW}→${RESET} Skipped"
+                    skipped=$((skipped + 1))
+                    echo ""
+                    continue
+                fi
+            fi
+        fi
+
+        # Generate based on mode
+        if [[ "$gen_mode" == "2" ]]; then
+            # Smart-detect mode: auto-generate with chosen style
+            show_progress $current $host_count "$hostname" "${CYAN}Generating MOTD...${RESET}"
+
+            # Prepare input for generate-motd
+            echo -e "n\n${ascii_style}\nn\n" | generate-motd "$hostname" &>/dev/null
+
+            if [[ -f "$template_file" ]]; then
+                show_progress $current $host_count "$hostname" "${GREEN}✓ Generated successfully${RESET}"
+                generated=$((generated + 1))
+                sleep 0.3
+            else
+                show_progress $current $host_count "$hostname" "${RED}✗ Generation failed${RESET}"
+                failed=$((failed + 1))
+                sleep 0.5
+            fi
+        else
+            # Interactive mode: call generate-motd interactively
+            echo -e "  ${YELLOW}→${RESET} Interactive customization..."
+            echo ""
+
+            # Pre-fill with chosen ASCII style
+            echo -e "y\n${ascii_style}\nn\n" | generate-motd "$hostname"
+
+            if [[ -f "$template_file" ]]; then
+                echo -e "  ${GREEN}✓${RESET} Generated"
+                generated=$((generated + 1))
+            else
+                echo -e "  ${YELLOW}→${RESET} Skipped or failed"
+                skipped=$((skipped + 1))
+            fi
+            echo ""
+        fi
+    done
+
+    # Finish progress display for Smart-detect mode
+    if [[ "$gen_mode" == "2" ]]; then
+        finish_progress
+        clear
     fi
-fi
+
+
+    # Summary
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo -e "${BOLD}${CYAN}                 Generation Summary                        ${RESET}"
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo ""
+    echo -e "${GREEN}✓ Generated:${RESET} $generated"
+    echo -e "${YELLOW}→ Skipped:${RESET}   $skipped"
+    if [[ $failed -gt 0 ]]; then
+        echo -e "${RED}✗ Failed:${RESET}    $failed"
+    fi
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo ""
+
+    # Bulk deploy option
+    if [[ $generated -gt 0 ]]; then
+        echo -e "${BOLD}${CYAN}Step 3: Deployment${RESET}"
+        echo ""
+        echo -e "  ${GREEN}✓${RESET} Templates generated successfully!"
+        echo ""
+        echo -e "${BOLD}Deploy all generated MOTDs to hosts now?${RESET}"
+        echo ""
+        echo -e "  ${YELLOW}1${RESET}) Yes, deploy now via SSH"
+        echo -e "  ${YELLOW}2${RESET}) No, I'll deploy manually later"
+        echo ""
+        read -p "$(echo -e ${CYAN}Choice \(1/2, q=cancel\):${RESET} )" deploy_all
+        if [[ "$deploy_all" == "q" || "$deploy_all" == "Q" ]]; then
+            break  # Return to main menu
+        fi
+        deploy_all=${deploy_all:-1}
+
+        if [[ "$deploy_all" == "1" ]]; then
+            echo ""
+            echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+            echo -e "${BOLD}${CYAN}                   🚀 Deploying MOTDs                       ${RESET}"
+            echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+            echo ""
+
+            deployed=0
+            deploy_failed=0
+
+            for hostname in $hosts; do
+                template_file="$TEMPLATES_DIR/${hostname}.sh"
+
+                # Only deploy if template exists
+                if [[ -f "$template_file" ]]; then
+                    echo -e "${BOLD}${CYAN}Deploying to: ${hostname}${RESET}"
+
+                    if deploy-motd "$hostname" &>/dev/null; then
+                        echo -e "  ${GREEN}✓${RESET} Deployed successfully"
+                        deployed=$((deployed + 1))
+                    else
+                        echo -e "  ${RED}✗${RESET} Deployment failed"
+                        deploy_failed=$((deploy_failed + 1))
+                    fi
+                fi
+            done
+
+            echo ""
+            echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+            echo -e "${BOLD}${CYAN}                Deployment Summary                         ${RESET}"
+            echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+            echo ""
+            echo -e "${GREEN}✓ Deployed:${RESET} $deployed"
+            if [[ $deploy_failed -gt 0 ]]; then
+                echo -e "${RED}✗ Failed:${RESET}   $deploy_failed"
+            fi
+            echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+            echo ""
+        else
+            echo ""
+            echo -e "${BOLD}${YELLOW}Manual Deployment Instructions:${RESET}"
+            echo ""
+            echo -e "  Templates have been generated but not deployed."
+            echo -e "  To deploy them manually, use one of these methods:"
+            echo ""
+            echo -e "  ${BOLD}1. Deploy individual hosts:${RESET}"
+            echo -e "     ${GREEN}deploy-motd <hostname>${RESET}"
+            echo -e "     Example: ${GREEN}deploy-motd jellyfin${RESET}"
+            echo ""
+            echo -e "  ${BOLD}2. View all templates:${RESET}"
+            echo -e "     ${GREEN}list-templates${RESET}"
+            echo ""
+            echo -e "  ${BOLD}3. Run this tool again:${RESET}"
+            echo -e "     ${GREEN}bulk-generate-motd${RESET}"
+            echo -e "     (Will skip existing templates)"
+            echo ""
+        fi
+    fi
+
+    # Return to menu or exit
+    echo ""
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo ""
+    echo -e "${BOLD}What would you like to do next?${RESET}"
+    echo ""
+    echo -e "  ${YELLOW}1${RESET}) Back to Homelab menu"
+    echo -e "  ${YELLOW}2${RESET}) Generate more (restart bulk-generate)"
+    echo -e "  ${YELLOW}3${RESET}) Quit"
+    echo ""
+    read -p "$(echo -e ${CYAN}Choice \(1/2/3, q=back\):${RESET} )" next_action
+    if [[ "$next_action" == "q" || "$next_action" == "Q" ]]; then
+        break  # Return to homelab menu
+    fi
+    next_action=${next_action:-1}
+
+    case "$next_action" in
+        1)
+            # Back to homelab main menu
+            break
+            ;;
+        2)
+            # Restart bulk-generate loop
+            continue
+            ;;
+        *)
+            # Quit
+            echo ""
+            echo -e "${GREEN}✓${RESET} Done! Have a great day!"
+            echo ""
+            exit 0
+            ;;
+    esac
+done

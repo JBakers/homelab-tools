@@ -3,13 +3,13 @@ set -euo pipefail
 
 # List all MOTD templates
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev.24
 
 # Kleuren
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
+# BLUE removed - using CYAN instead
 BOLD='\033[1m'
 RESET='\033[0m'
 
@@ -46,7 +46,7 @@ if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
 fi
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         📋 MOTD Templates                             ║"
+echo -e "║         📋 MOTD Templates                                 ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
@@ -74,8 +74,8 @@ fi
 echo -e "${BOLD}Locatie:${RESET} ${CYAN}$TEMPLATES_DIR${RESET}"
 echo -e "${BOLD}Aantal:${RESET}  ${GREEN}$template_count${RESET} template(s)"
 echo ""
-echo -e "${BOLD}${BLUE}Template                Laatst gewijzigd         Grootte${RESET}"
-echo -e "${BOLD}${BLUE}────────────────────────────────────────────────────────────${RESET}"
+echo -e "${BOLD}${CYAN}Template                Laatst gewijzigd         Grootte${RESET}"
+echo -e "${BOLD}${CYAN}────────────────────────────────────────────────────────────${RESET}"
 
 # List templates
 find "$TEMPLATES_DIR" -maxdepth 1 -name "*.sh" -type f | sort | while read -r template; do

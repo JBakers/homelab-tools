@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Copy SSH key to remote hosts
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev.24
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -37,7 +37,7 @@ if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
 fi
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗${RESET}"
-echo -e "${BOLD}${CYAN}║         🔑 SSH Key Distribution                       ║${RESET}"
+echo -e "${BOLD}${CYAN}║         🔑 SSH Key Distribution                           ║${RESET}"
 echo -e "${BOLD}${CYAN}╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
@@ -75,7 +75,7 @@ for hostname in $hosts; do
     # Validate hostname
     if [[ ! "$hostname" =~ ^[a-zA-Z0-9._-]+$ ]]; then
         echo -e "${YELLOW}→${RESET} ${BOLD}$hostname${RESET} ... ${RED}✗ (invalid)${RESET}"
-        ((failed++))
+        failed=$((failed + 1))
         continue
     fi
 
@@ -85,10 +85,10 @@ for hostname in $hosts; do
     if ssh -F "$CONFIG_FILE" -o ConnectTimeout=5 "$hostname" \
         "mkdir -p ~/.ssh; chmod 700 ~/.ssh; cat >> ~/.ssh/authorized_keys; chmod 600 ~/.ssh/authorized_keys" < "$PUBLIC_KEY_FILE" 2>/dev/null; then
         echo -e "${GREEN}✓${RESET}"
-        ((success++))
+        success=$((success + 1))
     else
         echo -e "${RED}✗${RESET}"
-        ((failed++))
+        failed=$((failed + 1))
     fi
 done
 

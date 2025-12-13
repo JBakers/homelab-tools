@@ -1,19 +1,24 @@
 #!/bin/bash
 # Homelab Tools Configuration Example
 # Author: J.Bakers
-# Version: 3.1.0
+# Version: 3.5.0-dev.23
+#
+# ⚠️  SECURITY WARNING ⚠️
+# This file contains your homelab configuration.
+# DO NOT commit config.sh to version control!
+# It is already in .gitignore for your protection.
 #
 # Copy this file to config.sh and customize for your homelab:
 #   cp config.sh.example config.sh
 #   nano config.sh
 
-# Domain suffix voor je homelab
-# Wordt gebruikt voor Web UI URLs in MOTDs
+# Domain suffix for your homelab
+# Used for Web UI URLs in MOTDs
 # Examples: ".home", ".local", ".lan", or leave empty for no suffix
 DOMAIN_SUFFIX=".home"
 
-# IP detectie methode
-# Opties: "hostname" of "ip"
-# - "hostname": gebruik hostname -I voor IP detectie
-# - "ip": gebruik ip addr voor IP detectie
-IP_METHOD="ip"
+# IP detection method
+# Options: "hostname" or "ip"
+# - "hostname": use hostname -I for IP detection
+# - "ip": use ip addr for IP detection
+IP_METHOD="hostname"

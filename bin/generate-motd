@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Generate MOTD template for homelab services
 # Author: J.Bakers
-# Version: 3.4.0
+# Version: 3.5.0-dev.24
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -15,6 +15,17 @@ RESET='\033[0m'
 
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 CONFIG_FILE="/opt/homelab-tools/config.sh"
+
+# Systems that don't support MOTD (appliances, Docker, non-Linux)
+UNSUPPORTED_SYSTEMS=(
+    "homeassistant" "hass" "ha"           # Home Assistant (Docker)
+    "truenas"                              # TrueNAS (FreeBSD appliance)
+    "pfsense" "opnsense"                   # Firewall appliances
+    "windows" "win"                        # Windows systems
+    "unraid"                               # Unraid (different MOTD)
+    "synology" "nas"                       # Synology NAS
+    "qnap"                                 # QNAP NAS
+)
 
 # Load config
 if [[ -f "$CONFIG_FILE" ]]; then
@@ -80,10 +91,48 @@ if [[ ! "$SERVICE" =~ ^[a-zA-Z0-9._-]+$ ]]; then
     exit 1
 fi
 
+# Check if system is unsupported
+SERVICE_LOWER=$(echo "$SERVICE" | tr '[:upper:]' '[:lower:]')
+for unsupported in "${UNSUPPORTED_SYSTEMS[@]}"; do
+    if [[ "$SERVICE_LOWER" == "$unsupported" ]]; then
+        echo -e "${YELLOW}⚠${RESET} ${BOLD}$SERVICE${RESET} doesn't support MOTD"
+        echo ""
+        echo -e "${BOLD}Reason:${RESET}"
+        case "$unsupported" in
+            homeassistant|hass|ha)
+                echo -e "  Home Assistant runs in Docker without system access"
+                echo -e "  Use the web UI: ${CYAN}http://${SERVICE}${DOMAIN_SUFFIX}:8123${RESET}"
+                ;;
+            truenas)
+                echo -e "  TrueNAS is a FreeBSD appliance (not Linux)"
+                echo -e "  Use the web UI: ${CYAN}https://${SERVICE}${DOMAIN_SUFFIX}${RESET}"
+                ;;
+            pfsense|opnsense)
+                echo -e "  Firewall appliances don't support custom MOTD"
+                echo -e "  Use the web UI: ${CYAN}https://${SERVICE}${DOMAIN_SUFFIX}${RESET}"
+                ;;
+            windows|win)
+                echo -e "  Windows systems don't use MOTD"
+                echo -e "  Use RDP to connect"
+                ;;
+            unraid)
+                echo -e "  Unraid uses a different MOTD system"
+                echo -e "  Use the web UI: ${CYAN}http://${SERVICE}${DOMAIN_SUFFIX}${RESET}"
+                ;;
+            synology|nas|qnap)
+                echo -e "  NAS systems have proprietary operating systems"
+                echo -e "  Use the web UI: ${CYAN}http://${SERVICE}${DOMAIN_SUFFIX}:5000${RESET}"
+                ;;
+        esac
+        echo ""
+        exit 0
+    fi
+done
+
 mkdir -p "$TEMPLATES_DIR"
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         📝 MOTD Generator                             ║"
+echo -e "║         📝 MOTD Generator                                 ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 echo -e "${BOLD}Service: ${GREEN}$SERVICE${RESET}"
@@ -98,21 +147,21 @@ webui_port=""
 case "$SERVICE" in
     # Media Servers
     jellyfin*)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         service_name="Jellyfin${number:+ $number}"
         description="Media Server"
         has_webui="y"
         webui_port="8096"
         ;;
     plex*)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         service_name="Plex${number:+ $number}"
         description="Media Server"
         has_webui="y"
         webui_port="32400/web"
         ;;
     emby*)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         service_name="Emby${number:+ $number}"
         description="Media Server"
         has_webui="y"
@@ -206,7 +255,7 @@ case "$SERVICE" in
     # Network & DNS
     pihole*|pi-hole*)
         # Extract number if present (pihole2 -> 2)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         if [[ -n "$number" ]]; then
             service_name="Pi-hole $number"
         else
@@ -217,7 +266,7 @@ case "$SERVICE" in
         webui_port="80/admin"
         ;;
     adguard*)
-        number=$(echo "$SERVICE" | grep -o '[0-9]\+$')
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
         if [[ -n "$number" ]]; then
             service_name="AdGuard Home $number"
         else
@@ -258,14 +307,8 @@ case "$SERVICE" in
         has_webui="y"
         webui_port="8000"
         ;;
-    
+
     # Home Automation
-    homeassistant|hass|ha)
-        service_name="Home Assistant"
-        description="Home Automation"
-        has_webui="y"
-        webui_port="8123"
-        ;;
     nodered|node-red)
         service_name="Node-RED"
         description="Flow Programming"
@@ -469,7 +512,11 @@ fi
 echo ""
 
 # Vraag bevestiging of override (default = n = direct doorgaan)
-read -p "$(echo -e ${YELLOW}Customize? \(y/N\):${RESET} )" customize
+read -p "$(echo -e ${YELLOW}Customize? \(y/N/q=cancel\):${RESET} )" customize
+if [[ "$customize" == "q" || "$customize" == "Q" ]]; then
+    echo -e "${YELLOW}Cancelled${RESET}"
+    exit 0
+fi
 customize=${customize:-n}
 
 if [[ "$customize" == "y" ]] || [[ "$customize" == "Y" ]]; then
@@ -532,7 +579,11 @@ else
 fi
 
 echo ""
-read -p "$(echo -e ${GREEN}Kies stijl [1-6, p voor preview]:${RESET} )" style_choice
+read -p "$(echo -e ${GREEN}Kies stijl [1-6, p=preview, q=cancel]:${RESET} )" style_choice
+if [[ "$style_choice" == "q" || "$style_choice" == "Q" ]]; then
+    echo -e "${YELLOW}Cancelled${RESET}"
+    exit 0
+fi
 
 # Preview mode
 if [[ "$style_choice" == "p" ]] || [[ "$style_choice" == "P" ]]; then
@@ -561,7 +612,11 @@ if [[ "$style_choice" == "p" ]] || [[ "$style_choice" == "P" ]]; then
         show_ascii_preview "$service_name" "smblock" ""
         echo ""
 
-        read -p "$(echo -e ${GREEN}Kies stijl [1-6]:${RESET} )" style_choice
+        read -p "$(echo -e ${GREEN}Kies stijl [1-6, q=cancel]:${RESET} )" style_choice
+        if [[ "$style_choice" == "q" || "$style_choice" == "Q" ]]; then
+            echo -e "${YELLOW}Cancelled${RESET}"
+            exit 0
+        fi
     else
         echo -e "${YELLOW}⚠${RESET} Preview niet beschikbaar (toilet niet geïnstalleerd)"
         style_choice="1"
@@ -658,7 +713,7 @@ cat > "$TEMPLATES_DIR/$SERVICE.sh" << 'TEMPLATE_START'
 CYAN='\033[0;96m'
 GREEN='\033[0;92m'
 YELLOW='\033[0;93m'
-BLUE='\033[0;94m'
+# BLUE removed - using CYAN instead
 MAGENTA='\033[0;95m'
 RED='\033[0;91m'
 BOLD='\033[1m'
@@ -688,11 +743,11 @@ if [[ "$ascii_font" == "none" ]]; then
     cat >> "$TEMPLATES_DIR/$SERVICE.sh" << 'TEMPLATE_CLEAN'
 
 echo ""
-echo -e "${BLUE}==========================================${NC}"
+echo -e "${CYAN}==========================================${NC}"
 echo -e "  ${CYAN}${BOLD}SERVICE_NAME_PLACEHOLDER${NC}"
 echo -e "  ${MAGENTA}DESCRIPTION_PLACEHOLDER${NC}"
 echo -e "  ${MAGENTA}by J.Bakers${NC}"
-echo -e "${BLUE}==========================================${NC}"
+echo -e "${CYAN}==========================================${NC}"
 echo ""
 echo -e "${GREEN}${BOLD}📊 System Information:${NC}"
 echo ""
@@ -721,7 +776,7 @@ echo ""
 echo -e "        ${CYAN}DESCRIPTION_PLACEHOLDER${NC}"
 echo -e "           ${MAGENTA}by J.Bakers${NC}"
 echo ""
-echo -e "${BLUE}==========================================${NC}"
+echo -e "${CYAN}==========================================${NC}"
 printf "%7s" ""
 echo -e "${GREEN}${BOLD}${UNDERLINE}📊 System Information:${NC}"
 echo ""
@@ -788,7 +843,7 @@ fi
 # Sluit af
 cat >> "$TEMPLATES_DIR/$SERVICE.sh" << 'TEMPLATE_END'
 echo ""
-echo -e "${BLUE}==========================================${NC}"
+echo -e "${CYAN}==========================================${NC}"
 echo ""
 TEMPLATE_END
 
@@ -800,7 +855,11 @@ echo -e "  Location: ${CYAN}$TEMPLATES_DIR/$SERVICE.sh${RESET}"
 echo ""
 
 # Vraag of meteen deployen (default = y)
-read -p "$(echo -e ${YELLOW}Deploy now? \(Y/n\):${RESET} )" deploy_now
+read -p "$(echo -e ${YELLOW}Deploy now? \(Y/n/q=cancel\):${RESET} )" deploy_now
+if [[ "$deploy_now" == "q" || "$deploy_now" == "Q" ]]; then
+    echo -e "${YELLOW}Skipped deployment${RESET}"
+    exit 0
+fi
 deploy_now=${deploy_now:-y}
 
 if [[ "$deploy_now" == "y" ]] || [[ "$deploy_now" == "Y" ]]; then

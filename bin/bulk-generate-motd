@@ -7,6 +7,7 @@ set -euo pipefail
 
 # Load shared menu helper library
 # Resolve symlinks to find the actual installation directory
+# shellcheck source=../lib/menu-helpers.sh
 SCRIPT_PATH="${BASH_SOURCE[0]}"
 while [[ -L "$SCRIPT_PATH" ]]; do
     SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
@@ -34,7 +35,7 @@ read_choice() {
     local default="${3:-}"
     local input
     
-    read -p "$(echo -e "${CYAN}${prompt}${RESET} ${YELLOW}(q=cancel)${RESET}: ")" input
+    read -r -p "$(echo -e "${CYAN}${prompt}${RESET} ${YELLOW}(q=cancel)${RESET}: ")" input
     
     if [[ "$input" == "q" || "$input" == "Q" ]]; then
         return 1
@@ -149,7 +150,7 @@ while true; do
                 echo -e "  ${CYAN}5${RESET}) Big Mono          ${YELLOW}(Large, bold)${RESET}"
                 echo -e "  ${CYAN}6${RESET}) Small/Smblock     ${YELLOW}(Compact)${RESET}"
                 echo ""
-                read -p "$(echo -e ${CYAN}Choose ASCII style \(1-6, p=preview, q=cancel\):${RESET} )" ascii_choice
+                read -r -p "$(echo -e "${CYAN}Choose ASCII style \(1-6, p=preview, q=cancel\):${RESET} ")" ascii_choice
                 ascii_choice=${ascii_choice:-1}
                 
                 # Handle cancel
@@ -267,7 +268,7 @@ while true; do
 
         # Update progress bar for Smart-detect mode
         if [[ "$gen_mode" == "2" ]]; then
-            show_progress $current $host_count "$hostname" "${YELLOW}Processing...${RESET}"
+            show_progress "$current" "$host_count" "$hostname" "${YELLOW}Processing...${RESET}"
         else
             # Interactive mode: show traditional output
             echo -e "${BOLD}${CYAN}Host: ${hostname}${RESET}"
@@ -279,7 +280,7 @@ while true; do
         for unsupported in "${UNSUPPORTED_SYSTEMS[@]}"; do
             if [[ "$hostname_lower" == "$unsupported" ]]; then
                 if [[ "$gen_mode" == "2" ]]; then
-                    show_progress $current $host_count "$hostname" "${YELLOW}⚠ System doesn't support MOTD - Skipped${RESET}"
+                    show_progress "$current" "$host_count" "$hostname" "${YELLOW}⚠ System doesn't support MOTD - Skipped${RESET}"
                     sleep 0.5
                 else
                     echo -e "  ${YELLOW}⚠${RESET} System doesn't support MOTD"
@@ -301,11 +302,11 @@ while true; do
         if [[ -f "$template_file" ]]; then
             if [[ "$gen_mode" == "2" ]]; then
                 # Smart mode: always overwrite
-                show_progress $current $host_count "$hostname" "${YELLOW}Template exists - Overwriting${RESET}"
+                show_progress "$current" "$host_count" "$hostname" "${YELLOW}Template exists - Overwriting${RESET}"
             else
                 # Interactive mode: ask
                 echo -e "  ${YELLOW}⚠${RESET} Template already exists"
-                read -p "  Overwrite? (1=Yes, 2=No, q=cancel): " overwrite
+                read -r -p "  Overwrite? (1=Yes, 2=No, q=cancel): " overwrite
                 if [[ "$overwrite" == "q" || "$overwrite" == "Q" ]]; then
                     echo -e "\n${YELLOW}→${RESET} Cancelled by user"
                     break 2  # Return to main menu
@@ -323,17 +324,20 @@ while true; do
         # Generate based on mode
         if [[ "$gen_mode" == "2" ]]; then
             # Smart-detect mode: auto-generate with chosen style
-            show_progress $current $host_count "$hostname" "${CYAN}Generating MOTD...${RESET}"
+            show_progress "$current" "$host_count" "$hostname" "${CYAN}Generating MOTD...${RESET}"
 
-            # Prepare input for generate-motd
+            # Prepare input for generate-motd; guard against non-zero exit so loop continues
+            set +e
             echo -e "n\n${ascii_style}\nn\n" | generate-motd "$hostname" &>/dev/null
+            gen_status=$?
+            set -e
 
-            if [[ -f "$template_file" ]]; then
-                show_progress $current $host_count "$hostname" "${GREEN}✓ Generated successfully${RESET}"
+            if [[ $gen_status -eq 0 && -f "$template_file" ]]; then
+                show_progress "$current" "$host_count" "$hostname" "${GREEN}✓ Generated successfully${RESET}"
                 generated=$((generated + 1))
                 sleep 0.3
             else
-                show_progress $current $host_count "$hostname" "${RED}✗ Generation failed${RESET}"
+                show_progress "$current" "$host_count" "$hostname" "${RED}✗ Generation failed${RESET}"
                 failed=$((failed + 1))
                 sleep 0.5
             fi

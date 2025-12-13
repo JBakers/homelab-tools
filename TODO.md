@@ -6,6 +6,7 @@
 - [x] Detect and handle legacy ~/homelab-tools installations (ask user: backup+remove, backup only, or keep)
 - [x] Always install to /opt/homelab-tools
 - [x] Ensure ~/.local/bin/homelab symlink points to /opt/homelab-tools/bin/homelab
+- [ ] create uninstall
 
 ## .bashrc & Welcome Banner
 - [x] Audit ~/.bashrc for old homelab-tools PATH/exports/aliases (do not touch .ssh)
@@ -23,12 +24,14 @@
 - [ ] Update README and CHANGELOG with migration, banner option, and version info
 - [ ] Ensure version info is managed centrally and shown everywhere
 
+
 ## Testing & Data Safety
 - [ ] Test install, migration, and usage in a clean shell
 - [ ] Ensure old data/templates/configs are safely backed up and migrated
 
 ## Internationalization (i18n)
-- [ ] Convert all Dutch text in scripts to English
+- [x] Convert all Dutch text in scripts to English (install.sh complete)
+- [ ] Convert remaining scripts: homelab, generate-motd, deploy-motd, etc.
 - [ ] Add language support option (LANG=en/nl/de/fr/es)
 - [ ] Create language files (lib/lang/en.sh, lib/lang/nl.sh, etc.)
 - [ ] Update all user-facing messages to use language variables

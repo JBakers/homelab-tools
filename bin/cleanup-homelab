@@ -34,7 +34,8 @@ find_orphaned_templates() {
             continue
         fi
         
-        local hostname=$(basename "$template" .sh)
+        local hostname
+        hostname=$(basename "$template" .sh)
         
         # Check of deze host nog in SSH config staat
         if ! echo "$active_hosts" | grep -q "^${hostname}$"; then
@@ -93,7 +94,7 @@ echo -e "${CYAN}=================================================${NC}"
 echo ""
 
 # Vind orphaned templates
-orphaned=($(find_orphaned_templates))
+mapfile -t orphaned < <(find_orphaned_templates)
 
 if [[ ${#orphaned[@]} -eq 0 ]]; then
     echo -e "${GREEN}✓ No orphaned templates found!${NC}"

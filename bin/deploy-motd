@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Deploy MOTD to remote host
 # Author: J.Bakers
-# Version: 3.5.0-dev.24
+# Version: 3.5.0-dev.25
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -61,7 +61,7 @@ fi
 SERVICE=${1:-}
 
 if [[ -z "$SERVICE" ]]; then
-    echo -e "${RED}✗ Fout: Geen service naam opgegeven${RESET}"
+    echo -e "${RED}✗ Error: No service name provided${RESET}"
     echo -e "  Gebruik: ${GREEN}deploy-motd <service-naam>${RESET}"
     echo -e "  Voorbeeld: ${GREEN}deploy-motd jellyfin${RESET}"
     echo -e "  Of: ${CYAN}deploy-motd --help${RESET} voor meer informatie"
@@ -70,7 +70,7 @@ fi
 
 # Validate service name to prevent command injection
 if [[ ! "$SERVICE" =~ ^[a-zA-Z0-9._-]+$ ]]; then
-    echo -e "${RED}✗ Fout: Ongeldige service naam${RESET}"
+    echo -e "${RED}✗ Error: Invalid service name${RESET}"
     echo -e "  Alleen letters, cijfers, punten, underscores en streepjes zijn toegestaan"
     echo -e "  Voorbeeld: ${GREEN}deploy-motd jellyfin${RESET}"
     exit 1
@@ -79,7 +79,7 @@ fi
 TEMPLATE_FILE="$TEMPLATES_DIR/$SERVICE.sh"
 
 if [[ ! -f "$TEMPLATE_FILE" ]]; then
-    echo -e "${RED}✗ Fout: Template niet gevonden${RESET}"
+    echo -e "${RED}✗ Error: Template not found${RESET}"
     echo -e "  Verwacht: ${CYAN}$TEMPLATE_FILE${RESET}"
     echo -e ""
     echo -e "  Genereer eerst een template:"
@@ -113,16 +113,16 @@ if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$SERVICE" "echo 2>&1" &>/dev/null
 fi
 echo -e "${GREEN}✓${RESET} SSH connectie OK"
 
-# Cleanup oude MOTD bestanden
-echo -e "${YELLOW}→${RESET} Cleanup oude MOTD..."
+# Cleanup old MOTD files
+echo -e "${YELLOW}→${RESET} Cleaning up old MOTD..."
 ssh "$SERVICE" "rm -f /etc/motd /etc/update-motd.d/* 2>/dev/null || sudo rm -f /etc/motd /etc/update-motd.d/* 2>/dev/null"
-echo -e "${GREEN}✓${RESET} Oude MOTD verwijderd"
+echo -e "${GREEN}✓${RESET} Old MOTD removed"
 
-# Maak profile.d directory aan als die niet bestaat
-echo -e "${YELLOW}→${RESET} Controleer /etc/profile.d/..."
+# Create profile.d directory if it doesn't exist
+echo -e "${YELLOW}→${RESET} Checking /etc/profile.d/..."
 ssh "$SERVICE" "mkdir -p /etc/profile.d 2>/dev/null || sudo mkdir -p /etc/profile.d 2>/dev/null"
 
-# Deploy nieuwe MOTD
+# Deploy new MOTD
 echo -e "${YELLOW}→${RESET} Deploy nieuwe MOTD..."
 
 # Probeer eerst zonder sudo
@@ -131,14 +131,14 @@ if scp "$TEMPLATE_FILE" "$SERVICE:/etc/profile.d/00-motd.sh" 2>/dev/null; then
     use_sudo=""
 else
     # Als dat faalt, kopieer naar /tmp en verplaats met sudo
-    echo -e "${YELLOW}  →${RESET} Geen directe toegang, gebruik sudo..."
+    echo -e "${YELLOW}  →${RESET} No direct access, using sudo..."
     if scp "$TEMPLATE_FILE" "$SERVICE:/tmp/00-motd.sh" 2>/dev/null; then
         ssh "$SERVICE" "sudo mv /tmp/00-motd.sh /etc/profile.d/00-motd.sh" 2>/dev/null
         if [[ $? -eq 0 ]]; then
             echo -e "${GREEN}✓${RESET} Template gekopieerd (via sudo)"
             use_sudo="sudo"
         else
-            echo -e "${RED}✗ Fout bij kopiëren van template${RESET}"
+            echo -e "${RED}✗ Error copying template${RESET}"
             echo -e ""
             echo -e "  ${YELLOW}Mogelijke oorzaken:${RESET}"
             echo -e "  - User heeft geen sudo rechten"
@@ -150,7 +150,7 @@ else
             exit 1
         fi
     else
-        echo -e "${RED}✗ Kan niet kopiëren naar remote host${RESET}"
+        echo -e "${RED}✗ Cannot copy to remote host${RESET}"
         echo ""
         read -p "$(echo -e ${YELLOW}Debug connection? \(y/N\):${RESET} )" debug
         if [[ "$debug" =~ ^[Yy]$ ]]; then

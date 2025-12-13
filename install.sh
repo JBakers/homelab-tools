@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Installatie script voor Homelab Management Tools
 # Author: J.Bakers
-# Version: 3.5.0-dev.24
+# Version: 3.5.0-dev.25
 
 # Detect actual user (not root when using sudo)
 ACTUAL_USER="${SUDO_USER:-$USER}"
@@ -253,10 +253,10 @@ if [[ -z "$HLT_BANNER" ]] || [[ "$HLT_BANNER" != "0" ]]; then
  |_| |_|\___/|_| |_| |_|\___|_|\__,_|_.__/    |_|\___/ \___/|_|___/
 
 EOF
-        echo -e "\033[0;36m------------------------------------------------------------\033[0m"
-        echo -e "\033[0;32mWelkom terug, $USER!\033[0m"
-        echo "Hostname: $HOSTNAME"
-        echo "$(date +'%A %d %B %Y, %H:%M')"
+        echo -e \"\\033[0;36m------------------------------------------------------------\\033[0m\"
+        echo -e \"\\033[0;32mWelcome back, \$USER!\\033[0m\"
+        echo \"Hostname: \$HOSTNAME\"
+        echo \"\$(date +'%A %d %B %Y, %H:%M')\"
         
         # Show version if available
         if [[ -f /opt/homelab-tools/VERSION ]]; then
@@ -321,7 +321,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Homelab Tools Installer
 # Installs to /opt/homelab-tools with system-wide access
 # Author: J.Bakers
-# Version: 3.5.0-dev.24
+# Version: 3.5.0-dev.25
 
 # Domain suffix for your homelab
 # Used for Web UI URLs

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Cleanup orphaned MOTD templates
 # Author: J.Bakers
-# Version: 3.5.0-dev.24
+# Version: 3.5.0-dev.25
 
 CONFIG_FILE="$HOME/.ssh/config"
 MOTD_DIR="$HOME/.local/share/homelab-tools/templates"
@@ -15,7 +15,7 @@ YELLOW='\033[0;33m'
 # BLUE removed - using CYAN instead
 NC='\033[0m' # No Color
 
-# Functie om orphaned templates te vinden
+# Function to find orphaned templates
 find_orphaned_templates() {
     local orphaned=()
     
@@ -24,7 +24,7 @@ find_orphaned_templates() {
         exit 1
     fi
     
-    # Haal alle hosts uit SSH config
+    # Get all hosts from SSH config
     local active_hosts
     active_hosts=$(grep "^Host " "$CONFIG_FILE" | awk '{print $2}' | grep -v '\*' | sort -u)
     
@@ -46,7 +46,7 @@ find_orphaned_templates() {
     echo "${orphaned[@]}"
 }
 
-# Toon help
+# Show help
 show_help() {
     cat << 'HELP'
 Usage: cleanup-homelab [OPTIONS]
@@ -66,7 +66,7 @@ Examples:
 HELP
 }
 
-# Parse argumenten
+# Parse arguments
 case "${1}" in
     --help|-h)
         show_help
@@ -93,7 +93,7 @@ echo -e "${CYAN}         Homelab Cleanup Utility${NC}"
 echo -e "${CYAN}=================================================${NC}"
 echo ""
 
-# Vind orphaned templates
+# Find orphaned templates
 mapfile -t orphaned < <(find_orphaned_templates)
 
 if [[ ${#orphaned[@]} -eq 0 ]]; then

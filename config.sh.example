@@ -15,10 +15,10 @@
 # Domain suffix for your homelab
 # Used for Web UI URLs in MOTDs
 # Examples: ".home", ".local", ".lan", or leave empty for no suffix
-DOMAIN_SUFFIX=".home"
+export DOMAIN_SUFFIX=".home"
 
 # IP detection method
 # Options: "hostname" or "ip"
 # - "hostname": use hostname -I for IP detection
 # - "ip": use ip addr for IP detection
-IP_METHOD="hostname"
+export IP_METHOD="hostname"

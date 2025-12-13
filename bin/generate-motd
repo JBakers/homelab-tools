@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Generate MOTD template for homelab services
 # Author: J.Bakers
-# Version: 3.5.0-dev.24
+# Version: 3.5.0-dev.25
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -29,11 +29,12 @@ UNSUPPORTED_SYSTEMS=(
 
 # Load config
 if [[ -f "$CONFIG_FILE" ]]; then
+    # shellcheck source=/dev/null
     source "$CONFIG_FILE"
 else
     # Defaults
-    DOMAIN_SUFFIX=""
-    IP_METHOD="ip"
+    export DOMAIN_SUFFIX=""
+    export IP_METHOD="ip"
 fi
 
 show_help() {
@@ -76,7 +77,7 @@ fi
 SERVICE=${1:-}
 
 if [[ -z "$SERVICE" ]]; then
-    echo -e "${RED}✗ Fout: Geen service naam opgegeven${RESET}"
+    echo -e "${RED}✗ Error: No service name provided${RESET}"
     echo -e "  Gebruik: ${GREEN}generate-motd <service-naam>${RESET}"
     echo -e "  Voorbeeld: ${GREEN}generate-motd jellyfin${RESET}"
     echo -e "  Of: ${CYAN}generate-motd --help${RESET} voor meer informatie"
@@ -85,7 +86,7 @@ fi
 
 # Validate service name to prevent command injection
 if [[ ! "$SERVICE" =~ ^[a-zA-Z0-9._-]+$ ]]; then
-    echo -e "${RED}✗ Fout: Ongeldige service naam${RESET}"
+    echo -e "${RED}✗ Error: Invalid service name${RESET}"
     echo -e "  Alleen letters, cijfers, punten, underscores en streepjes zijn toegestaan"
     echo -e "  Voorbeeld: ${GREEN}generate-motd jellyfin${RESET}"
     exit 1
@@ -511,7 +512,7 @@ if [[ "$has_webui" == "y" ]]; then
 fi
 echo ""
 
-# Vraag bevestiging of override (default = n = direct doorgaan)
+# Ask for confirmation or override (default = n = continue directly)
 read -p "$(echo -e ${YELLOW}Customize? \(y/N/q=cancel\):${RESET} )" customize
 if [[ "$customize" == "q" || "$customize" == "Q" ]]; then
     echo -e "${YELLOW}Cancelled${RESET}"
@@ -539,7 +540,7 @@ echo ""
 echo -e "${YELLOW}→${RESET} Choosing ASCII art style..."
 echo ""
 
-# Functie om preview te tonen
+# Function to show ASCII preview
 show_ascii_preview() {
     local text="$1"
     local font="$2"
@@ -558,28 +559,28 @@ show_ascii_preview() {
     fi
 }
 
-# Toon beschikbare stijlen
-echo -e "${BOLD}Beschikbare MOTD stijlen:${RESET}"
+# Show available styles
+echo -e "${BOLD}Available MOTD styles:${RESET}"
 echo ""
 
-echo -e "${CYAN}1)${RESET} Clean & Functional ${YELLOW}(Geen ASCII - Netjes & Informatief)${RESET} ${GREEN}[Default]${RESET}"
+echo -e "${CYAN}1)${RESET} Clean & Functional ${YELLOW}(No ASCII - Clean & Informative)${RESET} ${GREEN}[Default]${RESET}"
 echo ""
 
 if command -v toilet &> /dev/null; then
-    echo -e "${BOLD}Optionele ASCII art stijlen:${RESET}"
-    echo -e "${CYAN}2)${RESET} Rainbow Future   ${YELLOW}(Kleurrijk, modern)${RESET}"
-    echo -e "${CYAN}3)${RESET} Rainbow Standard ${YELLOW}(Kleurrijk, klassiek)${RESET}"
-    echo -e "${CYAN}4)${RESET} Mono Future      ${YELLOW}(Zwart-wit, modern)${RESET}"
-    echo -e "${CYAN}5)${RESET} Big Mono         ${YELLOW}(Groot, vet)${RESET}"
-    echo -e "${CYAN}6)${RESET} Small/Smblock    ${YELLOW}(Klein, compact)${RESET}"
+    echo -e "${BOLD}Optional ASCII art styles:${RESET}"
+    echo -e "${CYAN}2)${RESET} Rainbow Future   ${YELLOW}(Colorful, modern)${RESET}"
+    echo -e "${CYAN}3)${RESET} Rainbow Standard ${YELLOW}(Colorful, classic)${RESET}"
+    echo -e "${CYAN}4)${RESET} Mono Future      ${YELLOW}(Black-white, modern)${RESET}"
+    echo -e "${CYAN}5)${RESET} Big Mono         ${YELLOW}(Large, bold)${RESET}"
+    echo -e "${CYAN}6)${RESET} Small/Smblock    ${YELLOW}(Small, compact)${RESET}"
     echo -e "${CYAN}p)${RESET} Preview ASCII styles"
 else
-    echo -e "${YELLOW}⚠ Toilet niet geïnstalleerd - ASCII art niet beschikbaar${RESET}"
-    echo -e "  Voor ASCII art: ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
+    echo -e "${YELLOW}⚠ Toilet not installed - ASCII art not available${RESET}"
+    echo -e "  For ASCII art: ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
 fi
 
 echo ""
-read -p "$(echo -e ${GREEN}Kies stijl [1-6, p=preview, q=cancel]:${RESET} )" style_choice
+read -p "$(echo -e ${GREEN}Choose style [1-6, p=preview, q=cancel]:${RESET} )" style_choice
 if [[ "$style_choice" == "q" || "$style_choice" == "Q" ]]; then
     echo -e "${YELLOW}Cancelled${RESET}"
     exit 0
@@ -612,55 +613,55 @@ if [[ "$style_choice" == "p" ]] || [[ "$style_choice" == "P" ]]; then
         show_ascii_preview "$service_name" "smblock" ""
         echo ""
 
-        read -p "$(echo -e ${GREEN}Kies stijl [1-6, q=cancel]:${RESET} )" style_choice
+        read -p "$(echo -e ${GREEN}Choose style [1-6, q=cancel]:${RESET} )" style_choice
         if [[ "$style_choice" == "q" || "$style_choice" == "Q" ]]; then
             echo -e "${YELLOW}Cancelled${RESET}"
             exit 0
         fi
     else
-        echo -e "${YELLOW}⚠${RESET} Preview niet beschikbaar (toilet niet geïnstalleerd)"
+        echo -e "${YELLOW}⚠${RESET} Preview not available (toilet not installed)"
         style_choice="1"
     fi
 fi
 
-# Bepaal font en filter op basis van keuze
+# Determine font and filter based on choice
 case "$style_choice" in
     1|"")
-        # Clean & Functional - geen ASCII art
+        # Clean & Functional - no ASCII art
         ascii_font="none"
         ascii_filter=""
-        echo -e "${GREEN}✓${RESET} Gekozen: Clean & Functional (geen ASCII)"
+        echo -e "${GREEN}✓${RESET} Selected: Clean & Functional (no ASCII)"
         ;;
     2)
         ascii_font="future"
         ascii_filter="gay"
-        echo -e "${GREEN}✓${RESET} Gekozen: Rainbow Future"
+        echo -e "${GREEN}✓${RESET} Selected: Rainbow Future"
         ;;
     3)
         ascii_font="standard"
         ascii_filter="gay"
-        echo -e "${GREEN}✓${RESET} Gekozen: Rainbow Standard"
+        echo -e "${GREEN}✓${RESET} Selected: Rainbow Standard"
         ;;
     4)
         ascii_font="future"
         ascii_filter=""
-        echo -e "${GREEN}✓${RESET} Gekozen: Mono Future"
+        echo -e "${GREEN}✓${RESET} Selected: Mono Future"
         ;;
     5)
         ascii_font="bigmono9"
         ascii_filter=""
-        echo -e "${GREEN}✓${RESET} Gekozen: Big Mono"
+        echo -e "${GREEN}✓${RESET} Selected: Big Mono"
         ;;
     6)
         ascii_font="smblock"
         ascii_filter=""
-        echo -e "${GREEN}✓${RESET} Gekozen: Small/Smblock"
+        echo -e "${GREEN}✓${RESET} Selected: Small/Smblock"
         ;;
     *)
         # Default to clean functional
         ascii_font="none"
         ascii_filter=""
-        echo -e "${YELLOW}⚠${RESET} Ongeldige keuze, gebruik Clean & Functional"
+        echo -e "${YELLOW}⚠${RESET} Invalid choice, using Clean & Functional"
         ;;
 esac
 
@@ -684,10 +685,10 @@ else
         rainbow_art=$(toilet -f "$ascii_font" "$service_name" 2>/dev/null)
     fi
 
-    # Fallback als font niet werkt
+    # Fallback if font doesn't work
     if [[ -z "$rainbow_art" ]]; then
         rainbow_art=$(toilet -f standard -F gay "$service_name" 2>/dev/null)
-        echo -e "${YELLOW}⚠${RESET} Font niet beschikbaar, gebruik standard"
+        echo -e "${YELLOW}⚠${RESET} Font not available, using standard"
     fi
 fi
 
@@ -854,7 +855,7 @@ echo -e "${GREEN}✓ Template successfully created!${RESET}"
 echo -e "  Location: ${CYAN}$TEMPLATES_DIR/$SERVICE.sh${RESET}"
 echo ""
 
-# Vraag of meteen deployen (default = y)
+# Ask if deploy immediately (default = y)
 read -p "$(echo -e ${YELLOW}Deploy now? \(Y/n/q=cancel\):${RESET} )" deploy_now
 if [[ "$deploy_now" == "q" || "$deploy_now" == "Q" ]]; then
     echo -e "${YELLOW}Skipped deployment${RESET}"

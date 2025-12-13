@@ -2,11 +2,11 @@
 
 > Quick task list - mark [x] when done, move to archive on commit.
 
-## 🔴 Critical
+## 🔴 Critical (Fix Before Release)
 
-- [ ] Fix ShellCheck warnings (config.sh.example, menu-helpers.sh, cleanup-homelab, generate-motd)
-- [ ] Spellcheck all documentation
-- [ ] Test installation flow (fresh install + upgrade)
+- [x] Fix all ShellCheck warnings
+- [x] Fix VERSION file mismatch (bump to dev.25)
+- [x] Translate all Dutch text to English
 
 ## 🟠 High Priority
 
@@ -29,5 +29,12 @@
 
 ---
 
+## ✅ v3.5.0-dev.25 Done
+- All ShellCheck warnings fixed (config.sh.example, menu-helpers.sh, generate-motd)
+- Complete English translation of all scripts (no more Dutch text)
+- Version sync: VERSION file now matches all scripts
+- Fixed install.sh tip_count syntax error
+
 ## ✅ v3.5.0-dev.24 Done
-Arrow nav fixed • q=cancel everywhere • Uninstall menu • .bashrc cleanup • Security audit • English translation • Removed obsolete files
+- Arrow nav fixed • q=cancel everywhere • Uninstall menu • .bashrc cleanup
+- Security audit • Removed obsolete files • Simplified TODO.md

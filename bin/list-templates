@@ -3,7 +3,7 @@ set -euo pipefail
 
 # List all MOTD templates
 # Author: J.Bakers
-# Version: 3.5.0-dev.24
+# Version: 3.5.0-dev.25
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -63,7 +63,7 @@ fi
 template_count=$(find "$TEMPLATES_DIR" -maxdepth 1 -name "*.sh" -type f 2>/dev/null | wc -l)
 
 if [[ $template_count -eq 0 ]]; then
-    echo -e "${YELLOW}⚠ Geen templates gevonden${RESET}"
+    echo -e "${YELLOW}⚠ No templates found${RESET}"
     echo -e "  Directory: ${CYAN}$TEMPLATES_DIR${RESET}"
     echo ""
     echo -e "  Genereer een template:"

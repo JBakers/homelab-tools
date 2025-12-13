@@ -558,7 +558,7 @@ deploy-motd yourservice
 - ✅ Remote sudo usage only when necessary
 - ✅ Proper file permissions (600 for SSH keys, 700 for directories)
 
-**Security Audit:** See [claude.md](claude.md) for the complete security review.
+**Security:** See [SECURITY.md](SECURITY.md) for our security policy and responsible disclosure process.
 
 ---
 

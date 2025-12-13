@@ -270,6 +270,11 @@ if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
         sed -i '/export PATH.*homelab-tools/d' "$ACTUAL_HOME/.bashrc"
         sed -i '/PATH=.*homelab-tools/d' "$ACTUAL_HOME/.bashrc"
         sed -i '/alias.*homelab-tools/d' "$ACTUAL_HOME/.bashrc"
+
+        # Remove any old Homelab banner/tip blocks
+        sed -i '/^# Homelab Tools Welcome Banner$/,/^fi$/d' "$ACTUAL_HOME/.bashrc"
+        sed -i '/HLT_BANNER/d' "$ACTUAL_HOME/.bashrc"
+        sed -i '/Tip:.*homelab/d' "$ACTUAL_HOME/.bashrc"
         
         # Remove duplicate HLT tip lines (keep only lines inside the banner block)
         # First remove standalone tip lines (not inside the banner block)
@@ -362,11 +367,12 @@ ASCIIART
         echo "$(date +'%A %d %B %Y, %H:%M')"
         
         # Show version if available
+        HLT_VERSION="unknown"
         if [[ -f /opt/homelab-tools/VERSION ]]; then
             HLT_VERSION=$(cat /opt/homelab-tools/VERSION)
-            echo -e "Homelab Tools: \033[0;36mv${HLT_VERSION}\033[0m"
         fi
-        
+        echo -e "Homelab Tools: \033[0;36mv${HLT_VERSION}\033[0m"
+
         echo -e "\033[0;36m------------------------------------------------------------\033[0m"
         echo ""
     fi

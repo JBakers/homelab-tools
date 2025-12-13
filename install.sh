@@ -105,10 +105,10 @@ if [[ -d "$LEGACY_DIR" ]] && [[ "$LEGACY_DIR" != "$(pwd)" ]]; then
     echo -e "${BOLD}What do you want to do with the old installation?${RESET}"
     echo -e "  ${CYAN}1${RESET}) Backup and remove ${YELLOW}(recommended)${RESET}"
     echo -e "  ${CYAN}2${RESET}) Backup only"
-    echo -e "  ${CYAN}3${RESET}) Keep it"
-    echo ""
-    legacy_choice=$(read_input "Choice (1/2/3): ")
-    legacy_choice=${legacy_choice:-1}
+echo -e "  ${CYAN}3${RESET}) Keep it"
+echo ""
+legacy_choice="$(read_input "Choice (1/2/3): ")"
+legacy_choice=${legacy_choice:-1}
     
     case "$legacy_choice" in
         1)

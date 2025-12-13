@@ -1,0 +1,128 @@
+#!/bin/bash
+set -euo pipefail
+
+# Delete MOTD Template
+# Author: J.Bakers
+# Version: 3.5.0-dev.25
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+TEMPLATE_DIR="$HOME/.local/share/homelab-tools/templates"
+
+# Show help
+show_help() {
+    cat << EOF
+
+${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗
+║         🗑️  Delete MOTD Template                          ║
+╚══════════════════════════════════════════════════════════╝${RESET}
+
+${BOLD}Usage:${RESET}
+  delete-template [template-name]
+  delete-template -i                  # Interactive mode
+
+${BOLD}Examples:${RESET}
+  delete-template jellyfin            # Delete jellyfin.sh
+  delete-template -i                  # Choose from list
+
+${BOLD}Template Location:${RESET}
+  $TEMPLATE_DIR
+
+EOF
+}
+
+# Interactive selection
+interactive_delete() {
+    if [[ ! -d "$TEMPLATE_DIR" ]] || [[ -z "$(ls -A "$TEMPLATE_DIR" 2>/dev/null)" ]]; then
+        echo -e "${RED}✗ No templates found${RESET}"
+        echo -e "  Location: ${CYAN}$TEMPLATE_DIR${RESET}"
+        return 1
+    fi
+
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         🗑️  Delete Template                               ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "${BOLD}Available templates:${RESET}"
+    echo ""
+
+    local templates=()
+    local idx=1
+    while IFS= read -r template; do
+        local name="${template%.sh}"
+        local size
+        local date
+        size=$(du -h "$TEMPLATE_DIR/$template" | cut -f1)
+        date=$(stat -c %y "$TEMPLATE_DIR/$template" | cut -d' ' -f1)
+        printf "  ${CYAN}%2d${RESET}) %-20s  ${YELLOW}%s${RESET}  %s\n" "$idx" "$name" "$size" "$date"
+        templates+=("$name")
+        ((idx++))
+    done < <(find "$TEMPLATE_DIR" -name "*.sh" -type f -exec basename {} \; | sort)
+
+    echo ""
+    read -r -p "Select template number (or q to cancel): " choice
+
+    if [[ "$choice" == "q" || "$choice" == "Q" ]]; then
+        echo -e "${YELLOW}Cancelled${RESET}"
+        return 0
+    fi
+
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [[ "$choice" -lt 1 ]] || [[ "$choice" -gt "${#templates[@]}" ]]; then
+        echo -e "${RED}✗ Invalid selection${RESET}"
+        return 1
+    fi
+
+    local selected="${templates[$((choice-1))]}"
+    delete_template "$selected"
+}
+
+# Delete specific template
+delete_template() {
+    local name="$1"
+    local template_file="$TEMPLATE_DIR/${name}.sh"
+
+    if [[ ! -f "$template_file" ]]; then
+        echo -e "${RED}✗ Template not found: ${CYAN}$name${RESET}"
+        echo -e "  Location: ${CYAN}$template_file${RESET}"
+        return 1
+    fi
+
+    echo ""
+    echo -e "${YELLOW}Template to delete:${RESET}"
+    echo -e "  Name: ${CYAN}$name${RESET}"
+    echo -e "  File: ${CYAN}$template_file${RESET}"
+    echo -e "  Size: $(du -h "$template_file" | cut -f1)"
+    echo ""
+    
+    read -r -p "Are you sure you want to delete this template? (y/N): " confirm
+    
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        rm -f "$template_file"
+        echo -e "${GREEN}✓ Template deleted: ${CYAN}$name${RESET}"
+    else
+        echo -e "${YELLOW}Cancelled${RESET}"
+    fi
+}
+
+# Main
+case "${1:-}" in
+    -h|--help|help)
+        show_help
+        exit 0
+        ;;
+    -i|--interactive)
+        interactive_delete
+        ;;
+    "")
+        interactive_delete
+        ;;
+    *)
+        delete_template "$1"
+        ;;
+esac

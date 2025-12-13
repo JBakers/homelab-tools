@@ -126,8 +126,9 @@ show_help() {
     echo -e "  ${YELLOW}generate-motd${RESET}         Generate MOTD for a service"
     echo -e "  ${YELLOW}bulk-generate-motd${RESET}    Generate MOTDs for all hosts"
     echo -e "  ${YELLOW}deploy-motd${RESET}           Deploy MOTD to container"
-    echo -e "  ${YELLOW}cleanup-keys${RESET}          Remove old SSH keys"
+    echo -e "  ${YELLOW}delete-template${RESET}       Delete MOTD template"
     echo -e "  ${YELLOW}list-templates${RESET}        Show all MOTD templates"
+    echo -e "  ${YELLOW}cleanup-keys${RESET}          Remove old SSH keys"
     echo -e "  ${YELLOW}edit-hosts${RESET}            Edit SSH configuration"
     echo -e "  ${YELLOW}copykey${RESET}               Distribute SSH keys"
     echo ""
@@ -225,6 +226,11 @@ show_motd_help() {
     echo -e "   Shows hostname, last modified date, and file size."
     echo -e "   ${GREEN}Usage:${RESET} Select option 4"
     echo ""
+    echo -e "${BOLD}5. Delete Template${RESET}"
+    echo -e "   Remove a MOTD template you no longer need."
+    echo -e "   Interactive selection from list of templates."
+    echo -e "   ${GREEN}Usage:${RESET} Select option 5, choose template to delete"
+    echo ""
     echo -e "${CYAN}════════════════════════════════════════════════════════════${RESET}"
     echo ""
     wait_for_continue
@@ -313,6 +319,7 @@ while true; do
                     "Bulk Generate|Create for all hosts" \
                     "Deploy MOTD|Upload to host" \
                     "List Templates|View all templates" \
+                    "Delete Template|Remove a template" \
                     "HELP" "BACK"
                 submenu_result="$MENU_RESULT"
 
@@ -350,10 +357,17 @@ while true; do
                         wait_for_continue
                         ;;
                     4)
+                        # Delete Template
+                        clear
+                        delete-template
+                        echo ""
+                        wait_for_continue
+                        ;;
+                    5)
                         # Help
                         show_motd_help
                         ;;
-                    5|-1)
+                    6|-1)
                         # Back (selected or ESC)
                         break
                         ;;

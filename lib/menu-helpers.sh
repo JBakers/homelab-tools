@@ -240,6 +240,11 @@ show_progress() {
     local hostname=$3
     local status=$4
 
+    # If not a TTY (e.g., piped input for automation), skip progress rendering
+    if [[ ! -t 1 ]]; then
+        return 0
+    fi
+
     # Calculate percentage
     local percent=$(( current * 100 / total ))
 
@@ -265,11 +270,19 @@ show_progress() {
 
 # Initialize progress display (clear screen, hide cursor)
 init_progress() {
+    # Skip when not a TTY
+    if [[ ! -t 1 ]]; then
+        return 0
+    fi
     clear
     tput civis  # Hide cursor
 }
 
 # Finalize progress display (show cursor)
 finish_progress() {
+    # Skip when not a TTY
+    if [[ ! -t 1 ]]; then
+        return 0
+    fi
     tput cnorm  # Show cursor
 }

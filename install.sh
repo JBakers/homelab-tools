@@ -27,8 +27,41 @@ RED='\033[0;31m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
+# GitHub repo info
+GITHUB_REPO="https://github.com/JBakers/homelab-tools.git"
+DEFAULT_BRANCH="main"
+
+# Parse command line arguments
+INSTALL_BRANCH="${1:-$DEFAULT_BRANCH}"
+if [[ "$INSTALL_BRANCH" == "--branch" ]] && [[ -n "${2:-}" ]]; then
+    INSTALL_BRANCH="$2"
+fi
+
+# Check if we're in a homelab-tools directory or need to clone
+if [[ ! -f "$(pwd)/bin/homelab" ]]; then
+    echo -e "${CYAN}Cloning homelab-tools from GitHub (branch: $INSTALL_BRANCH)...${RESET}"
+    TEMP_DIR=$(mktemp -d)
+    git clone -b "$INSTALL_BRANCH" --depth 1 "$GITHUB_REPO" "$TEMP_DIR" || {
+        echo -e "${RED}✗ Error: Failed to clone repository${RESET}"
+        rm -rf "$TEMP_DIR"
+        exit 1
+    }
+    cd "$TEMP_DIR"
+    echo -e "${GREEN}✓${RESET} Cloned to temporary directory"
+    echo ""
+    # Re-run install from cloned directory
+    exec bash "$TEMP_DIR/install.sh" "--from-clone"
+fi
+
 # Get version and branch info
-VERSION=$(grep -m1 "Version: " bin/homelab | sed 's/.*Version: //')
+# Use VERSION file as primary source, fallback to bin/homelab header
+if [[ -f "VERSION" ]]; then
+    VERSION=$(cat VERSION)
+elif [[ -f "bin/homelab" ]]; then
+    VERSION=$(grep -m1 "Version: " bin/homelab | sed 's/.*Version: //')
+else
+    VERSION="unknown"
+fi
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 INSTALL_DATE=$(date '+%Y-%m-%d %H:%M:%S')
 
@@ -42,13 +75,6 @@ echo -e "  Branch:  ${CYAN}$BRANCH${RESET}"
 echo -e "  Date:    ${CYAN}$INSTALL_DATE${RESET}"
 echo -e "  User:    ${CYAN}$ACTUAL_USER${RESET}"
 echo ""
-
-# Check if we're in the correct directory
-if [[ ! -f "$(pwd)/bin/homelab" ]]; then
-    echo -e "${RED}✗ Error: Run this script from the homelab-tools directory${RESET}"
-    echo -e "  ${YELLOW}cd ~/homelab-tools && ./install.sh${RESET}"
-    exit 1
-fi
 
 INSTALL_DIR="/opt/homelab-tools"
 
@@ -482,3 +508,9 @@ echo -e "   ${GREEN}generate-motd --help${RESET}"
 echo ""
 echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 echo ""
+
+# Cleanup temp directory if we cloned from GitHub
+if [[ "${1:-}" == "--from-clone" ]] && [[ "$(pwd)" == /tmp/* ]]; then
+    cd /
+    rm -rf "$(dirname "$0")" 2>/dev/null || true
+fi

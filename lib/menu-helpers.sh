@@ -205,6 +205,7 @@ show_arrow_menu() {
 
                 # Check for easter egg
                 if [[ "$typed_buffer" == *"iddqd"* ]]; then
+                    # shellcheck disable=SC2034
                     MENU_RESULT="IDDQD"
                     return 0
                 fi

@@ -7,7 +7,7 @@ set -euo pipefail
 
 # Cleanup old SSH host keys
 # Author: J.Bakers
-# Version: 3.5.0-dev.24
+# Version: 3.5.0-dev.25
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -57,14 +57,14 @@ HOST=${1:-}
 
 # Validate hostname/IP if provided
 if [[ -n "$HOST" ]] && [[ ! "$HOST" =~ ^[a-zA-Z0-9._-]+$ ]]; then
-    echo -e "${RED}✗ Fout: Ongeldige hostname${RESET}"
+    echo -e "${RED}✗ Error: Invalid hostname${RESET}"
     echo -e "  Alleen letters, cijfers, punten, underscores en streepjes zijn toegestaan"
     exit 1
 fi
 
 # Validate hostname/IP if provided
 if [[ -n "$HOST" ]] && [[ ! "$HOST" =~ ^[a-zA-Z0-9._-]+$ ]] && [[ ! "$HOST" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-    echo -e "${RED}✗ Fout: Ongeldige hostname of IP${RESET}"
+    echo -e "${RED}✗ Error: Invalid hostname or IP${RESET}"
     echo -e "  Gebruik een geldige hostname of IP address"
     exit 1
 fi
@@ -76,7 +76,7 @@ echo ""
 
 # Check of known_hosts bestaat
 if [[ ! -f ~/.ssh/known_hosts ]]; then
-    echo -e "${YELLOW}⚠ Geen known_hosts bestand gevonden${RESET}"
+    echo -e "${YELLOW}⚠ No known_hosts file found${RESET}"
     echo -e "  (Dit is normaal als je nog nooit SSH hebt gebruikt)"
     exit 0
 fi
@@ -86,23 +86,23 @@ if [[ -z "$HOST" ]]; then
     SSH_CONFIG="$HOME/.ssh/config"
     
     if [[ ! -f "$SSH_CONFIG" ]]; then
-        echo -e "${RED}✗ Geen host list gevonden${RESET}"
-        echo -e "  Gebruik: ${GREEN}cleanup-keys <hostname-of-ip>${RESET}"
+        echo -e "${RED}✗ No host list found${RESET}"
+        echo -e "  Usage: ${GREEN}cleanup-keys <hostname-or-ip>${RESET}"
         exit 1
     fi
     
-    # Haal alle hosts op
+    # Get all hosts from SSH config
     hosts=$(grep "^Host " "$SSH_CONFIG" | awk '{print $2}' | grep -v '\*' | sort -u)
     
     if [[ -z "$hosts" ]]; then
-        echo -e "${YELLOW}⚠ Geen hosts gevonden in host list${RESET}"
+        echo -e "${YELLOW}⚠ No hosts found in host list${RESET}"
         exit 0
     fi
     
-    echo -e "${BOLD}Beschikbare hosts:${RESET}"
+    echo -e "${BOLD}Available hosts:${RESET}"
     echo ""
     
-    # Toon alle hosts
+    # Show all hosts
     i=1
     declare -a host_array
     while IFS= read -r host; do
@@ -116,7 +116,7 @@ if [[ -z "$HOST" ]]; then
     echo -e "  ${CYAN}q)${RESET} Quit"
     echo ""
     
-    read -p "Cleanup keys voor welke host(s)? " choice
+    read -p "Cleanup keys for which host(s)? " choice
     
     if [[ "$choice" == "q" ]]; then
         echo "Cancelled."
@@ -124,7 +124,7 @@ if [[ -z "$HOST" ]]; then
     fi
     
     if [[ "$choice" == "a" ]]; then
-        # Cleanup alle hosts
+        # Cleanup all hosts
         echo ""
         echo -e "${YELLOW}→${RESET} Cleaning up all hosts..."
         echo ""
@@ -143,16 +143,16 @@ if [[ -z "$HOST" ]]; then
         done
         
         echo ""
-        echo -e "${GREEN}✓ Cleanup voltooid!${RESET}"
+        echo -e "${GREEN}✓ Cleanup complete!${RESET}"
         echo -e "  $cleaned host(s) cleaned"
         exit 0
     fi
     
-    # Cleanup specifieke host
+    # Cleanup specific host
     if [[ "$choice" =~ ^[0-9]+$ ]] && [[ $choice -ge 1 ]] && [[ $choice -lt $i ]]; then
         HOST="${host_array[$choice]}"
     else
-        echo -e "${RED}✗ Ongeldige keuze${RESET}"
+        echo -e "${RED}✗ Invalid choice${RESET}"
         exit 1
     fi
 fi
@@ -160,19 +160,19 @@ fi
 echo -e "${BOLD}Host: ${GREEN}$HOST${RESET}"
 echo ""
 
-# Verwijder keys
-echo -e "${YELLOW}→${RESET} Verwijder oude host keys..."
+# Remove old host keys
+echo -e "${YELLOW}→${RESET} Removing old host keys..."
 ssh-keygen -R "$HOST" &>/dev/null
 
 if [[ $? -eq 0 ]]; then
-    echo -e "${GREEN}✓${RESET} Keys verwijderd voor: ${CYAN}$HOST${RESET}"
+    echo -e "${GREEN}✓${RESET} Keys removed for: ${CYAN}$HOST${RESET}"
 else
-    echo -e "${YELLOW}⚠${RESET} Geen keys gevonden voor: ${CYAN}$HOST${RESET}"
-    echo -e "  (Dit is OK, betekent dat er geen oude keys waren)"
+    echo -e "${YELLOW}⚠${RESET} No keys found for: ${CYAN}$HOST${RESET}"
+    echo -e "  (This is OK, means there were no old keys)"
 fi
 
 echo ""
-echo -e "${GREEN}✓ Cleanup voltooid!${RESET}"
+echo -e "${GREEN}✓ Cleanup complete!${RESET}"
 echo ""
 echo -e "${YELLOW}Volgende stap:${RESET}"
 echo -e "  Test de SSH connectie:"

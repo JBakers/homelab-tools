@@ -5,7 +5,7 @@
 
 ## 🔴 CRITICAL
 
-- [ ] **Fix undeploy-motd bug** - Searches for `99-homelab-*.sh` but deploy-motd creates `00-motd.sh`
+- [x] **Fix undeploy-motd bug** - Searches for `99-homelab-*.sh` but deploy-motd creates `00-motd.sh`
 
 ## 🎯 v3.6.0 IN PROGRESS 🚧
 

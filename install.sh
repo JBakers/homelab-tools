@@ -171,6 +171,9 @@ clean_user_data() {
             banner_depth = 0
         }
         
+        # Never touch VS Code shell integration
+        /locate-shell-integration-path/ { print; next }
+        
         # Match tip section
         /^# Homelab Tools tip$/ { 
             getline

@@ -368,9 +368,10 @@ ASCIIART
         echo "$(date +'%A %d %B %Y, %H:%M')"
         
         # Show version if available
-        HLT_VERSION="unknown"
         if [[ -f /opt/homelab-tools/VERSION ]]; then
             HLT_VERSION=$(cat /opt/homelab-tools/VERSION)
+        else
+            HLT_VERSION="unknown"
         fi
         echo -e "Homelab Tools: \033[0;36mv${HLT_VERSION}\033[0m"
 

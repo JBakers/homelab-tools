@@ -58,6 +58,10 @@ echo -e "${YELLOW}[1/5]${RESET} Update script headers (Version: X.Y.Z)..."
 find . -type f \( -name "*.sh" -o -path "*/bin/*" \) \
     ! -path "./.git/*" \
     -exec sed -i "s/^# Version: [0-9]\+\.[0-9]\+\.[0-9]\+/# Version: $NEW_VERSION/g" {} \;
+sed -i "s/^# Version: .*/# Version: $NEW_VERSION/" lib/menu-helpers.sh 2>/dev/null || true
+
+# Update VERSION file
+echo "$NEW_VERSION" > VERSION
 
 echo -e "${GREEN}  ✓${RESET} Updated version headers"
 echo ""

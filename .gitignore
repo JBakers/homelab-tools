@@ -3,6 +3,9 @@ config.sh
 templates/
 !templates/.gitkeep
 
+# Archive folder for old/deprecated files
+.archive/
+
 # Development and documentation artifacts
 claude.md
 conversation*.md

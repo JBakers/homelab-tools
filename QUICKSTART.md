@@ -1,44 +1,45 @@
 # 🚀 Quick Start Guide
 
-## Direct aan de slag
+## Getting Started
 
 ```bash
-# 1. Download/clone naar je homelab
+# 1. Clone to your homelab
 cd ~
-# ... download homelab-tools ...
+git clone https://github.com/JBakers/homelab-tools.git
 
-# 2. Installeer
+# 2. Install
 cd homelab-tools
 ./install.sh
 source ~/.bashrc
 
-# 3. Start!
+# 3. Launch!
 homelab
 ```
 
-## Meest gebruikte commando's
+## Most Used Commands
 
-### MOTD maken voor een nieuwe service
+### Create MOTD for a new service
 ```bash
-generate-motd jellyfin
-# Beantwoord de vragen
+generate-motd pihole
+# Answer the prompts
 ```
 
-### MOTD deployen
+### Deploy MOTD
 ```bash
-deploy-motd jellyfin
+deploy-motd pihole
 ```
 
-### SSH keys opruimen na rebuild
+### Clean up SSH keys after rebuild
 ```bash
-cleanup-keys jellyfin
-# of
-cleanup-keys 192.168.178.30
+cleanup-keys pihole
+# or
+cleanup-keys 192.168.1.100
 ```
 
-### Overzicht van templates
+### View templates
 ```bash
 list-templates
+list-templates --status  # Shows deployment status
 ```
 
 ### Help
@@ -48,17 +49,17 @@ generate-motd --help
 deploy-motd --help
 ```
 
-## Workflow: Nieuwe Container
+## Workflow: New Container
 
 ```bash
-# 1. Maak MOTD
+# 1. Create MOTD
 generate-motd frigate
-> Service naam: Frigate
-> Beschrijving: Network Video Recorder
-> Web UI? j
-> Poort: 5000
+> Service name: Frigate
+> Description: Network Video Recorder
+> Web UI? y
+> Port: 5000
 
-# 2. Als er SSH key conflicts zijn
+# 2. If there are SSH key conflicts
 cleanup-keys frigate
 
 # 3. Deploy
@@ -68,36 +69,36 @@ deploy-motd frigate
 ssh frigate
 ```
 
-## Handige SSH Config
+## SSH Config Example
 
-Voeg toe aan `~/.ssh/config`:
+Add to `~/.ssh/config` (or use `edit-hosts`):
 
 ```
 Host frigate
-  HostName 192.168.178.30
+  HostName 192.168.1.30
   User root
 
-Host jellyfin
-  HostName 192.168.178.25
+Host pihole
+  HostName 192.168.1.100
   User root
   
-Host pihole
-  HostName 192.168.178.3
+Host plex
+  HostName 192.168.1.50
   User root
 ```
 
-Dan kun je gewoon `ssh frigate` gebruiken!
+Then just use `ssh frigate`!
 
 ## Troubleshooting Cheat Sheet
 
-| Probleem | Oplossing |
-|----------|-----------|
+| Problem | Solution |
+|---------|----------|
 | `command not found: homelab` | `source ~/.bashrc` |
-| SSH connectie mislukt | Check SSH config, test met `ssh <host> echo test` |
+| SSH connection failed | Check SSH config, test with `ssh <host> echo test` |
 | Host key warning | `cleanup-keys <host>` |
-| MOTD niet zichtbaar | Log helemaal uit en weer in |
-| Geen kleuren | Check terminal ANSI support |
-| Geen ASCII art | `sudo apt install toilet` (optioneel) |
+| MOTD not visible | Log out completely and log back in |
+| No colors | Check terminal ANSI support |
+| No ASCII art | `sudo apt install toilet` (optional) |
 
 ## Handige Aliases (optioneel)
 

@@ -59,18 +59,18 @@ echo -e "${BOLD}SSH Key:${RESET} ${CYAN}$PUBLIC_KEY_FILE${RESET}"
 echo -e "${BOLD}Config:${RESET}  ${CYAN}$CONFIG_FILE${RESET}"
 echo ""
 
-# Lees hosts uit config
+# Read hosts from config
 hosts=$(grep "^Host " "$CONFIG_FILE" | awk '{print $2}' | grep -v '\*' | sort -u)
 host_count=$(echo "$hosts" | wc -l)
 
-echo -e "${BOLD}Gevonden hosts:${RESET} ${GREEN}$host_count${RESET}"
+echo -e "${BOLD}Hosts found:${RESET} ${GREEN}$host_count${RESET}"
 echo ""
 
 # Counters
 success=0
 failed=0
 
-# Loop door hosts
+# Loop through hosts
 for hostname in $hosts; do
     # Validate hostname
     if [[ ! "$hostname" =~ ^[a-zA-Z0-9._-]+$ ]]; then
@@ -81,7 +81,7 @@ for hostname in $hosts; do
 
     echo -ne "${YELLOW}→${RESET} ${BOLD}$hostname${RESET} ... "
     
-    # Kopieer de sleutel
+    # Copy the key
     if ssh -F "$CONFIG_FILE" -o ConnectTimeout=5 "$hostname" \
         "mkdir -p ~/.ssh; chmod 700 ~/.ssh; cat >> ~/.ssh/authorized_keys; chmod 600 ~/.ssh/authorized_keys" < "$PUBLIC_KEY_FILE" 2>/dev/null; then
         echo -e "${GREEN}✓${RESET}"
@@ -94,7 +94,7 @@ done
 
 echo ""
 echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
-echo -e "${GREEN}✓ Succesvol:${RESET} $success"
-echo -e "${RED}✗ Mislukt:${RESET}   $failed"
+echo -e "${GREEN}✓ Success:${RESET}  $success"
+echo -e "${RED}✗ Failed:${RESET}   $failed"
 echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 echo ""

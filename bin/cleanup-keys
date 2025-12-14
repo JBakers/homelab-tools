@@ -1,15 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
-# Cleanup host keys for homelab hosts
-#!/bin/bash
-set -euo pipefail
-
 # Cleanup old SSH host keys
 # Author: J.Bakers
 # Version: 3.6.0-dev.13
 
-# Kleuren
+# Colors
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -56,16 +52,9 @@ fi
 HOST=${1:-}
 
 # Validate hostname/IP if provided
-if [[ -n "$HOST" ]] && [[ ! "$HOST" =~ ^[a-zA-Z0-9._-]+$ ]]; then
-    echo -e "${RED}✗ Error: Invalid hostname${RESET}"
-    echo -e "  Alleen letters, cijfers, punten, underscores en streepjes zijn toegestaan"
-    exit 1
-fi
-
-# Validate hostname/IP if provided
 if [[ -n "$HOST" ]] && [[ ! "$HOST" =~ ^[a-zA-Z0-9._-]+$ ]] && [[ ! "$HOST" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
     echo -e "${RED}✗ Error: Invalid hostname or IP${RESET}"
-    echo -e "  Gebruik een geldige hostname of IP address"
+    echo -e "  Use a valid hostname or IP address"
     exit 1
 fi
 
@@ -74,10 +63,10 @@ echo -e "║         🧹 Cleanup Host Keys                          ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
-# Check of known_hosts bestaat
+# Check if known_hosts exists
 if [[ ! -f ~/.ssh/known_hosts ]]; then
     echo -e "${YELLOW}⚠ No known_hosts file found${RESET}"
-    echo -e "  (Dit is normaal als je nog nooit SSH hebt gebruikt)"
+    echo -e "  (This is normal if you haven't used SSH before)"
     exit 0
 fi
 

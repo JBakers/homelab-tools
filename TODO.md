@@ -25,8 +25,18 @@
 
 ---
 
-## 🟢 Low Priority
+## � Medium Priority
 
+- [ ] **Consolidate all features into `homelab` menu** - Users only need to remember one command
+  - [ ] Check all features are accessible via menu
+  - [ ] Add missing features to menu if needed (undeploy-motd, list-templates --status/--view)
+  - [ ] Keep standalone commands for power users/scripting, but don't promote
+- [ ] **Archive TESTING_GUIDE.md** → `.archive/` (outdated, manual testing via menu is simpler)
+- [ ] **Update README.md** - Promote only `homelab` command, hide individual commands
+
+## �🟢 Low Priority
+
+- [ ] Add delete-all / delete-multiple to delete-template menu
 - [ ] Create `lib/constants.sh` for shared `UNSUPPORTED_SYSTEMS` array
 - [ ] Improve ASCII preview performance
 - [ ] Add more MOTD templates

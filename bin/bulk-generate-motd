@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Bulk generate MOTD templates for all hosts
 # Author: J.Bakers
-# Version: 3.5.0-dev.31
+# Version: 3.6.0-dev.13
 
 # Load shared menu helper library
 # Resolve symlinks to find the actual installation directory

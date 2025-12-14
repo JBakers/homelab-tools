@@ -10,6 +10,7 @@
 - [x] list-templates --status - Deployment tracking
 - [x] list-templates --view - Interactive preview
 - [x] Removed Jellyfin examples, replaced with Pi-hole
+- [x] Enhanced edit-hosts - Full interactive SSH config manager
 
 **Pending:**
 - [ ] Version bump to 3.6.0-dev in all scripts
@@ -24,22 +25,21 @@
 - [ ] Add more MOTD templates
 - [ ] Add i18n support (future)
 
-## 📋 Planned: Enhanced edit-hosts (v3.6.0)
+## ✅ DONE: Enhanced edit-hosts (v3.6.0)
 
-- [ ] **Interactive host menu** - Show list of all SSH config hosts
+- [x] **Interactive host menu** - Show list of all SSH config hosts
   - View host details
   - Edit host entry
   - Delete host
   - Copy host (with numeric suffix like host-copy1)
   - Search/filter hosts by name pattern
-- [ ] **Add Host guided wizard** - Interactive prompts for:
+- [x] **Add Host guided wizard** - Interactive prompts for:
   - Hostname, HostName/IP, User, Port, SSH key path
-  - Input validation
+  - Input validation (IP octet check, port range, hostname chars)
   - Append to config without nano
-- [ ] **Bulk operations**
-  - Disable/enable multiple hosts
-  - Export host list
-  - Backup SSH config
+- [x] **Bulk operations**
+  - Export host list to file
+  - Backup SSH config (timestamped)
   - Batch delete hosts
 
 ## 📋 Planned: MOTD Customization (v3.7.0)

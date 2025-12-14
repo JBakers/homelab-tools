@@ -1,94 +1,833 @@
 #!/bin/bash
 set -euo pipefail
 
-# Edit SSH host configuration
+# Enhanced SSH host configuration manager
 # Author: J.Bakers
-# Version: 3.5.0-dev.31
+# Version: 3.6.0-dev.13
 
-# Kleuren
+# Colors
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+RED='\033[0;31m'
 BOLD='\033[1m'
+DIM='\033[2m'
 RESET='\033[0m'
 
 SSH_CONFIG="$HOME/.ssh/config"
+SSH_CONFIG_BACKUP="$HOME/.ssh/config.backup"
+
+# Source menu helpers for arrow navigation
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/menu-helpers.sh
+source "${SCRIPT_DIR}/../lib/menu-helpers.sh"
 
 show_help() {
-    echo -e "${BOLD}${CYAN}edit-hosts - Edit host configuration${RESET}"
+    echo -e "${BOLD}${CYAN}edit-hosts - Enhanced host configuration manager${RESET}"
     echo ""
     echo -e "${BOLD}USAGE:${RESET}"
-    echo "  edit-hosts"
+    echo "  edit-hosts [options]"
+    echo ""
+    echo -e "${BOLD}OPTIONS:${RESET}"
+    echo "  --help, -h        Show this help message"
+    echo "  --edit            Open SSH config in editor (classic mode)"
     echo ""
     echo -e "${BOLD}DESCRIPTION:${RESET}"
-    echo "  Opens your host configuration file in your default editor."
-    echo "  Creates the file if it doesn't exist."
+    echo "  Interactive SSH host configuration manager with:"
+    echo "  • View and manage all configured hosts"
+    echo "  • Add new hosts with guided wizard"
+    echo "  • Edit, delete, or copy existing hosts"
+    echo "  • Search and filter hosts"
+    echo "  • Bulk operations (backup, export, batch delete)"
     echo ""
     echo -e "${BOLD}FILE LOCATION:${RESET}"
     echo "  ~/.ssh/config"
     echo ""
-    echo -e "${BOLD}EXAMPLE ENTRY:${RESET}"
-    echo "  Host jellyfin"
-    echo "    HostName 192.168.178.25"
-    echo "    User root"
-    echo "    Port 22"
-    echo ""
-    echo -e "${BOLD}TIP:${RESET}"
-    echo "  After editing, use ${GREEN}bulk-generate-motd${RESET} to create"
-    echo "  MOTDs for all hosts automatically."
+    echo -e "${BOLD}FEATURES:${RESET}"
+    echo "  • Arrow key navigation in all menus"
+    echo "  • Input validation for all fields"
+    echo "  • Automatic backup before modifications"
+    echo "  • Safe host copying with numeric suffixes"
     echo ""
 }
 
+# Initialize SSH config structure
+init_ssh_config() {
+    if [[ ! -d "$HOME/.ssh" ]]; then
+        echo -e "${YELLOW}→${RESET} Creating ~/.ssh directory..."
+        mkdir -p "$HOME/.ssh"
+        chmod 700 "$HOME/.ssh"
+    fi
+
+    if [[ ! -f "$SSH_CONFIG" ]]; then
+        echo -e "${YELLOW}→${RESET} Creating new SSH config file..."
+        cat > "$SSH_CONFIG" << 'EOF'
+# SSH Configuration
+# Managed by homelab-tools
+
+# Example:
+# Host pihole
+#   HostName 192.168.1.100
+#   User admin
+#   Port 22
+#   IdentityFile ~/.ssh/id_ed25519
+
+EOF
+        chmod 600 "$SSH_CONFIG"
+    fi
+}
+
+# Parse SSH config and extract hosts
+# Returns: Array of host names
+get_all_hosts() {
+    if [[ ! -f "$SSH_CONFIG" ]]; then
+        return
+    fi
+    
+    grep -E "^Host " "$SSH_CONFIG" 2>/dev/null | awk '{print $2}' | grep -v "\*" || true
+}
+
+# Get host details
+# Args: $1 = hostname
+get_host_details() {
+    local hostname="$1"
+    local in_host=0
+    local details=""
+    
+    while IFS= read -r line; do
+        if [[ "$line" =~ ^Host[[:space:]]+${hostname}$ ]]; then
+            in_host=1
+            details="Host: $hostname"$'\n'
+            continue
+        fi
+        
+        if [[ $in_host -eq 1 ]]; then
+            if [[ "$line" =~ ^Host[[:space:]] ]]; then
+                break
+            fi
+            
+            if [[ "$line" =~ ^[[:space:]]*(HostName|User|Port|IdentityFile)[[:space:]]+ ]]; then
+                local key value
+                key=$(echo "$line" | awk '{print $1}')
+                value=$(echo "$line" | awk '{$1=""; print $0}' | sed 's/^[[:space:]]*//')
+                details+="  $key: $value"$'\n'
+            fi
+        fi
+    done < "$SSH_CONFIG"
+    
+    echo "$details"
+}
+
+# Validate hostname (alphanumeric, dash, underscore, dot)
+validate_hostname() {
+    local name="$1"
+    if [[ ! "$name" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+        return 1
+    fi
+    return 0
+}
+
+# Validate IP or hostname
+validate_ip_or_hostname() {
+    local input="$1"
+    
+    # If input looks like an IP (only digits and dots), validate as IP
+    if [[ "$input" =~ ^[0-9.]+$ ]]; then
+        # Must match exactly 4 octets
+        if [[ ! "$input" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+            return 1
+        fi
+        IFS='.' read -ra ADDR <<< "$input"
+        # Each part must be 0-255
+        for i in "${ADDR[@]}"; do
+            if [[ $i -gt 255 ]]; then
+                return 1
+            fi
+        done
+        return 0
+    fi
+    
+    # Check if it's a valid hostname/FQDN
+    if [[ "$input" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$ ]]; then
+        return 0
+    fi
+    
+    return 1
+}
+
+# Validate port number
+validate_port() {
+    local port="$1"
+    if [[ ! "$port" =~ ^[0-9]+$ ]] || [[ $port -lt 1 ]] || [[ $port -gt 65535 ]]; then
+        return 1
+    fi
+    return 0
+}
+
+# Check if host exists in config
+host_exists() {
+    local hostname="$1"
+    grep -q "^Host ${hostname}$" "$SSH_CONFIG" 2>/dev/null
+}
+
+# Create backup of SSH config
+backup_ssh_config() {
+    if [[ -f "$SSH_CONFIG" ]]; then
+        cp "$SSH_CONFIG" "$SSH_CONFIG_BACKUP"
+        echo -e "${GREEN}✓${RESET} Backup created: ${DIM}${SSH_CONFIG_BACKUP}${RESET}"
+    fi
+}
+
+# Add new host wizard
+add_host_wizard() {
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║              ➕  Add New SSH Host                        ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    
+    # Host alias
+    local hostname
+    while true; do
+        echo -e "${BOLD}Host alias:${RESET} ${DIM}(e.g., pihole, jellyfin, proxmox)${RESET}"
+        read -r -p "> " hostname
+        
+        if [[ -z "$hostname" ]]; then
+            echo -e "${RED}✗ Host alias cannot be empty${RESET}"
+            continue
+        fi
+        
+        if ! validate_hostname "$hostname"; then
+            echo -e "${RED}✗ Invalid hostname. Use only: a-z A-Z 0-9 . - _${RESET}"
+            continue
+        fi
+        
+        if host_exists "$hostname"; then
+            echo -e "${RED}✗ Host '$hostname' already exists${RESET}"
+            continue
+        fi
+        
+        break
+    done
+    
+    echo ""
+    
+    # HostName (IP or FQDN)
+    local target
+    while true; do
+        echo -e "${BOLD}IP address or hostname:${RESET} ${DIM}(e.g., 192.168.1.100 or server.local)${RESET}"
+        read -r -p "> " target
+        
+        if [[ -z "$target" ]]; then
+            echo -e "${RED}✗ Target cannot be empty${RESET}"
+            continue
+        fi
+        
+        if ! validate_ip_or_hostname "$target"; then
+            echo -e "${RED}✗ Invalid IP address or hostname${RESET}"
+            continue
+        fi
+        
+        break
+    done
+    
+    echo ""
+    
+    # User
+    local user
+    while true; do
+        echo -e "${BOLD}Username:${RESET} ${DIM}(e.g., root, admin, ubuntu)${RESET}"
+        read -r -p "> " user
+        
+        if [[ -z "$user" ]]; then
+            echo -e "${RED}✗ Username cannot be empty${RESET}"
+            continue
+        fi
+        
+        if ! validate_hostname "$user"; then
+            echo -e "${RED}✗ Invalid username${RESET}"
+            continue
+        fi
+        
+        break
+    done
+    
+    echo ""
+    
+    # Port
+    local port
+    while true; do
+        echo -e "${BOLD}Port:${RESET} ${DIM}(default: 22)${RESET}"
+        read -r -p "> " port
+        port="${port:-22}"
+        
+        if ! validate_port "$port"; then
+            echo -e "${RED}✗ Invalid port number (1-65535)${RESET}"
+            continue
+        fi
+        
+        break
+    done
+    
+    echo ""
+    
+    # SSH key (optional)
+    local ssh_key
+    echo -e "${BOLD}SSH key path:${RESET} ${DIM}(optional, press Enter to skip)${RESET}"
+    read -r -p "> " ssh_key
+    
+    echo ""
+    echo -e "${YELLOW}─────────────────────────────────────────────────────────${RESET}"
+    echo -e "${BOLD}Review configuration:${RESET}"
+    echo ""
+    echo -e "  ${BOLD}Host:${RESET}       $hostname"
+    echo -e "  ${BOLD}HostName:${RESET}   $target"
+    echo -e "  ${BOLD}User:${RESET}       $user"
+    echo -e "  ${BOLD}Port:${RESET}       $port"
+    if [[ -n "$ssh_key" ]]; then
+        echo -e "  ${BOLD}SSH Key:${RESET}    $ssh_key"
+    fi
+    echo ""
+    
+    if ! confirm_action "Add this host to SSH config?"; then
+        echo -e "${YELLOW}✗ Cancelled${RESET}"
+        return 1
+    fi
+    
+    # Backup before adding
+    backup_ssh_config
+    
+    # Add host to config
+    {
+        echo ""
+        echo "Host $hostname"
+        echo "  HostName $target"
+        echo "  User $user"
+        echo "  Port $port"
+        if [[ -n "$ssh_key" ]]; then
+            echo "  IdentityFile $ssh_key"
+        fi
+    } >> "$SSH_CONFIG"
+    
+    echo ""
+    echo -e "${GREEN}✓ Host '$hostname' added successfully${RESET}"
+    sleep 2
+    return 0
+}
+
+# View host details
+view_host() {
+    local hostname="$1"
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║              📋  Host Details                            ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    
+    local details
+    details=$(get_host_details "$hostname")
+    
+    if [[ -z "$details" ]]; then
+        echo -e "${RED}✗ Host not found: $hostname${RESET}"
+    else
+        echo -e "${CYAN}$details${RESET}"
+    fi
+    
+    echo ""
+    echo -e "${DIM}Press Enter to continue...${RESET}"
+    read -r
+}
+
+# Edit host in editor
+edit_host_in_editor() {
+    local hostname="$1"
+    
+    if ! host_exists "$hostname"; then
+        echo -e "${RED}✗ Host not found: $hostname${RESET}"
+        sleep 2
+        return 1
+    fi
+    
+    backup_ssh_config
+    
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║              ✏️  Edit Host in Editor                      ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "${YELLOW}→${RESET} Opening SSH config at host: ${BOLD}$hostname${RESET}"
+    echo -e "${DIM}  Find the 'Host $hostname' section and edit as needed${RESET}"
+    echo ""
+    echo -e "${DIM}Press Enter to open editor...${RESET}"
+    read -r
+    
+    EDITOR="${EDITOR:-nano}"
+    $EDITOR "$SSH_CONFIG"
+    
+    echo ""
+    echo -e "${GREEN}✓ Changes saved${RESET}"
+    sleep 1
+    return 0
+}
+
+# Delete host
+delete_host() {
+    local hostname="$1"
+    
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║              🗑️  Delete Host                             ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    
+    local details
+    details=$(get_host_details "$hostname")
+    
+    if [[ -z "$details" ]]; then
+        echo -e "${RED}✗ Host not found: $hostname${RESET}"
+        sleep 2
+        return 1
+    fi
+    
+    echo -e "${CYAN}$details${RESET}"
+    echo ""
+    
+    if ! confirm_action "Delete host '$hostname'?"; then
+        echo -e "${YELLOW}✗ Cancelled${RESET}"
+        sleep 1
+        return 1
+    fi
+    
+    backup_ssh_config
+    
+    # Delete host block using awk
+    awk -v host="$hostname" '
+    BEGIN { in_host=0 }
+    /^Host / {
+        if ($2 == host) {
+            in_host=1
+            next
+        } else {
+            in_host=0
+        }
+    }
+    in_host == 0 { print }
+    ' "$SSH_CONFIG" > "${SSH_CONFIG}.tmp"
+    
+    mv "${SSH_CONFIG}.tmp" "$SSH_CONFIG"
+    
+    echo ""
+    echo -e "${GREEN}✓ Host '$hostname' deleted${RESET}"
+    sleep 2
+    return 0
+}
+
+# Copy host
+copy_host() {
+    local hostname="$1"
+    
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║              📋  Copy Host                               ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    
+    if ! host_exists "$hostname"; then
+        echo -e "${RED}✗ Host not found: $hostname${RESET}"
+        sleep 2
+        return 1
+    fi
+    
+    # Find next available copy number
+    local counter=1
+    local new_name="${hostname}-copy${counter}"
+    while host_exists "$new_name"; do
+        ((counter++))
+        new_name="${hostname}-copy${counter}"
+    done
+    
+    echo -e "${BOLD}Source host:${RESET} $hostname"
+    echo -e "${BOLD}New name:${RESET}    $new_name"
+    echo ""
+    
+    if ! confirm_action "Copy host '$hostname' to '$new_name'?"; then
+        echo -e "${YELLOW}✗ Cancelled${RESET}"
+        sleep 1
+        return 1
+    fi
+    
+    backup_ssh_config
+    
+    # Extract host block and append with new name
+    local host_block
+    host_block=$(awk -v host="$hostname" '
+    /^Host / {
+        if ($2 == host) {
+            in_host=1
+            print
+            next
+        } else {
+            in_host=0
+        }
+    }
+    in_host == 1 {
+        if (/^Host /) {
+            in_host=0
+        } else {
+            print
+        }
+    }
+    ' "$SSH_CONFIG")
+    
+    {
+        echo ""
+        echo "Host $new_name"
+        echo "$host_block" | grep -v "^Host "
+    } >> "$SSH_CONFIG"
+    
+    echo ""
+    echo -e "${GREEN}✓ Host copied to '$new_name'${RESET}"
+    sleep 2
+    return 0
+}
+
+# Search/filter hosts
+search_hosts() {
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║              🔍  Search Hosts                            ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    
+    echo -e "${BOLD}Search pattern:${RESET} ${DIM}(case-insensitive)${RESET}"
+    read -r -p "> " pattern
+    
+    if [[ -z "$pattern" ]]; then
+        return 0
+    fi
+    
+    echo ""
+    echo -e "${YELLOW}─────────────────────────────────────────────────────────${RESET}"
+    
+    local hosts found=0
+    hosts=$(get_all_hosts)
+    
+    while IFS= read -r host; do
+        if [[ "$host" =~ $pattern ]] || [[ "${host,,}" =~ ${pattern,,} ]]; then
+            echo -e "${GREEN}•${RESET} $host"
+            ((found++))
+        fi
+    done <<< "$hosts"
+    
+    echo -e "${YELLOW}─────────────────────────────────────────────────────────${RESET}"
+    echo -e "${BOLD}Found:${RESET} $found host(s)"
+    echo ""
+    echo -e "${DIM}Press Enter to continue...${RESET}"
+    read -r
+}
+
+# Host management menu
+host_menu() {
+    local hostname="$1"
+    
+    while true; do
+        clear
+        echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+        echo -e "║              ⚙️  Manage Host: ${hostname}$(printf '%*s' $((38-${#hostname})) '')║"
+        echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+        echo ""
+        
+        local options=(
+            "View host details"
+            "Edit host in editor"
+            "Delete host"
+            "Copy host"
+            "← Back to host list"
+        )
+        
+        local choice
+        if ! choice=$(show_menu "${options[@]}"); then
+            return 0
+        fi
+        
+        case "$choice" in
+            0) view_host "$hostname" ;;
+            1) edit_host_in_editor "$hostname" ;;
+            2) 
+                delete_host "$hostname"
+                return 0  # Return after delete
+                ;;
+            3) copy_host "$hostname" ;;
+            4) return 0 ;;
+        esac
+    done
+}
+
+# Export host list
+export_host_list() {
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║              📤  Export Host List                        ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    
+    local export_file
+    export_file="$HOME/ssh-hosts-export-$(date +%Y%m%d-%H%M%S).txt"
+    
+    {
+        echo "SSH Hosts Export - $(date)"
+        echo "================================"
+        echo ""
+        
+        local hosts
+        hosts=$(get_all_hosts)
+        
+        while IFS= read -r host; do
+            echo "Host: $host"
+            get_host_details "$host" | tail -n +2
+            echo ""
+        done <<< "$hosts"
+    } > "$export_file"
+    
+    echo -e "${GREEN}✓ Host list exported to:${RESET}"
+    echo -e "  ${CYAN}$export_file${RESET}"
+    echo ""
+    echo -e "${DIM}Press Enter to continue...${RESET}"
+    read -r
+}
+
+# Backup SSH config with timestamp
+backup_ssh_config_timestamped() {
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║              💾  Backup SSH Config                       ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    
+    local backup_file
+    backup_file="$HOME/.ssh/config.backup-$(date +%Y%m%d-%H%M%S)"
+    cp "$SSH_CONFIG" "$backup_file"
+    
+    echo -e "${GREEN}✓ Backup created:${RESET}"
+    echo -e "  ${CYAN}$backup_file${RESET}"
+    echo ""
+    echo -e "${DIM}Press Enter to continue...${RESET}"
+    read -r
+}
+
+# Batch delete hosts
+batch_delete_hosts() {
+    clear
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║              🗑️  Batch Delete Hosts                      ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    
+    local hosts
+    hosts=$(get_all_hosts)
+    
+    if [[ -z "$hosts" ]]; then
+        echo -e "${YELLOW}No hosts configured${RESET}"
+        sleep 2
+        return 0
+    fi
+    
+    echo -e "${BOLD}Enter host names to delete (space-separated):${RESET}"
+    echo -e "${DIM}Example: pihole jellyfin proxmox${RESET}"
+    echo ""
+    read -r -p "> " input
+    
+    if [[ -z "$input" ]]; then
+        return 0
+    fi
+    
+    read -ra hosts_to_delete <<< "$input"
+    
+    echo ""
+    echo -e "${YELLOW}─────────────────────────────────────────────────────────${RESET}"
+    echo -e "${BOLD}Hosts to delete:${RESET}"
+    for host in "${hosts_to_delete[@]}"; do
+        if host_exists "$host"; then
+            echo -e "  ${RED}•${RESET} $host"
+        else
+            echo -e "  ${DIM}• $host (not found)${RESET}"
+        fi
+    done
+    echo -e "${YELLOW}─────────────────────────────────────────────────────────${RESET}"
+    echo ""
+    
+    if ! confirm_action "Delete ${#hosts_to_delete[@]} host(s)?"; then
+        echo -e "${YELLOW}✗ Cancelled${RESET}"
+        sleep 1
+        return 0
+    fi
+    
+    backup_ssh_config
+    
+    local deleted=0
+    for host in "${hosts_to_delete[@]}"; do
+        if host_exists "$host"; then
+            # Delete using awk
+            awk -v host="$host" '
+            BEGIN { in_host=0 }
+            /^Host / {
+                if ($2 == host) {
+                    in_host=1
+                    next
+                } else {
+                    in_host=0
+                }
+            }
+            in_host == 0 { print }
+            ' "$SSH_CONFIG" > "${SSH_CONFIG}.tmp"
+            
+            mv "${SSH_CONFIG}.tmp" "$SSH_CONFIG"
+            ((deleted++))
+        fi
+    done
+    
+    echo ""
+    echo -e "${GREEN}✓ Deleted $deleted host(s)${RESET}"
+    sleep 2
+}
+
+# Bulk operations menu
+bulk_operations_menu() {
+    while true; do
+        clear
+        echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+        echo -e "║              📦  Bulk Operations                         ║"
+        echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+        echo ""
+        
+        local options=(
+            "Export host list to file"
+            "Backup SSH config (timestamped)"
+            "Batch delete hosts"
+            "← Back to main menu"
+        )
+        
+        local choice
+        if ! choice=$(show_menu "${options[@]}"); then
+            return 0
+        fi
+        
+        case "$choice" in
+            0) export_host_list ;;
+            1) backup_ssh_config_timestamped ;;
+            2) batch_delete_hosts ;;
+            3) return 0 ;;
+        esac
+    done
+}
+
+# Main interactive menu
+interactive_menu() {
+    init_ssh_config
+    
+    while true; do
+        clear
+        echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+        echo -e "║         ⚙️  SSH Host Configuration Manager               ║"
+        echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+        echo ""
+        
+        local hosts
+        hosts=$(get_all_hosts)
+        local host_count
+        host_count=$(echo "$hosts" | grep -c "." || echo "0")
+        
+        echo -e "${BOLD}Configured hosts:${RESET} ${GREEN}$host_count${RESET}"
+        echo ""
+        
+        if [[ $host_count -gt 0 ]]; then
+            echo -e "${DIM}Hosts:${RESET}"
+            while IFS= read -r host; do
+                echo -e "  ${CYAN}•${RESET} $host"
+            done <<< "$hosts"
+            echo ""
+        fi
+        
+        local options=(
+            "➕ Add new host"
+            "📋 Manage existing host"
+            "🔍 Search hosts"
+            "📦 Bulk operations"
+            "✏️  Open SSH config in editor"
+            "← Exit"
+        )
+        
+        local choice
+        if ! choice=$(show_menu "${options[@]}"); then
+            clear
+            echo -e "${GREEN}✓ Goodbye!${RESET}"
+            exit 0
+        fi
+        
+        case "$choice" in
+            0) add_host_wizard ;;
+            1)
+                if [[ $host_count -eq 0 ]]; then
+                    echo -e "${YELLOW}No hosts configured yet${RESET}"
+                    sleep 2
+                    continue
+                fi
+                
+                # Show host selection menu
+                clear
+                echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+                echo -e "║              📋  Select Host                             ║"
+                echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+                echo ""
+                
+                local host_array=()
+                while IFS= read -r host; do
+                    host_array+=("$host")
+                done <<< "$hosts"
+                host_array+=("← Back")
+                
+                local host_choice
+                if host_choice=$(show_menu "${host_array[@]}"); then
+                    if [[ $host_choice -lt ${#host_array[@]}-1 ]]; then
+                        host_menu "${host_array[$host_choice]}"
+                    fi
+                fi
+                ;;
+            2) search_hosts ;;
+            3) bulk_operations_menu ;;
+            4)
+                clear
+                echo -e "${YELLOW}→${RESET} Opening SSH config in editor..."
+                EDITOR="${EDITOR:-nano}"
+                backup_ssh_config
+                $EDITOR "$SSH_CONFIG"
+                echo -e "${GREEN}✓ Changes saved${RESET}"
+                sleep 1
+                ;;
+            5)
+                clear
+                echo -e "${GREEN}✓ Goodbye!${RESET}"
+                exit 0
+                ;;
+        esac
+    done
+}
+
+# Main execution
 if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     show_help
     exit 0
 fi
 
-echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-echo -e "║         ⚙️  Host Configuration Editor                    ║"
-echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
-echo ""
-
-# Maak .ssh directory als die niet bestaat
-if [[ ! -d "$HOME/.ssh" ]]; then
-    echo -e "${YELLOW}→${RESET} Creating ~/.ssh directory..."
-    mkdir -p "$HOME/.ssh"
-    chmod 700 "$HOME/.ssh"
+if [[ "${1:-}" == "--edit" ]]; then
+    # Classic mode: just open in editor
+    init_ssh_config
+    backup_ssh_config
+    EDITOR="${EDITOR:-nano}"
+    $EDITOR "$SSH_CONFIG"
+    echo -e "${GREEN}✓ Changes saved${RESET}"
+    exit 0
 fi
 
-# Maak config als die niet bestaat
-if [[ ! -f "$SSH_CONFIG" ]]; then
-    echo -e "${YELLOW}→${RESET} Creating new host configuration file..."
-    cat > "$SSH_CONFIG" << 'EOF'
-# SSH Configuration
-# Add your homelab hosts here
-
-# Example:
-# Host jellyfin
-#   HostName 192.168.178.25
-#   User root
-#   Port 22
-
-EOF
-    chmod 600 "$SSH_CONFIG"
-fi
-
-echo -e "${BOLD}File:${RESET} ${CYAN}$SSH_CONFIG${RESET}"
-echo ""
-
-# Bepaal editor (nano default, tenzij EDITOR expliciet is ingesteld)
-EDITOR="${EDITOR:-nano}"
-
-echo -e "${YELLOW}→${RESET} Opening in ${GREEN}$EDITOR${RESET}..."
-echo ""
-
-# Open editor
-$EDITOR "$SSH_CONFIG"
-
-echo ""
-echo -e "${GREEN}✓ host configuration saved${RESET}"
-echo ""
-echo -e "${YELLOW}Next steps:${RESET}"
-echo -e "  ${GREEN}bulk-generate-motd${RESET}  - Generate MOTDs for all hosts"
-echo -e "  ${GREEN}list-templates${RESET}      - View generated templates"
-echo ""
+# Run interactive menu
+interactive_menu

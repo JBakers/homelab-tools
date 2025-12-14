@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Undeploy MOTD from remote host
 # Author: J.Bakers
-# Version: 3.6.0
+# Version: 3.6.0-dev.13
 
 # Colors
 CYAN='\033[0;36m'

@@ -17,24 +17,22 @@ TEMPLATE_DIR="$HOME/.local/share/homelab-tools/templates"
 
 # Show help
 show_help() {
-    cat << EOF
-
-${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗
-║         🗑️  Delete MOTD Template                          ║
-╚══════════════════════════════════════════════════════════╝${RESET}
-
-${BOLD}Usage:${RESET}
-  delete-template [template-name]
-  delete-template -i                  # Interactive mode
-
-${BOLD}Examples:${RESET}
-  delete-template pihole              # Delete pihole.sh
-  delete-template -i                  # Choose from list
-
-${BOLD}Template Location:${RESET}
-  $TEMPLATE_DIR
-
-EOF
+    echo ""
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         🗑️  Delete MOTD Template                          ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "${BOLD}Usage:${RESET}"
+    echo "  delete-template [template-name]"
+    echo "  delete-template -i                  # Interactive mode"
+    echo ""
+    echo -e "${BOLD}Examples:${RESET}"
+    echo "  delete-template pihole              # Delete pihole.sh"
+    echo "  delete-template -i                  # Choose from list"
+    echo ""
+    echo -e "${BOLD}Template Location:${RESET}"
+    echo "  $TEMPLATE_DIR"
+    echo ""
 }
 
 # Interactive selection

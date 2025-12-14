@@ -36,7 +36,13 @@
 
 ### 🐛 Bug Fixes
 
-#### v3.6.0-dev.19 (Current)
+#### v3.6.0-dev.20 (Current)
+- Fixed missing title arguments in edit-hosts show_arrow_menu calls (3 locations)
+  - Host Options menu, Bulk Operations menu, Select Host menu
+- Fixed list-templates --view using wrong function (choose_menu → show_arrow_menu)
+- Fixed delete-template --help escape codes not displaying (heredoc → echo -e)
+
+#### v3.6.0-dev.19
 - Fixed edit-hosts hanging on startup (missing title argument to show_arrow_menu)
 - show_arrow_menu requires title as first parameter; edit-hosts was calling without title
 - Now properly displays interactive menu with all host options

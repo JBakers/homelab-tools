@@ -200,6 +200,11 @@ else
 fi
 echo -e "${GREEN}✓${RESET} Permissions ingesteld"
 
+# Log the deployment
+DEPLOY_LOG="$HOME/.local/share/homelab-tools/deploy-log"
+mkdir -p "$(dirname "$DEPLOY_LOG")"
+echo "$(date +%s)|$SERVICE|$SERVICE|deployed" >> "$DEPLOY_LOG"
+
 echo ""
 echo -e "${GREEN}✓ Deployment succesvol!${RESET}"
 echo ""

@@ -14,19 +14,20 @@ todo*.md
 .todos.md
 GESPREK.md
 .markdownlint.json
-TESTING_GUIDE.md
-test-checklist.sh
 .homelab-test-progress
-TESTING_COMMANDS.md
 
 # Development tracking (private)
 .notes.md
 .dev-*.md
 
 # Test files
+TEST*
 test.sh
 test-*.sh
 test-motd.sh
+TESTING_GUIDE.md
+test-checklist.sh
+TESTING_COMMANDS.md
 
 # Backup files
 *.backup

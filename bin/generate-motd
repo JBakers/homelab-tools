@@ -49,7 +49,7 @@ show_help() {
     echo ""
     echo -e "${BOLD}INTERACTIVE:${RESET}"
     echo "  The script will ask for:"
-    echo "  - Service name (e.g., Jellyfin, Home Assistant)"
+    echo "  - Service name (e.g., Pi-hole, Home Assistant)"
     echo "  - Description (e.g., Media Server)"
     echo "  - Whether there's a Web UI (y/n)"
     echo "  - Port number (if Web UI)"
@@ -79,7 +79,7 @@ SERVICE=${1:-}
 if [[ -z "$SERVICE" ]]; then
     echo -e "${RED}✗ Error: No service name provided${RESET}"
     echo -e "  Gebruik: ${GREEN}generate-motd <service-naam>${RESET}"
-    echo -e "  Voorbeeld: ${GREEN}generate-motd jellyfin${RESET}"
+    echo -e "  Voorbeeld: ${GREEN}generate-motd pihole${RESET}"
     echo -e "  Of: ${CYAN}generate-motd --help${RESET} voor meer informatie"
     exit 1
 fi
@@ -88,7 +88,7 @@ fi
 if [[ ! "$SERVICE" =~ ^[a-zA-Z0-9._-]+$ ]]; then
     echo -e "${RED}✗ Error: Invalid service name${RESET}"
     echo -e "  Alleen letters, cijfers, punten, underscores en streepjes zijn toegestaan"
-    echo -e "  Voorbeeld: ${GREEN}generate-motd jellyfin${RESET}"
+    echo -e "  Voorbeeld: ${GREEN}generate-motd pihole${RESET}"
     exit 1
 fi
 

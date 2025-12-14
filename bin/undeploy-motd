@@ -32,7 +32,7 @@ show_help() {
     echo "  --all           Remove MOTDs from all hosts in SSH config"
     echo ""
     echo -e "${BOLD}EXAMPLES:${RESET}"
-    echo -e "  ${GREEN}undeploy-motd jellyfin${RESET}"
+    echo -e "  ${GREEN}undeploy-motd pihole${RESET}"
     echo -e "  ${GREEN}undeploy-motd --all${RESET}"
     echo ""
 }

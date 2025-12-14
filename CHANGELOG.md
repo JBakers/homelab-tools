@@ -7,15 +7,16 @@
 ### ✨ New Features
 
 #### MOTD Management
-- **dev.1-12** - Previous fixes from 3.5.0 development
 - `undeploy-motd` - Remove MOTDs from remote hosts (single + bulk with --all)
 - `list-templates --status` - Deployment tracking with 🟢🟡🔴 indicators
 - `list-templates --view` - Interactive preview mode with arrow navigation
+- Deployment logging in `~/.local/share/homelab-tools/deploy-log`
 
 #### Enhanced generate-motd (dev.15-16)
 - Non-interactive mode for scripting: accepts Web UI choice + port via stdin
 - Creates minimal but functional templates from stdin input
 - Useful for automation and batch template generation
+- Translates remaining Dutch strings to English
 
 #### Enhanced edit-hosts (dev.13)
 - Interactive host menu with arrow key navigation
@@ -31,26 +32,89 @@
 - All version scripts now update VERSION file
 - Dynamic version display in homelab menu (reads from VERSION)
 - Translated remaining Dutch text to English
+- Centralized constants in `lib/constants.sh` with `UNSUPPORTED_SYSTEMS` array
 
 ### 🐛 Bug Fixes
 
 #### v3.6.0-dev.16 (Current)
 - Fixed symlink resolution in `edit-hosts` and `list-templates --view`
 - Prevents "Bestand of map bestaat niet" error when called via ~/.local/bin symlinks
-- Consistent BASH_SOURCE symlink handling across all commands
+- Consistent BASH_SOURCE symlink handling across all commands (resolves symlinks before sourcing lib/)
 
 #### v3.6.0-dev.15
 - Non-interactive `generate-motd` support for stdin input
-- Complete English translation of remaining Dutch user-facing text
+- Complete English translation of remaining Dutch user-facing text in deploy-motd:
+  - Usage/Example/Validation messages
+  - SSH connection check messages
 - Centralized constants in `lib/constants.sh`
-- VS Code shell integration preserved in .bashrc cleanup
-- Fixed duplicate shebang in cleanup-keys
-- Fixed missing $CYAN variable in cleanup-homelab
-- IP validation now correctly rejects incomplete IPs (192.168.1)
+- Create minimal MOTD templates from stdin (Web UI y/n + port)
+
+#### v3.6.0-dev.14
+- Add lib/constants.sh for shared UNSUPPORTED_SYSTEMS array
+- Source constants in generate-motd for detection logic
+
+#### v3.6.0-dev.13
+- Enhanced edit-hosts with full interactive SSH config manager
+- Interactive host menu with arrow key navigation
+- Add host wizard with validation
+- Bulk operations: export, backup, batch delete
+
+#### v3.6.0-dev.12
+- Archive redundant version scripts (bump-version.sh, update-version.sh to .archive/)
+- Translate all Dutch text to English in scripts and comments
+
+#### v3.6.0-dev.11
+- Archive redundant version scripts per consolidation plan
+- All version references now dynamic via lib/version.sh
+
+#### v3.6.0-dev.10
+- Fix undeploy-motd mismatch: removes `/etc/profile.d/00-motd.sh` (not 99-homelab-*.sh)
+- Adjust undeploy-motd help text and messages
+
+#### v3.6.0-dev.9
+- Centralize version display system
+- Ensure bin/homelab shows version via lib/version.sh
+- Remove hardcoded versions in headers ("See VERSION file")
+
+#### v3.6.0-dev.8
+- Add deploy-motd debug connection option
+- Improve error messages (English)
+
+#### v3.6.0-dev.7
+- Add undeploy-motd script for removing MOTDs
+- Single host: `undeploy-motd <hostname>`
+- Bulk removal: `undeploy-motd --all`
+
+#### v3.6.0-dev.6
+- Fix version mismatch in VERSION file
+- Add comprehensive testing guide structure
+
+#### v3.6.0-dev.5
+- Translate deploy-motd strings to English
+- Translate generate-motd comments to English
+
+#### v3.6.0-dev.4
+- Update TODO to mark audit items as complete
+- Archive bump-version.sh and update-version.sh to .archive/
+
+#### v3.6.0-dev.3
+- Add lib/constants.sh for shared constants
+- Source in generate-motd for detection rules
+
+#### v3.6.0-dev.2
+- Non-interactive generate-motd via stdin/heredoc
+- Syntax validation across all scripts (bash -n)
+
+#### v3.6.0-dev.1
+- Repository audit and cleanup (2025-12-14)
+- Archive redundant version management scripts
+- Centralize version display and management
+- Remove Jellyfin examples, replace with Pi-hole
+- Complete Dutch → English translation
 
 ---
 
-## v3.5.0-dev (Released)
+## v3.5.0 (Released 2025-12-14)
 
 After v3.4.0 release, multiple critical bugs were discovered. Development was rolled back to the `develop` branch for systematic bugfixing before the next stable release.
 

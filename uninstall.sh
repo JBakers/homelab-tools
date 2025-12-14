@@ -228,9 +228,9 @@ if [[ -f "$HOME/.bashrc" ]] && grep -qi "homelab" "$HOME/.bashrc" 2>/dev/null; t
     
     # When in banner section, count if/fi pairs to find the right closing fi
     in_banner == 1 {
-        # Count nested if statements
-        if ($0 ~ /^if /) banner_depth++
-        if ($0 ~ /^fi$/) {
+        # Count nested if statements (including inline if)
+        if ($0 ~ /^[[:space:]]*if /) banner_depth++
+        if ($0 ~ /^[[:space:]]*fi$/) {
             if (banner_depth == 0) {
                 # This is the closing fi for the HLT_BANNER if
                 in_banner = 0
@@ -247,11 +247,23 @@ if [[ -f "$HOME/.bashrc" ]] && grep -qi "homelab" "$HOME/.bashrc" 2>/dev/null; t
     { print }
     ' "$HOME/.bashrc" > "$temp_file"
     
-    # Verify the result is valid bash
+    # Verify the result is valid bash before applying
     if bash -n "$temp_file" 2>/dev/null; then
-        mv "$temp_file" "$HOME/.bashrc"
-        echo -e "${GREEN}  ✓${RESET} Homelab entries removed"
-        echo -e "${YELLOW}  →${RESET} Backup: ${CYAN}${backup_file}${RESET}"
+        # Double-check: make sure we didn't accidentally remove too much
+        orig_lines=$(wc -l < "$HOME/.bashrc")
+        new_lines=$(wc -l < "$temp_file")
+        removed=$((orig_lines - new_lines))
+        
+        # Sanity check: we should remove 20-40 lines max (tip + banner)
+        if [[ $removed -ge 0 && $removed -le 50 ]]; then
+            mv "$temp_file" "$HOME/.bashrc"
+            echo -e "${GREEN}  ✓${RESET} Homelab entries removed ($removed lines)"
+            echo -e "${YELLOW}  →${RESET} Backup: ${CYAN}${backup_file}${RESET}"
+        else
+            echo -e "${RED}  ✗${RESET} Unexpected line count change ($removed lines) - keeping original"
+            echo -e "${YELLOW}  →${RESET} Check backup: ${CYAN}${backup_file}${RESET}"
+            rm -f "$temp_file"
+        fi
     else
         echo -e "${RED}  ✗${RESET} Cleanup would break .bashrc - keeping original"
         echo -e "${YELLOW}  →${RESET} Check backup: ${CYAN}${backup_file}${RESET}"

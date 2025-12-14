@@ -12,6 +12,11 @@
 - `list-templates --status` - Deployment tracking with 🟢🟡🔴 indicators
 - `list-templates --view` - Interactive preview mode with arrow navigation
 
+#### Enhanced generate-motd (dev.15-16)
+- Non-interactive mode for scripting: accepts Web UI choice + port via stdin
+- Creates minimal but functional templates from stdin input
+- Useful for automation and batch template generation
+
 #### Enhanced edit-hosts (dev.13)
 - Interactive host menu with arrow key navigation
 - Add new host wizard with validation (IP/hostname, port, username)
@@ -28,6 +33,16 @@
 - Translated remaining Dutch text to English
 
 ### 🐛 Bug Fixes
+
+#### v3.6.0-dev.16 (Current)
+- Fixed symlink resolution in `edit-hosts` and `list-templates --view`
+- Prevents "Bestand of map bestaat niet" error when called via ~/.local/bin symlinks
+- Consistent BASH_SOURCE symlink handling across all commands
+
+#### v3.6.0-dev.15
+- Non-interactive `generate-motd` support for stdin input
+- Complete English translation of remaining Dutch user-facing text
+- Centralized constants in `lib/constants.sh`
 - VS Code shell integration preserved in .bashrc cleanup
 - Fixed duplicate shebang in cleanup-keys
 - Fixed missing $CYAN variable in cleanup-homelab

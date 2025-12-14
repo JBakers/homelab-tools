@@ -13,31 +13,7 @@ readonly MENU_BOLD='\033[1m'
 readonly MENU_RESET='\033[0m'
 readonly MENU_INVERSE='\033[7m'
 
-# Ask for a one-key Yes/No confirmation
-# Usage: if confirm_prompt "Debug connection?"; then ... fi
-confirm_prompt() {
-    local prompt="$1"
-    local default=${2:-N}  # default N if not provided
-    local def_disp
-    if [[ "$default" =~ ^[Yy]$ ]]; then
-        def_disp="Y/n"
-    else
-        def_disp="y/N"
-    fi
-    echo -ne "${MENU_YELLOW}${prompt}? (${def_disp}):${MENU_RESET} "
-    local key
-    # read single character without enter; fallback to full read if not a TTY
-    if [[ -t 0 ]]; then
-        IFS= read -r -n1 key
-        echo ""
-    else
-        read -r key
-    fi
-    if [[ -z "$key" ]]; then
-        key="$default"
-    fi
-    [[ "$key" =~ ^[Yy]$ ]]
-}
+ 
 
 # Read a single key including arrow keys and ESC
 # Sets global variable MENU_KEY instead of echoing (to avoid subshell issues)

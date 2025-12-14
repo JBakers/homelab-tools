@@ -183,53 +183,78 @@ if [[ -f "$HOME/.bashrc" ]] && grep -qi "homelab" "$HOME/.bashrc" 2>/dev/null; t
     backup_file="$HOME/.bashrc.backup.$(date +%Y%m%d_%H%M%S)"
     cp "$HOME/.bashrc" "$backup_file"
 
-    # Safe removal: only remove our exact markers and content
-    # Using a temporary file to avoid any in-place edit issues
+    # Safe removal using awk: remove our exact sections
     temp_file="$(mktemp)"
     
-    # State machine: skip=0 means copy line, skip=1 means don't copy
     awk '
-    BEGIN { skip = 0 }
+    BEGIN { 
+        in_banner = 0
+        banner_depth = 0
+    }
     
-    # Detect start of our tip section
-    /^# Homelab Tools tip$/ { skip = 1; next }
+    # Match tip section start
+    /^# Homelab Tools tip$/ { 
+        getline  # Skip this line and the next (echo line)
+        next 
+    }
     
-    # Detect tip echo line
-    /^echo -e "\\033\[0;36mTip:\\033\[0m Type \\033\[1mhomelab\\033\[0m for available commands"$/ { next }
-    
-    # Detect start of our banner section (exact match of our comment)
+    # Match banner section start (exact 3-line header)
     /^# ===============================================$/ {
-        # Peek ahead to see if next line is our banner marker
-        getline nextline
-        if (nextline ~ /^# Homelab Tools Welcome Banner$/) {
-            skip = 1
-            next
+        line1 = $0
+        getline
+        line2 = $0
+        if (line2 ~ /^# Homelab Tools Welcome Banner$/) {
+            getline
+            line3 = $0
+            if (line3 ~ /^# Set HLT_BANNER=0 to disable$/) {
+                getline  # Skip the next === line too
+                in_banner = 1
+                banner_depth = 0
+                next
+            } else {
+                # Not our banner, print all 3 lines
+                print line1
+                print line2
+                print line3
+                next
+            }
         } else {
-            # Not our section, print both lines
-            print
-            print nextline
+            # Not our banner, print both lines
+            print line1
+            print line2
             next
         }
     }
     
-    # When skipping, look for the closing fi
-    skip == 1 && /^fi$/ { 
-        skip = 0
-        next 
+    # When in banner section, count if/fi pairs to find the right closing fi
+    in_banner == 1 {
+        # Count nested if statements
+        if ($0 ~ /^if /) banner_depth++
+        if ($0 ~ /^fi$/) {
+            if (banner_depth == 0) {
+                # This is the closing fi for the HLT_BANNER if
+                in_banner = 0
+                next
+            } else {
+                banner_depth--
+            }
+        }
+        # Skip all lines while in banner
+        next
     }
     
-    # Copy all non-skipped lines
-    skip == 0 { print }
+    # Print all other lines
+    { print }
     ' "$HOME/.bashrc" > "$temp_file"
     
     # Verify the result is valid bash
     if bash -n "$temp_file" 2>/dev/null; then
         mv "$temp_file" "$HOME/.bashrc"
         echo -e "${GREEN}  ✓${RESET} Homelab entries removed"
-        echo -e "${YELLOW}  →${RESET} Backup saved: ${CYAN}${backup_file}${RESET}"
+        echo -e "${YELLOW}  →${RESET} Backup: ${CYAN}${backup_file}${RESET}"
     else
         echo -e "${RED}  ✗${RESET} Cleanup would break .bashrc - keeping original"
-        echo -e "${YELLOW}  →${RESET} Manual cleanup may be needed"
+        echo -e "${YELLOW}  →${RESET} Check backup: ${CYAN}${backup_file}${RESET}"
         rm -f "$temp_file"
     fi
 else

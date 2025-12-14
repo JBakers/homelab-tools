@@ -179,20 +179,59 @@ echo ""
 # Remove from bashrc
 echo -e "${YELLOW}[6/6]${RESET} Cleaning up ~/.bashrc..."
 if [[ -f "$HOME/.bashrc" ]] && grep -qi "homelab" "$HOME/.bashrc" 2>/dev/null; then
-    # Create backup
-    cp "$HOME/.bashrc" "$HOME/.bashrc.backup.$(date +%Y%m%d_%H%M%S)"
+    # Create backup FIRST - always preserve user data
+    backup_file="$HOME/.bashrc.backup.$(date +%Y%m%d_%H%M%S)"
+    cp "$HOME/.bashrc" "$backup_file"
 
-    # Remove homelab-tools lines (works for both old /opt and new ~/.local/bin)
-    sed -i '/# Homelab Management Tools/d' "$HOME/.bashrc"
-    sed -i '/# Homelab Tools tip/d' "$HOME/.bashrc"
-    sed -i '/# =.*SSH Homelab Configuratie/d' "$HOME/.bashrc"
-    sed -i '\|/opt/homelab-tools|d' "$HOME/.bashrc"
-    sed -i '\|\.local/bin.*homelab|d' "$HOME/.bashrc"
-    sed -i '\|Type.*homelab.*for available commands|d' "$HOME/.bashrc"
-    sed -i '\|Type.*homelab.*voor beschikbare|d' "$HOME/.bashrc"
-
-    echo -e "${GREEN}  ✓${RESET} PATH entry removed"
-    echo -e "${YELLOW}  →${RESET} Backup: ${CYAN}~/.bashrc.backup.*${RESET}"
+    # Safe removal: only remove our exact markers and content
+    # Using a temporary file to avoid any in-place edit issues
+    temp_file="$(mktemp)"
+    
+    # State machine: skip=0 means copy line, skip=1 means don't copy
+    awk '
+    BEGIN { skip = 0 }
+    
+    # Detect start of our tip section
+    /^# Homelab Tools tip$/ { skip = 1; next }
+    
+    # Detect tip echo line
+    /^echo -e "\\033\[0;36mTip:\\033\[0m Type \\033\[1mhomelab\\033\[0m for available commands"$/ { next }
+    
+    # Detect start of our banner section (exact match of our comment)
+    /^# ===============================================$/ {
+        # Peek ahead to see if next line is our banner marker
+        getline nextline
+        if (nextline ~ /^# Homelab Tools Welcome Banner$/) {
+            skip = 1
+            next
+        } else {
+            # Not our section, print both lines
+            print
+            print nextline
+            next
+        }
+    }
+    
+    # When skipping, look for the closing fi
+    skip == 1 && /^fi$/ { 
+        skip = 0
+        next 
+    }
+    
+    # Copy all non-skipped lines
+    skip == 0 { print }
+    ' "$HOME/.bashrc" > "$temp_file"
+    
+    # Verify the result is valid bash
+    if bash -n "$temp_file" 2>/dev/null; then
+        mv "$temp_file" "$HOME/.bashrc"
+        echo -e "${GREEN}  ✓${RESET} Homelab entries removed"
+        echo -e "${YELLOW}  →${RESET} Backup saved: ${CYAN}${backup_file}${RESET}"
+    else
+        echo -e "${RED}  ✗${RESET} Cleanup would break .bashrc - keeping original"
+        echo -e "${YELLOW}  →${RESET} Manual cleanup may be needed"
+        rm -f "$temp_file"
+    fi
 else
     echo -e "${GREEN}  ✓${RESET} No entries in ~/.bashrc"
 fi

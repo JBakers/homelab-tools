@@ -36,7 +36,17 @@
 
 ### 🐛 Bug Fixes
 
-#### v3.6.0-dev.16 (Current)
+#### v3.6.0-dev.18 (Current)
+- Identified root cause: banner prompt on Update installation
+- Sed removes banner block before grep checks for HLT_BANNER
+- Solution: Save HLT_BANNER before cleanup, skip prompt if already configured
+- Added TODO for fix implementation
+
+#### v3.6.0-dev.17
+- Complete CHANGELOG documentation for all v3.6.0-dev commits (dev.1-dev.17)
+- Full audit of 5 days development work
+
+#### v3.6.0-dev.16
 - Fixed symlink resolution in `edit-hosts` and `list-templates --view`
 - Prevents "Bestand of map bestaat niet" error when called via ~/.local/bin symlinks
 - Consistent BASH_SOURCE symlink handling across all commands (resolves symlinks before sourcing lib/)

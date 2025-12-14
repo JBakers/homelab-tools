@@ -26,8 +26,11 @@
 ---
 
 ## � Medium Priority
-
-- [ ] **Consolidate all features into `homelab` menu** - Users only need to remember one command
+- [ ] **Skip banner prompt on Update** - Banner cleanup removes HLT_BANNER, so grep check fails
+  - [ ] Save HLT_BANNER setting before cleanup
+  - [ ] Restore after .bashrc cleanup (only if was previously set)
+  - [ ] Skip banner prompt if already configured
+  - Root cause: Sed removes banner block (L341), then grep for HLT_BANNER fails (L408)- [ ] **Consolidate all features into `homelab` menu** - Users only need to remember one command
   - [ ] Check all features are accessible via menu
   - [ ] Add missing features to menu if needed (undeploy-motd, list-templates --status/--view)
   - [ ] Keep standalone commands for power users/scripting, but don't promote

@@ -5,7 +5,7 @@ set -euo pipefail
 # Author: J.Bakers
 # Version: See VERSION file
 
-# Kleuren
+# Colors
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -692,7 +692,7 @@ else
     fi
 fi
 
-# Bepaal welke versie commando's nodig zijn
+# Determine which version commands are needed
 version_check=""
 case "$SERVICE" in
     pihole)
@@ -738,7 +738,7 @@ UPTIME=$(uptime -p | sed 's/up //')
 VERSION_CHECK_PLACEHOLDER
 TEMPLATE_START
 
-# Voeg ASCII art toe of clean header - afhankelijk van de keuze
+# Add ASCII art or clean header - depending on selection
 if [[ "$ascii_font" == "none" ]]; then
     # Clean & Functional - geen ASCII art
     cat >> "$TEMPLATES_DIR/$SERVICE.sh" << 'TEMPLATE_CLEAN'
@@ -767,7 +767,7 @@ while IFS= read -r line; do
 done << 'ASCII_ART'
 TEMPLATE_ASCII_START
 
-    # Voeg de ASCII art toe als een heredoc blok (behoudt alle ANSI codes)
+    # Add ASCII art as a heredoc block (preserves all ANSI codes)
     echo "$rainbow_art" >> "$TEMPLATES_DIR/$SERVICE.sh"
 
     # Sluit de ASCII art heredoc af en ga verder met de template
@@ -787,7 +787,7 @@ echo -e "  ${YELLOW}⏱️  Uptime:${NC}      $UPTIME"
 TEMPLATE_ASCII_MIDDLE
 fi
 
-# Voeg versie checks toe indien van toepassing
+# Add version checks if applicable
 if [[ -n "$version_check" ]]; then
     cat >> "$TEMPLATES_DIR/$SERVICE.sh" << VERSION_SECTION
 $version_check
@@ -797,7 +797,7 @@ else
     sed -i '/VERSION_CHECK_PLACEHOLDER/d' "$TEMPLATES_DIR/$SERVICE.sh"
 fi
 
-# Voeg versie display toe
+# Add version display
 cat >> "$TEMPLATES_DIR/$SERVICE.sh" << 'VERSION_DISPLAY'
 # Version info (if available)
 if [[ -n "$PIHOLE_VERSION" ]]; then
@@ -817,7 +817,7 @@ service_name_escaped=$(echo "$service_name" | sed 's/[\/&]/\\&/g')
 sed -i "s/DESCRIPTION_PLACEHOLDER/$description_escaped/g" "$TEMPLATES_DIR/$SERVICE.sh"
 sed -i "s/SERVICE_NAME_PLACEHOLDER/$service_name_escaped/g" "$TEMPLATES_DIR/$SERVICE.sh"
 
-# Web UI toevoegen als nodig
+# Add Web UI if needed
 if [[ -n "$webui_port" ]]; then
     # Check of het een URL of poort is
     if [[ "$webui_port" =~ ^https?:// ]]; then
@@ -826,7 +826,7 @@ if [[ -n "$webui_port" ]]; then
         # Gebruik hostname met domein suffix
         hostname_var="\$(hostname -s)"
         
-        # Bepaal protocol (proxmox en PBS gebruiken https)
+        # Determine protocol (Proxmox and PBS use HTTPS)
         if [[ "$SERVICE" =~ ^(proxmox|pbs) ]]; then
             protocol="https"
         else

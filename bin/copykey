@@ -41,7 +41,7 @@ echo -e "${BOLD}${CYAN}║         🔑 SSH Key Distribution                    
 echo -e "${BOLD}${CYAN}╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
-# Controleer of bestanden bestaan
+# Check if files exist
 if [[ ! -f "$CONFIG_FILE" ]]; then
     echo -e "${RED}✗ SSH config not found: $CONFIG_FILE${RESET}"
     exit 1
@@ -50,7 +50,7 @@ fi
 if [[ ! -f "$PUBLIC_KEY_FILE" ]]; then
     echo -e "${RED}✗ Public key not found: $PUBLIC_KEY_FILE${RESET}"
     echo ""
-    echo -e "  Genereer eerst een sleutel:"
+    echo -e "  Generate a key first:"
     echo -e "  ${GREEN}ssh-keygen -t ed25519${RESET}"
     exit 1
 fi

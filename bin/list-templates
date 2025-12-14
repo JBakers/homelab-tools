@@ -72,28 +72,28 @@ echo -e "╚══════════════════════�
 echo ""
 
 if [[ ! -d "$TEMPLATES_DIR" ]]; then
-    echo -e "${YELLOW}⚠ Templates directory bestaat niet${RESET}"
-    echo -e "  Verwacht: ${CYAN}$TEMPLATES_DIR${RESET}"
+    echo -e "${YELLOW}⚠ Templates directory does not exist${RESET}"
+    echo -e "  Expected: ${CYAN}$TEMPLATES_DIR${RESET}"
     echo ""
-    echo -e "  Genereer eerst een template:"
+    echo -e "  Generate a template first:"
     echo -e "  ${GREEN}generate-motd <service>${RESET}"
     exit 0
 fi
 
-# Tel aantal templates
+# Count templates
 template_count=$(find "$TEMPLATES_DIR" -maxdepth 1 -name "*.sh" -type f 2>/dev/null | wc -l)
 
 if [[ $template_count -eq 0 ]]; then
     echo -e "${YELLOW}⚠ No templates found${RESET}"
     echo -e "  Directory: ${CYAN}$TEMPLATES_DIR${RESET}"
     echo ""
-    echo -e "  Genereer een template:"
+    echo -e "  Generate a template:"
     echo -e "  ${GREEN}generate-motd <service>${RESET}"
     exit 0
 fi
 
-echo -e "${BOLD}Locatie:${RESET} ${CYAN}$TEMPLATES_DIR${RESET}"
-echo -e "${BOLD}Aantal:${RESET}  ${GREEN}$template_count${RESET} template(s)"
+echo -e "${BOLD}Location:${RESET} ${CYAN}$TEMPLATES_DIR${RESET}"
+echo -e "${BOLD}Count:${RESET}    ${GREEN}$template_count${RESET} template(s)"
 echo ""
 
 if [[ "$SHOW_STATUS" == "true" ]]; then

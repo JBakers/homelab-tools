@@ -28,7 +28,7 @@ find_orphaned_templates() {
     local active_hosts
     active_hosts=$(grep "^Host " "$CONFIG_FILE" | awk '{print $2}' | grep -v '\*' | sort -u)
     
-    # Loop door alle MOTD templates
+    # Loop through all MOTD templates
     for template in "$MOTD_DIR"/*.sh; do
         if [[ ! -f "$template" ]]; then
             continue
@@ -37,7 +37,7 @@ find_orphaned_templates() {
         local hostname
         hostname=$(basename "$template" .sh)
         
-        # Check of deze host nog in SSH config staat
+        # Check if this host still exists in SSH config
         if ! echo "$active_hosts" | grep -q "^${hostname}$"; then
             orphaned+=("$hostname")
         fi

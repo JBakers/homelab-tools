@@ -24,6 +24,7 @@ show_help() {
     echo ""
     echo -e "${BOLD}OPTIONS:${RESET}"
     echo "  -s, --status    Show deployment status for each template"
+    echo "  -v, --view      Interactive mode: select and preview templates"
     echo "  -h, --help      Show this help message"
     echo ""
     echo -e "${BOLD}DESCRIPTION:${RESET}"
@@ -42,10 +43,15 @@ show_help() {
 
 # Parse arguments
 SHOW_STATUS=false
+INTERACTIVE_VIEW=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -s|--status)
             SHOW_STATUS=true
+            shift
+            ;;
+        -v|--view)
+            INTERACTIVE_VIEW=true
             shift
             ;;
         -h|--help)
@@ -156,6 +162,62 @@ find "$TEMPLATES_DIR" -maxdepth 1 -name "*.sh" -type f | sort | while read -r te
 done
 
 echo ""
-echo -e "${YELLOW}Tip:${RESET} Bekijk een template met:"
-echo -e "  ${GREEN}cat $TEMPLATES_DIR/<naam>.sh${RESET}"
-echo ""
+
+# Interactive view mode
+if [[ "$INTERACTIVE_VIEW" == "true" ]]; then
+    # Build template array
+    mapfile -t templates < <(find "$TEMPLATES_DIR" -maxdepth 1 -name "*.sh" -type f | sort)
+    
+    if [[ ${#templates[@]} -eq 0 ]]; then
+        echo -e "${YELLOW}No templates to preview${RESET}"
+        exit 0
+    fi
+    
+    # Build menu options
+    menu_options=()
+    for template in "${templates[@]}"; do
+        name=$(basename "$template")
+        service="${name%.sh}"
+        menu_options+=("$service|Preview MOTD template")
+    done
+    menu_options+=("QUIT")
+    
+    # Load menu helper
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
+    source "$LIB_DIR/menu-helpers.sh"
+    
+    while true; do
+        choose_menu "📋 Select Template to Preview" "${menu_options[@]}"
+        selection=$MENU_RESULT
+        
+        if [[ $selection -eq -1 ]] || [[ $selection -eq $((${#menu_options[@]} - 1)) ]]; then
+            break
+        fi
+        
+        # Show template preview
+        selected_template="${templates[$selection]}"
+        service=$(basename "$selected_template" .sh)
+        
+        clear
+        echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+        echo -e "║         📄 MOTD Preview: ${service}${RESET}${BOLD}${CYAN}"
+        printf "║%-58s║\n" ""
+        echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+        echo ""
+        
+        # Execute the template to show the MOTD
+        bash "$selected_template"
+        
+        echo ""
+        echo -e "${YELLOW}────────────────────────────────────────────────────────────${RESET}"
+        echo ""
+        read -rp "$(echo -e "${CYAN}Press Enter to continue...${RESET}")"
+        clear
+    done
+else
+    echo -e "${YELLOW}Tip:${RESET} View a template with:"
+    echo -e "  ${GREEN}cat $TEMPLATES_DIR/<name>.sh${RESET}"
+    echo -e "  ${GREEN}list-templates -v${RESET} for interactive preview"
+    echo ""
+fi

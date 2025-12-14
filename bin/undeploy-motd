@@ -24,7 +24,7 @@ show_help() {
     echo "  Removes deployed MOTD from remote host(s)."
     echo "  The script:"
     echo "  1. Connects to the remote host via SSH"
-    echo "  2. Removes /etc/profile.d/99-homelab-*.sh"
+    echo "  2. Removes /etc/profile.d/00-motd.sh"
     echo "  3. Restores original /etc/motd if backup exists"
     echo ""
     echo -e "${BOLD}OPTIONS:${RESET}"
@@ -53,8 +53,8 @@ undeploy_single() {
         return 1
     fi
     
-    # Remove MOTD script
-    if ssh "$service" "sudo rm -f /etc/profile.d/99-homelab-*.sh" 2>/dev/null; then
+    # Remove MOTD script (matches what deploy-motd creates: 00-motd.sh)
+    if ssh "$service" "sudo rm -f /etc/profile.d/00-motd.sh" 2>/dev/null; then
         echo -e "${GREEN}  ✓${RESET} MOTD script removed"
     else
         echo -e "${YELLOW}  →${RESET} No MOTD found or removal failed"

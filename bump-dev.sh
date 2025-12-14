@@ -3,15 +3,26 @@ set -euo pipefail
 
 # Bump development version (auto-increment build number)
 # Usage: ./bump-dev.sh [commit message]
+#
+# CENTRALIZED VERSION MANAGEMENT:
+# - VERSION file is the single source of truth
+# - All scripts read from VERSION via lib/version.sh
+# - This script ONLY updates the VERSION file
 
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+RED='\033[0;31m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
-# Get current version
-CURRENT=$(grep -m1 "Version: " bin/homelab | sed 's/.*Version: //')
+# Get current version from VERSION file (single source of truth)
+if [[ ! -f VERSION ]]; then
+    echo -e "${RED}✗ VERSION file not found${RESET}"
+    exit 1
+fi
+
+CURRENT=$(cat VERSION)
 
 # Extract base version and build number
 if [[ "$CURRENT" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-dev\.([0-9]+)$ ]]; then
@@ -37,13 +48,8 @@ echo -e "  Current: ${YELLOW}$CURRENT${RESET}"
 echo -e "  New:     ${GREEN}$NEW_VERSION${RESET}"
 echo ""
 
-# Update all files with version
-echo -e "${YELLOW}→${RESET} Updating version in all files..."
-find bin -type f -exec sed -i "s/^# Version: .*/# Version: $NEW_VERSION/" {} \;
-find . -maxdepth 1 -name "*.sh" -type f -exec sed -i "s/^# Version: .*/# Version: $NEW_VERSION/" {} \;
-sed -i "s/^# Version: .*/# Version: $NEW_VERSION/" lib/menu-helpers.sh 2>/dev/null || true
-
-# Update VERSION file
+# Update VERSION file (single source of truth)
+echo -e "${YELLOW}→${RESET} Updating VERSION file..."
 echo "$NEW_VERSION" > VERSION
 
 echo -e "${GREEN}✓${RESET} Version updated to ${CYAN}$NEW_VERSION${RESET}"
@@ -57,6 +63,6 @@ if [[ $# -gt 0 ]]; then
     git commit -m "Version: $NEW_VERSION - $MSG"
     echo -e "${GREEN}✓${RESET} Committed!"
 else
-    echo -e "${YELLOW}→${RESET} Files updated, ready to commit"
+    echo -e "${YELLOW}→${RESET} Ready to commit"
     echo -e "  Run: ${GREEN}git add -A && git commit -m 'Version: $NEW_VERSION - your message'${RESET}"
 fi

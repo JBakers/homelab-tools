@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Homelab Management Menu
 # Author: J.Bakers
-# Version: 3.6.0-dev.13
+# Version: Centralized in VERSION file
 
 # Load shared menu helper library
 # Resolve symlinks to find the actual installation directory
@@ -16,6 +16,7 @@ done
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
 source "$LIB_DIR/menu-helpers.sh"
+source "$LIB_DIR/version.sh"
 
 # Kleuren (from menu-helpers.sh, but keep for backwards compat)
 CYAN="$MENU_CYAN"
@@ -300,18 +301,10 @@ elif [[ "${1:-}" == "help" ]]; then
     exit 0
 fi
 
-# Get version from VERSION file
-VERSION_DISPLAY=""
-if [[ -f "${SCRIPT_DIR}/../VERSION" ]]; then
-    VERSION_DISPLAY="v$(cat "${SCRIPT_DIR}/../VERSION")"
-elif [[ -f "/opt/homelab-tools/VERSION" ]]; then
-    VERSION_DISPLAY="v$(cat /opt/homelab-tools/VERSION)"
-fi
-
 # Interactief menu met arrow navigation
 while true; do
-    # Show main menu with arrow navigation
-    choose_menu "🏠 Homelab Management Tools ${VERSION_DISPLAY}" \
+    # Show main menu with arrow navigation (version from lib/version.sh)
+    choose_menu "🏠 Homelab Management Tools ${HLT_VERSION_DISPLAY}" \
         "📝 MOTD Tools|Generate/deploy/list MOTDs" \
         "⚙️  Configuration|Edit hosts & settings" \
         "🔑 SSH Management|Keys & cleanup" \

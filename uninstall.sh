@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Homelab Tools Uninstaller
 # Author: J.Bakers
-# Version: 3.6.0-dev.13
+# Version: See VERSION file
 
 # Kleuren
 CYAN='\033[0;36m'

@@ -2,7 +2,7 @@
 # Shared menu helper functions for Homelab Tools
 # Provides arrow key navigation, consistent colors, and menu rendering
 # Author: J.Bakers
-# Version: 3.6.0-dev.13
+# Version: See VERSION file
 
 # Standard menu colors
 readonly MENU_CYAN='\033[0;36m'

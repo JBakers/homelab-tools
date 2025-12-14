@@ -18,26 +18,16 @@
 - [x] Centralized version management (VERSION file + lib/version.sh)
 
 **Repository cleanup (audit 2025-12-14):**
-- [ ] Archive `bump-version.sh` → `.archive/` (duplicate of smarter release.sh)
-- [ ] Archive `update-version.sh` → `.archive/` (redundant)
-- [ ] Translate all Dutch text to English (10 scripts, ~35 locations):
-  - [ ] install.sh (L4, L38)
-  - [ ] uninstall.sh (L8)
-  - [ ] bin/homelab (L21, L115)
-  - [ ] bin/generate-motd (L8, L713+)
-  - [ ] bin/deploy-motd (L8, L67-L186 - 10+ locations)
-  - [ ] bin/list-templates (L75-L96)
-  - [ ] bin/edit-config (L8-L86)
-  - [ ] bin/copykey (L8, L44, L53)
-  - [ ] bin/cleanup-homelab (L35, L38)
-  - [ ] bin/bulk-generate-motd (check)
+- [x] Archive `bump-version.sh` → `.archive/` (duplicate of smarter release.sh)
+- [x] Archive `update-version.sh` → `.archive/` (redundant)
+- [x] Translate all Dutch text to English (scripts and comments)
 - [ ] Test all new features
 
 ---
 
 ## 🟢 Low Priority
 
-- [ ] Create lib/constants.sh for shared UNSUPPORTED_SYSTEMS array
+- [ ] Create `lib/constants.sh` for shared `UNSUPPORTED_SYSTEMS` array
 - [ ] Improve ASCII preview performance
 - [ ] Add more MOTD templates
 - [ ] Add i18n support (future)

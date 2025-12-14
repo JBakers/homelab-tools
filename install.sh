@@ -159,10 +159,69 @@ remove_symlinks() {
 # Helper: clean user configs/templates and bashrc entries
 clean_user_data() {
     rm -rf "$ACTUAL_HOME/.local/share/homelab-tools" 2>/dev/null || true
-    if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
-        sed -i '/homelab-tools/d' "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
-        sed -i '/HLT_BANNER/d' "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
-        sed -i '/Tip:.*homelab/d' "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
+    
+    # Clean .bashrc using safe awk-based removal (same as uninstall.sh)
+    if [[ -f "$ACTUAL_HOME/.bashrc" ]] && grep -qi "homelab" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
+        local temp_file
+        temp_file="$(mktemp)"
+        
+        awk '
+        BEGIN { 
+            in_banner = 0
+            banner_depth = 0
+        }
+        
+        # Match tip section
+        /^# Homelab Tools tip$/ { 
+            getline
+            next 
+        }
+        
+        # Match banner section start
+        /^# ===============================================$/ {
+            line1 = $0
+            getline
+            line2 = $0
+            if (line2 ~ /^# Homelab Tools Welcome Banner$/) {
+                getline
+                line3 = $0
+                if (line3 ~ /^# Set HLT_BANNER=0 to disable$/) {
+                    getline
+                    in_banner = 1
+                    banner_depth = 0
+                    next
+                } else {
+                    print line1; print line2; print line3
+                    next
+                }
+            } else {
+                print line1; print line2
+                next
+            }
+        }
+        
+        # Track nested if/fi in banner
+        in_banner == 1 {
+            if ($0 ~ /^[[:space:]]*if /) banner_depth++
+            if ($0 ~ /^[[:space:]]*fi$/) {
+                if (banner_depth == 0) {
+                    in_banner = 0
+                    next
+                } else {
+                    banner_depth--
+                }
+            }
+            next
+        }
+        
+        { print }
+        ' "$ACTUAL_HOME/.bashrc" > "$temp_file"
+        
+        if bash -n "$temp_file" 2>/dev/null; then
+            mv "$temp_file" "$ACTUAL_HOME/.bashrc"
+        else
+            rm -f "$temp_file"
+        fi
     fi
 }
 

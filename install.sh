@@ -219,6 +219,8 @@ clean_user_data() {
         
         if bash -n "$temp_file" 2>/dev/null; then
             mv "$temp_file" "$ACTUAL_HOME/.bashrc"
+            # Restore ownership to actual user (not root)
+            chown "$ACTUAL_USER:$ACTUAL_USER" "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
         else
             rm -f "$temp_file"
         fi

@@ -257,6 +257,8 @@ if [[ -f "$HOME/.bashrc" ]] && grep -qi "homelab" "$HOME/.bashrc" 2>/dev/null; t
         # Sanity check: we should remove 20-40 lines max (tip + banner)
         if [[ $removed -ge 0 && $removed -le 50 ]]; then
             mv "$temp_file" "$HOME/.bashrc"
+            # Ensure correct ownership
+            chown "$(id -un):$(id -gn)" "$HOME/.bashrc" 2>/dev/null || true
             echo -e "${GREEN}  ✓${RESET} Homelab entries removed ($removed lines)"
             echo -e "${YELLOW}  →${RESET} Backup: ${CYAN}${backup_file}${RESET}"
         else

@@ -36,7 +36,13 @@
 
 ### 🐛 Bug Fixes
 
-#### v3.6.0-dev.20 (Current)
+#### v3.6.0-dev.21 (Current)
+- Fixed install.sh .bashrc escape codes (single quotes → echo -e)
+- Fixed install.sh duplicate Homelab entries in .bashrc
+- Fixed test-runner.sh progress counter (72 tests, not 80)
+- All 72 tests now pass with 100% success rate
+
+#### v3.6.0-dev.20
 - Fixed missing title arguments in edit-hosts show_arrow_menu calls (3 locations)
   - Host Options menu, Bulk Operations menu, Select Host menu
 - Fixed list-templates --view using wrong function (choose_menu → show_arrow_menu)

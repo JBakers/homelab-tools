@@ -50,7 +50,8 @@ undeploy_single() {
     # Test SSH connection
     if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$service" "echo 2>&1" &>/dev/null; then
         echo -e "${RED}  ✗${RESET} Cannot connect to $service"
-        if confirm_prompt "Debug connection" N; then
+        read -p "$(echo -e ${YELLOW}Debug connection? \(y/N\):${RESET} )" debug
+        if [[ "$debug" =~ ^[Yy]$ ]]; then
             echo -e "${CYAN}=== SSH Connection Debug ===${RESET}"
             ssh -v "$service" "echo 2>&1" 2>&1 | tail -20
         fi

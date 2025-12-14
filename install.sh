@@ -389,16 +389,6 @@ else
     echo -e "${GREEN}  ✓${RESET} .bashrc created with PATH"
 fi
 
-# Add MOTD tip to bashrc (only if not already present)
-if grep -q "Tip: Type.*homelab" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
-    echo -e "${GREEN}  ✓${RESET} MOTD tip already present"
-else
-    echo "" >> "$ACTUAL_HOME/.bashrc"
-    echo "# Homelab Tools tip" >> "$ACTUAL_HOME/.bashrc"
-    echo 'echo -e "\033[0;36mTip:\033[0m Type \033[1mhomelab\033[0m for available commands"' >> "$ACTUAL_HOME/.bashrc"
-    echo -e "${GREEN}  ✓${RESET} MOTD tip added to ~/.bashrc"
-fi
-
 # Add optional welcome banner (only if not already present)
 if grep -q "HLT_BANNER" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
     echo -e "${GREEN}  ✓${RESET} Welcome banner already configured"
@@ -440,12 +430,18 @@ ASCIIART
         echo -e "Homelab Tools: \033[0;36mv${HLT_VERSION}\033[0m"
 
         echo -e "\033[0;36m------------------------------------------------------------\033[0m"
+        echo -e "\033[0;36mTip:\033[0m Type \033[1mhomelab\033[0m for available commands"
         echo ""
     fi
 fi
 BANNER_EOF
         echo -e "${GREEN}  ✓${RESET} Welcome banner added to ~/.bashrc"
         echo -e "${YELLOW}  →${RESET} Set HLT_BANNER=0 in ~/.bashrc to disable"
+    else
+        # No banner, but add tip standalone
+        echo "" >> "$ACTUAL_HOME/.bashrc"
+        echo "# Homelab Tools tip" >> "$ACTUAL_HOME/.bashrc"
+        echo -e 'echo -e "\033[0;36mTip:\033[0m Type \033[1mhomelab\033[0m for available commands"' >> "$ACTUAL_HOME/.bashrc"
     fi
 fi
 echo ""

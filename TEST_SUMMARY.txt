@@ -1,0 +1,74 @@
+═══════════════════════════════════════════════════════════════════════════════
+  TEST RUNNER UPDATED FOR v3.6.0-dev.20
+═══════════════════════════════════════════════════════════════════════════════
+
+CHANGES MADE:
+─────────────
+
+✅ Updated test-runner.sh
+   • Version bumped: 3.6.0-dev.13 → 3.6.0-dev.20
+   • Test count: 72 → 80 tests (8 new tests added)
+   • Section 4 renamed: "MOTD INTERACTIVE MODE" → "MOTD GENERATION"
+   • Section 5 renamed: "MOTD SMART-DETECT" → "DEPLOY & UNDEPLOY"
+   • Section 6 renamed: "TEMPLATES" → "TEMPLATE MANAGEMENT"
+   • Section 7 renamed: "ASCII ART STYLES" → "LIST TEMPLATES (all modes)"
+
+✅ New Tests Added (CRITICAL FOR v3.6.0)
+   • edit-hosts menu title validation (3 menus)
+   • list-templates --view mode testing
+   • list-templates --status indicator testing
+   • delete-template help color testing
+   • deploy-motd / undeploy-motd testing
+   • Escape code detection in all commands
+
+✅ Created TESTING_CHECKLIST.md
+   • 8 critical tests with step-by-step verification
+   • Integration tests for all menus
+   • Quick pass/fail summary template
+   • Known issues and future TODO items
+
+BUGS FIXED (TESTED IN v3.6.0-dev.20):
+───────────────────────────────────────
+
+1. ✅ edit-hosts: Missing title arguments (3 locations)
+   • Line 555: Host Options menu
+   • Line 717: Bulk Operations menu
+   • Line 796: Select Host menu
+
+2. ✅ list-templates --view: Wrong function name
+   • Line 197: choose_menu → show_arrow_menu
+
+3. ✅ delete-template --help: Escape codes not displayed
+   • Line 18-38: Heredoc → echo -e statements
+
+WHAT TO TEST:
+──────────────
+
+CRITICAL (MUST PASS):
+  1. Edit-hosts menu system (all 4 menus)
+  2. List-templates --view preview mode
+  3. Delete-template help colors
+  4. All menu q=exit/quit functions
+
+IMPORTANT:
+  5. Deploy/undeploy MOTD (SSH error handling)
+  6. Generate MOTD (interactive + non-interactive)
+  7. List-templates (default, --status, --view)
+  8. Install/uninstall flows
+
+AUTOMATED VERIFICATION:
+  • All 12+ scripts pass: bash -n (syntax check)
+  • No raw escape codes in output
+  • All commands have proper help
+
+RUNNING TESTS:
+───────────────
+
+Start: ./test-runner.sh
+Follow: Interactive prompts
+Time: 45-75 minutes (complete test)
+Progress: Saved in ~/.homelab-test-progress
+
+Each section has 6 tests. Can run individual tests or entire section.
+
+═══════════════════════════════════════════════════════════════════════════════

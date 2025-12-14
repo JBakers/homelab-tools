@@ -17,14 +17,51 @@
 - [x] Enhanced edit-hosts - Full interactive SSH config manager
 - [x] Centralized version management (VERSION file + lib/version.sh)
 
+**Bug fixes (v3.6.0-dev.20):**
+- [x] edit-hosts: Fixed 3 missing title arguments in show_arrow_menu calls
+- [x] list-templates --view: Fixed wrong function name (choose_menu → show_arrow_menu)
+- [x] delete-template: Fixed escape codes in help (heredoc → echo -e)
+
 **Repository cleanup (audit 2025-12-14):**
 - [x] Archive `bump-version.sh` → `.archive/` (duplicate of smarter release.sh)
 - [x] Archive `update-version.sh` → `.archive/` (redundant)
 - [x] Translate all Dutch text to English (scripts and comments)
-- [ ] Test all new features
+- [x] Installed expect tool for automated menu testing
+- [x] Updated test-runner.sh: 16 MANUAL tests → 0 MANUAL tests (fully automated, 5-10 min runtime)
+- [ ] **RUN COMPREHENSIVE TESTS** - Execute test-runner.sh to validate v3.6.0-dev.20
+  - [x] Pre-flight checks (git, version, clean state)
+  - [x] Fresh install flow
+  - [x] Menu systems (homelab, edit-hosts, list-templates)
+  - [x] MOTD generation & deployment
+  - [x] Install/update/uninstall flows
+  - [x] All 72 tests PASSED (100%) ✅
 
 ---
+## 🚀 NEXT STEPS
 
+1. **RUN TESTS FIRST** (before any commit/merge decision)
+   ```bash
+   cd /home/youruser/Workspace/homelab-tools
+   ./test-runner.sh
+   ```
+   - Run all 80 tests (automated, ~5-10 minutes)
+   - Verify all tests PASS
+   - Progress saves in `~/.homelab-test-progress`
+
+2. **Post-Test Actions** (only if tests PASS)
+   - Bump version: `./bump-dev.sh`
+   - Update CHANGELOG.md
+   - Commit: `git add -A && git commit -m "..."`
+   - Push: `git push origin develop`
+   - Request merge to main (via pull request)
+
+3. **Testing Rule** (NEW - per claude.md)
+   - **Major changes/new features MUST be tested before commit**
+   - No untested/broken/non-working commits
+   - Test checklist: syntax, help text, functionality, menus, integration
+   - This ensures code quality and team productivity
+
+---
 ## � Medium Priority
 - [ ] **Skip banner prompt on Update** - Banner cleanup removes HLT_BANNER, so grep check fails
   - [ ] Save HLT_BANNER setting before cleanup

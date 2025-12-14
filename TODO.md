@@ -13,8 +13,8 @@
 - [x] Enhanced edit-hosts - Full interactive SSH config manager
 
 **Pending:**
-- [ ] Version bump to 3.6.0-dev in all scripts
-- [ ] Update README version badge
+- [x] Version bump to 3.6.0-dev in all scripts
+- [x] Update README version badge
 - [ ] Test all new features
 
 ---

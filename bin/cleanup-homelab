@@ -8,11 +8,11 @@ set -euo pipefail
 CONFIG_FILE="$HOME/.ssh/config"
 MOTD_DIR="$HOME/.local/share/homelab-tools/templates"
 
-# Kleuren
+# Colors
+CYAN='\033[0;36m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
-# BLUE removed - using CYAN instead
 NC='\033[0m' # No Color
 
 # Function to find orphaned templates

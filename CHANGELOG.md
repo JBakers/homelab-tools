@@ -1,8 +1,41 @@
 # Changelog - Homelab Tools
 
-## v3.5.0-dev (Unreleased)
+## v3.6.0-dev (In Development)
 
-**Development builds - Not yet released**
+**Current development branch** - Building on v3.5.0 release
+
+### ✨ New Features
+
+#### MOTD Management
+- **dev.1-12** - Previous fixes from 3.5.0 development
+- `undeploy-motd` - Remove MOTDs from remote hosts (single + bulk with --all)
+- `list-templates --status` - Deployment tracking with 🟢🟡🔴 indicators
+- `list-templates --view` - Interactive preview mode with arrow navigation
+
+#### Enhanced edit-hosts (dev.13)
+- Interactive host menu with arrow key navigation
+- Add new host wizard with validation (IP/hostname, port, username)
+- Host operations: view details, edit, delete, copy (with -copy1 suffix)
+- Search/filter hosts by pattern
+- Bulk operations: export list, timestamped backup, batch delete
+- Automatic backup before any modification
+- Classic --edit mode preserved for direct editor access
+
+#### Code Quality
+- Removed Jellyfin bias - replaced with Pi-hole examples
+- All version scripts now update VERSION file
+- Dynamic version display in homelab menu (reads from VERSION)
+- Translated remaining Dutch text to English
+
+### 🐛 Bug Fixes
+- VS Code shell integration preserved in .bashrc cleanup
+- Fixed duplicate shebang in cleanup-keys
+- Fixed missing $CYAN variable in cleanup-homelab
+- IP validation now correctly rejects incomplete IPs (192.168.1)
+
+---
+
+## v3.5.0-dev (Released)
 
 After v3.4.0 release, multiple critical bugs were discovered. Development was rolled back to the `develop` branch for systematic bugfixing before the next stable release.
 

@@ -300,10 +300,18 @@ elif [[ "${1:-}" == "help" ]]; then
     exit 0
 fi
 
+# Get version from VERSION file
+VERSION_DISPLAY=""
+if [[ -f "${SCRIPT_DIR}/../VERSION" ]]; then
+    VERSION_DISPLAY="v$(cat "${SCRIPT_DIR}/../VERSION")"
+elif [[ -f "/opt/homelab-tools/VERSION" ]]; then
+    VERSION_DISPLAY="v$(cat /opt/homelab-tools/VERSION)"
+fi
+
 # Interactief menu met arrow navigation
 while true; do
     # Show main menu with arrow navigation
-    choose_menu "🏠 Homelab Management Tools v3.5.0-dev" \
+    choose_menu "🏠 Homelab Management Tools ${VERSION_DISPLAY}" \
         "📝 MOTD Tools|Generate/deploy/list MOTDs" \
         "⚙️  Configuration|Edit hosts & settings" \
         "🔑 SSH Management|Keys & cleanup" \

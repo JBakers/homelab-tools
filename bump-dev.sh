@@ -41,6 +41,10 @@ echo ""
 echo -e "${YELLOW}→${RESET} Updating version in all files..."
 find bin -type f -exec sed -i "s/^# Version: .*/# Version: $NEW_VERSION/" {} \;
 find . -maxdepth 1 -name "*.sh" -type f -exec sed -i "s/^# Version: .*/# Version: $NEW_VERSION/" {} \;
+sed -i "s/^# Version: .*/# Version: $NEW_VERSION/" lib/menu-helpers.sh 2>/dev/null || true
+
+# Update VERSION file
+echo "$NEW_VERSION" > VERSION
 
 echo -e "${GREEN}✓${RESET} Version updated to ${CYAN}$NEW_VERSION${RESET}"
 echo ""

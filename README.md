@@ -1,6 +1,6 @@
-# 🏠 Homelab Management Tools v3.5.0-dev.24
+# 🏠 Homelab Management Tools v3.6.0-dev.13
 
-[![Version](https://img.shields.io/badge/version-3.5.0--dev.24-orange.svg)](https://github.com/JBakers/homelab-tools/releases)
+[![Version](https://img.shields.io/badge/version-3.6.0--dev.13-orange.svg)](https://github.com/JBakers/homelab-tools/releases)
 [![License](https://img.shields.io/badge/license-GPL--v3-blue.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/shell-bash-lightgrey.svg)](https://www.gnu.org/software/bash/)
 

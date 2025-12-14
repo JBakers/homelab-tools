@@ -4,6 +4,9 @@
 [![License](https://img.shields.io/badge/license-GPL--v3-blue.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/shell-bash-lightgrey.svg)](https://www.gnu.org/software/bash/)
 
+> [!WARNING]
+> **🚧 Active Development** - This project is currently under active development. Features may change, and bugs may exist. Use in production at your own risk. Feedback and contributions are welcome!
+
 > **Professional command-line toolkit for managing homelab infrastructure with beautiful, colorful interfaces and intelligent automation.**
 
 Streamline your homelab management with auto-detecting MOTD generators, bulk operations, and SSH tooling - all with a stunning terminal UI.

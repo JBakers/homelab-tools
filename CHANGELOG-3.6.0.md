@@ -35,6 +35,9 @@ All commits between v3.5.0 and v3.6.0-dev.1 should have had individual version b
 ### v3.6.0-dev.10 (dc13f49)
 - chore: bump version to 3.6.0-dev.1 (should have been dev.10)
 
+### v3.6.0-dev.11 (pending)
+- fix: preserve VS Code shell integration during uninstall (.bashrc cleanup skips locate-shell-integration-path)
+
 ---
 
 **Going forward:** Every feature/fix commit will be followed by a version bump commit using `./bump-dev.sh`

@@ -3,49 +3,20 @@
 > Quick task list - mark [x] when done, move to archive on commit.
 > Workflow: Fix Critical → High Priority → Commit → Comprehensive Testing → Merge to main → Version bump
 
-## 🎯 v3.5.0 RELEASED ✅
+## 🎯 v3.6.0 IN PROGRESS 🚧
 
-**All tests passed! (72/72)**
-- Merged to main
-- Version bumped to 3.5.0
-- Production ready
+**New features completed:**
+- [x] undeploy-motd - Remove MOTDs from hosts
+- [x] list-templates --status - Deployment tracking
+- [x] list-templates --view - Interactive preview
+- [x] Removed Jellyfin examples, replaced with Pi-hole
 
-### Post-release bugfixes (in develop):
-- [x] Fixed install.sh banner HLT_VERSION if/else order
-- [x] Fixed uninstall.sh .bashrc cleanup (awk state machine)
-- [x] Fixed install.sh clean_user_data() - was using simple sed, now uses full awk
-- [x] Fixed .bashrc ownership after sudo cleanup (chown to user)
-- [x] Added undeploy-motd script + menu integration
+**Pending:**
+- [ ] Version bump to 3.6.0-dev in all scripts
+- [ ] Update README version badge
+- [ ] Test all new features
 
 ---
-
-## 🟡 Medium Priority (v3.6.0)
-
-- [x] **SSH MOTD uninstall** - Remove deployed MOTDs from remote hosts
-  - Created undeploy-motd script with single & bulk removal
-  - Remove /etc/profile.d/99-homelab-*.sh files from host via SSH
-  - Restore original /etc/motd if backup exists
-  - Added to homelab menu (MOTD Tools → Undeploy MOTD)
-  - Supports --all flag for bulk removal
-
-- [x] **List templates with host status** - Show which hosts have MOTD templates
-  - Added `-s` or `--status` flag to list-templates
-  - Output format: `hostname | modified | size | status`
-  - Status: 🟢 deployed, 🟡 ready, 🔴 stale
-  - Tracks deployment info in ~/.local/share/homelab-tools/deploy-log
-  - deploy-motd now logs each deployment
-
-- [x] **Show MOTD preview in template list** - Interactive option to view MOTD content
-  - Added `-v` or `--view` flag to list-templates for interactive preview
-  - Arrow key navigation through template list
-  - Executes template to show actual MOTD output
-  - Press Enter to return to menu, q to quit
-
-- [x] **Verify Jellyfin auto-detection is not too aggressive**
-  - Removed Jellyfin as default example throughout codebase
-  - Replaced with Pi-hole (more universal homelab service)
-  - Updated all help texts, examples, and README
-  - Service auto-detection still works for all 60+ services
 
 ## 🟢 Low Priority
 
@@ -85,6 +56,20 @@
 ---
 
 ## 📚 ARCHIVE: Completed Work
+
+### ✅ v3.6.0 (In Development)
+
+**Medium Priority - All Complete:**
+- [x] undeploy-motd script (single + bulk removal)
+- [x] list-templates --status (deployment tracking with 🟢🟡🔴 indicators)
+- [x] list-templates --view (interactive MOTD preview)
+- [x] Removed Jellyfin bias (replaced with Pi-hole examples)
+
+**Post-v3.5.0 Bugfixes:**
+- [x] install.sh banner HLT_VERSION if/else order
+- [x] uninstall.sh .bashrc cleanup (awk state machine)
+- [x] install.sh clean_user_data() full awk implementation
+- [x] .bashrc ownership restoration after sudo operations
 
 ### ✅ v3.5.0 (Released 2025-12-14)
 

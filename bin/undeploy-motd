@@ -1,0 +1,166 @@
+#!/bin/bash
+set -euo pipefail
+
+# Undeploy MOTD from remote host
+# Author: J.Bakers
+# Version: 3.6.0
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+show_help() {
+    echo -e "${BOLD}${CYAN}undeploy-motd - Remove MOTD from remote host${RESET}"
+    echo ""
+    echo -e "${BOLD}USAGE:${RESET}"
+    echo "  undeploy-motd <service-name>"
+    echo "  undeploy-motd --all"
+    echo ""
+    echo -e "${BOLD}DESCRIPTION:${RESET}"
+    echo "  Removes deployed MOTD from remote host(s)."
+    echo "  The script:"
+    echo "  1. Connects to the remote host via SSH"
+    echo "  2. Removes /etc/profile.d/99-homelab-*.sh"
+    echo "  3. Restores original /etc/motd if backup exists"
+    echo ""
+    echo -e "${BOLD}OPTIONS:${RESET}"
+    echo "  <service-name>  Remove MOTD from specific host"
+    echo "  --all           Remove MOTDs from all hosts in SSH config"
+    echo ""
+    echo -e "${BOLD}EXAMPLES:${RESET}"
+    echo -e "  ${GREEN}undeploy-motd jellyfin${RESET}"
+    echo -e "  ${GREEN}undeploy-motd --all${RESET}"
+    echo ""
+}
+
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+undeploy_single() {
+    local service="$1"
+    
+    echo -e "${CYAN}→${RESET} Undeploying from ${BOLD}$service${RESET}..."
+    
+    # Test SSH connection
+    if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$service" "echo 2>&1" &>/dev/null; then
+        echo -e "${RED}  ✗${RESET} Cannot connect to $service"
+        return 1
+    fi
+    
+    # Remove MOTD script
+    if ssh "$service" "sudo rm -f /etc/profile.d/99-homelab-*.sh" 2>/dev/null; then
+        echo -e "${GREEN}  ✓${RESET} MOTD script removed"
+    else
+        echo -e "${YELLOW}  →${RESET} No MOTD found or removal failed"
+    fi
+    
+    # Restore original /etc/motd if backup exists
+    if ssh "$service" "[[ -f /etc/motd.backup ]]" 2>/dev/null; then
+        if ssh "$service" "sudo mv /etc/motd.backup /etc/motd" 2>/dev/null; then
+            echo -e "${GREEN}  ✓${RESET} Original /etc/motd restored"
+        fi
+    fi
+    
+    echo -e "${GREEN}  ✓${RESET} Undeploy complete for $service"
+    return 0
+}
+
+undeploy_all() {
+    local ssh_config="$HOME/.ssh/config"
+    
+    if [[ ! -f "$ssh_config" ]]; then
+        echo -e "${RED}✗ Error: No SSH config found${RESET}"
+        exit 1
+    fi
+    
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         🗑️  Bulk MOTD Undeploy                           ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    
+    # Get all hosts from SSH config
+    local hosts
+    hosts=$(grep "^Host " "$ssh_config" | awk '{print $2}' | grep -v '\*' | sort -u)
+    local host_count
+    host_count=$(echo "$hosts" | wc -w)
+    
+    if [[ $host_count -eq 0 ]]; then
+        echo -e "${YELLOW}→${RESET} No hosts found in SSH config"
+        exit 0
+    fi
+    
+    echo -e "${CYAN}Found $host_count host(s)${RESET}"
+    echo ""
+    read -rp "$(echo -e "${YELLOW}Undeploy MOTDs from all hosts? (y/N): ${RESET}")" confirm
+    confirm=${confirm:-n}
+    
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        echo -e "${YELLOW}Cancelled${RESET}"
+        exit 0
+    fi
+    
+    echo ""
+    local success=0
+    local failed=0
+    
+    for hostname in $hosts; do
+        if undeploy_single "$hostname"; then
+            ((success++))
+        else
+            ((failed++))
+        fi
+        echo ""
+    done
+    
+    echo -e "${BOLD}Summary:${RESET}"
+    echo -e "  ${GREEN}✓${RESET} Success: $success"
+    if [[ $failed -gt 0 ]]; then
+        echo -e "  ${RED}✗${RESET} Failed: $failed"
+    fi
+}
+
+# Main
+SERVICE="${1:-}"
+
+if [[ -z "$SERVICE" ]]; then
+    echo -e "${RED}✗ Error: No service name provided${RESET}"
+    echo -e "  Usage: ${GREEN}undeploy-motd <service-name>${RESET}"
+    echo -e "  Or: ${GREEN}undeploy-motd --all${RESET}"
+    echo -e "  Help: ${CYAN}undeploy-motd --help${RESET}"
+    exit 1
+fi
+
+# Validate service name (unless --all)
+if [[ "$SERVICE" != "--all" ]]; then
+    if [[ ! "$SERVICE" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+        echo -e "${RED}✗ Error: Invalid service name${RESET}"
+        echo -e "  Only letters, numbers, dots, underscores and dashes allowed"
+        exit 1
+    fi
+fi
+
+if [[ "$SERVICE" == "--all" ]]; then
+    undeploy_all
+else
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         🗑️  MOTD Undeploy                                ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "${BOLD}Service: ${GREEN}$SERVICE${RESET}"
+    echo ""
+    
+    if undeploy_single "$SERVICE"; then
+        echo ""
+        echo -e "${GREEN}✓ Undeploy successful${RESET}"
+    else
+        echo ""
+        echo -e "${RED}✗ Undeploy failed${RESET}"
+        exit 1
+    fi
+fi

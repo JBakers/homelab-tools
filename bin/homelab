@@ -318,6 +318,7 @@ while true; do
                     "Generate MOTD|Create template for one host" \
                     "Bulk Generate|Create for all hosts" \
                     "Deploy MOTD|Upload to host" \
+                    "Undeploy MOTD|Remove from host" \
                     "List Templates|View all templates" \
                     "Delete Template|Remove a template" \
                     "HELP" "BACK"
@@ -350,24 +351,51 @@ while true; do
                         fi
                         ;;
                     3)
+                        # Undeploy MOTD
+                        clear
+                        echo ""
+                        echo -e "${BOLD}Undeploy MOTD${RESET}"
+                        echo ""
+                        echo "1) Remove from specific host"
+                        echo "2) Remove from all hosts"
+                        echo ""
+                        if read_input "Choice [1-2]" choice && [[ -n "$choice" ]]; then
+                            case "$choice" in
+                                1)
+                                    if read_input "Service name" service && [[ -n "$service" ]]; then
+                                        undeploy-motd "$service"
+                                    fi
+                                    ;;
+                                2)
+                                    undeploy-motd --all
+                                    ;;
+                                *)
+                                    echo -e "${YELLOW}Invalid choice${RESET}"
+                                    ;;
+                            esac
+                            echo ""
+                            wait_for_continue
+                        fi
+                        ;;
+                    4)
                         # List Templates
                         clear
                         list-templates
                         echo ""
                         wait_for_continue
                         ;;
-                    4)
+                    5)
                         # Delete Template
                         clear
                         delete-template
                         echo ""
                         wait_for_continue
                         ;;
-                    5)
+                    6)
                         # Help
                         show_motd_help
                         ;;
-                    6|-1)
+                    7|-1)
                         # Back (selected or ESC)
                         break
                         ;;

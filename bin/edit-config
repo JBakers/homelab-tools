@@ -5,7 +5,7 @@ set -euo pipefail
 # Author: J.Bakers
 # Version: See VERSION file
 
-# Kleuren
+# Colors
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -31,8 +31,8 @@ else
 fi
 
 # Ask for new values (compact format)
-echo -e "${BOLD}Huidige instellingen:${RESET}"
-echo -e "  Domain: ${CYAN}${DOMAIN_SUFFIX:-<none>}${RESET}  |  IP methode: ${CYAN}${IP_METHOD}${RESET}"
+echo -e "${BOLD}Current settings:${RESET}"
+echo -e "  Domain: ${CYAN}${DOMAIN_SUFFIX:-<none>}${RESET}  |  IP method: ${CYAN}${IP_METHOD}${RESET}"
 echo ""
 
 read -p "Domain suffix [${DOMAIN_SUFFIX}] (q=cancel): " new_domain
@@ -44,7 +44,7 @@ new_domain=${new_domain:-$DOMAIN_SUFFIX}
 
 # Validate domain starts with dot if not empty
 if [[ -n "$new_domain" ]] && [[ ! "$new_domain" =~ ^\. ]]; then
-    echo -e "${RED}✗ Domain moet starten met '.' (bijv. .home) of leeg zijn${RESET}"
+    echo -e "${RED}✗ Domain must start with '.' (e.g. .home) or be empty${RESET}"
     exit 1
 fi
 
@@ -68,12 +68,12 @@ cat > "$TEMP_CONFIG" << EOF
 # Author: J.Bakers
 # Version: See VERSION file
 
-# Domain suffix voor je homelab
-# Wordt gebruikt voor Web UI URLs
+# Domain suffix for your homelab
+# Used for Web UI URLs
 DOMAIN_SUFFIX="$new_domain"
 
-# IP detectie methode
-# Opties: "hostname" of "ip"
+# IP detection method
+# Options: "hostname" or "ip"
 IP_METHOD="$new_ip_method"
 EOF
 
@@ -83,7 +83,7 @@ if sudo mv "$TEMP_CONFIG" "$CONFIG_FILE" && sudo chmod 644 "$CONFIG_FILE"; then
     echo -e "${GREEN}✓${RESET} Configuration saved!"
 else
     echo ""
-    echo -e "${RED}✗${RESET} Kon configuratie niet opslaan"
+    echo -e "${RED}✗${RESET} Could not save configuration"
     rm -f "$TEMP_CONFIG"
     exit 1
 fi

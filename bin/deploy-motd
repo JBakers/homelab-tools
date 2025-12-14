@@ -5,7 +5,7 @@ set -euo pipefail
 # Author: J.Bakers
 # Version: See VERSION file
 
-# Kleuren
+# Colors
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -123,7 +123,7 @@ echo -e "${YELLOW}→${RESET} Checking /etc/profile.d/..."
 ssh "$SERVICE" "mkdir -p /etc/profile.d 2>/dev/null || sudo mkdir -p /etc/profile.d 2>/dev/null"
 
 # Deploy new MOTD
-echo -e "${YELLOW}→${RESET} Deploy nieuwe MOTD..."
+echo -e "${YELLOW}→${RESET} Deploy new MOTD..."
 
 # Probeer eerst zonder sudo
 if scp "$TEMPLATE_FILE" "$SERVICE:/etc/profile.d/00-motd.sh" 2>/dev/null; then
@@ -140,11 +140,11 @@ else
         else
             echo -e "${RED}✗ Error copying template${RESET}"
             echo -e ""
-            echo -e "  ${YELLOW}Mogelijke oorzaken:${RESET}"
+            echo -e "  ${YELLOW}Possible causes:${RESET}"
             echo -e "  - User heeft geen sudo rechten"
             echo -e "  - /etc/profile.d/ bestaat niet en kan niet aangemaakt worden"
             echo -e ""
-            echo -e "  ${YELLOW}Handmatige fix:${RESET}"
+            echo -e "  ${YELLOW}Manual fix:${RESET}"
             echo -e "  ${CYAN}ssh $SERVICE${RESET}"
             echo -e "  ${CYAN}sudo mkdir -p /etc/profile.d${RESET}"
             exit 1
@@ -167,7 +167,7 @@ fi
 echo -e "${YELLOW}→${RESET} Configureer permissions..."
 if [[ -n "$use_sudo" ]]; then
     if ! ssh "$SERVICE" "sudo chmod +x /etc/profile.d/00-motd.sh" 2>/dev/null; then
-        echo -e "${RED}✗ Kan permissions niet instellen${RESET}"
+        echo -e "${RED}✗ Cannot set permissions${RESET}"
         echo ""
         read -p "$(echo -e ${YELLOW}Debug? \(y/N\):${RESET} )" debug
         if [[ "$debug" =~ ^[Yy]$ ]]; then
@@ -183,7 +183,7 @@ if [[ -n "$use_sudo" ]]; then
     fi
 else
     if ! ssh "$SERVICE" "chmod +x /etc/profile.d/00-motd.sh" 2>/dev/null; then
-        echo -e "${RED}✗ Kan permissions niet instellen${RESET}"
+        echo -e "${RED}✗ Cannot set permissions${RESET}"
         echo ""
         read -p "$(echo -e ${YELLOW}Debug? \(y/N\):${RESET} )" debug
         if [[ "$debug" =~ ^[Yy]$ ]]; then

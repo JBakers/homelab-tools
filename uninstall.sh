@@ -5,7 +5,7 @@ set -euo pipefail
 # Author: J.Bakers
 # Version: See VERSION file
 
-# Kleuren
+# Colors
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'

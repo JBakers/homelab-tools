@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Installatie script voor Homelab Management Tools
+# Installation script for homelab tools
 # Author: J.Bakers
 # Version: See VERSION file
 

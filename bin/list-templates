@@ -3,47 +3,62 @@ set -euo pipefail
 
 # List all MOTD templates
 # Author: J.Bakers
-# Version: 3.5.0-dev.31
+# Version: 3.6.0
 
-# Kleuren
+# Colors
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-# BLUE removed - using CYAN instead
+RED='\033[0;31m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
+DEPLOY_LOG="$HOME/.local/share/homelab-tools/deploy-log"
 
 show_help() {
     echo -e "${BOLD}${CYAN}list-templates - View all MOTD templates${RESET}"
     echo ""
     echo -e "${BOLD}USAGE:${RESET}"
-    echo "  list-templates"
+    echo "  list-templates [OPTIONS]"
+    echo ""
+    echo -e "${BOLD}OPTIONS:${RESET}"
+    echo "  -s, --status    Show deployment status for each template"
+    echo "  -h, --help      Show this help message"
     echo ""
     echo -e "${BOLD}DESCRIPTION:${RESET}"
     echo "  Shows an overview of all generated MOTD templates"
-    echo "  in ~/homelab-tools/templates/"
     echo ""
-    echo -e "${BOLD}OUTPUT:${RESET}"
-    echo "  For each template shows:"
-    echo "  - Template name"
-    echo "  - Last modified"
-    echo "  - File size"
+    echo -e "${BOLD}STATUS INDICATORS:${RESET}"
+    echo "  🟢 deployed   Template has been deployed to host"
+    echo "  🟡 ready      Template generated but not deployed"
+    echo "  🔴 stale      Host changed since last deploy"
     echo ""
-    echo -e "${BOLD}EXAMPLE OUTPUT:${RESET}"
-    echo "  📄 Templates in: ~/homelab-tools/templates"
-    echo ""
-    echo "  jellyfin.sh      2025-11-14 10:30    2.1 KB"
-    echo "  pihole.sh        2025-11-14 09:15    2.3 KB"
-    echo "  homeassistant.sh 2025-11-13 18:45    2.0 KB"
+    echo -e "${BOLD}EXAMPLE:${RESET}"
+    echo -e "  ${GREEN}list-templates${RESET}         # List all templates"
+    echo -e "  ${GREEN}list-templates -s${RESET}      # List with deployment status"
     echo ""
 }
 
-if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
-    show_help
-    exit 0
-fi
+# Parse arguments
+SHOW_STATUS=false
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -s|--status)
+            SHOW_STATUS=true
+            shift
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Unknown option: $1${RESET}"
+            show_help
+            exit 1
+            ;;
+    esac
+done
 
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
 echo -e "║         📋 MOTD Templates                                 ║"
@@ -74,17 +89,70 @@ fi
 echo -e "${BOLD}Locatie:${RESET} ${CYAN}$TEMPLATES_DIR${RESET}"
 echo -e "${BOLD}Aantal:${RESET}  ${GREEN}$template_count${RESET} template(s)"
 echo ""
-echo -e "${BOLD}${CYAN}Template                Laatst gewijzigd         Grootte${RESET}"
-echo -e "${BOLD}${CYAN}────────────────────────────────────────────────────────────${RESET}"
+
+if [[ "$SHOW_STATUS" == "true" ]]; then
+    echo -e "${BOLD}${CYAN}Template              Modified              Size    Status${RESET}"
+    echo -e "${BOLD}${CYAN}──────────────────────────────────────────────────────────────────${RESET}"
+else
+    echo -e "${BOLD}${CYAN}Template                Modified                   Size${RESET}"
+    echo -e "${BOLD}${CYAN}────────────────────────────────────────────────────────────${RESET}"
+fi
+
+# Get deployment status from log
+get_deploy_status() {
+    local service="$1"
+    local template_modified="$2"
+    
+    if [[ ! -f "$DEPLOY_LOG" ]]; then
+        echo "ready"
+        return
+    fi
+    
+    # Check if service was deployed (format: timestamp|service|host|status)
+    local deploy_entry
+    deploy_entry=$(grep "^[^|]*|${service}|" "$DEPLOY_LOG" 2>/dev/null | tail -1)
+    
+    if [[ -z "$deploy_entry" ]]; then
+        echo "ready"
+        return
+    fi
+    
+    local deploy_time
+    deploy_time=$(echo "$deploy_entry" | cut -d'|' -f1)
+    
+    # Compare timestamps: if template is newer than deploy, it's stale
+    if [[ "$template_modified" > "$deploy_time" ]]; then
+        echo "stale"
+    else
+        echo "deployed"
+    fi
+}
 
 # List templates
 find "$TEMPLATES_DIR" -maxdepth 1 -name "*.sh" -type f | sort | while read -r template; do
     name=$(basename "$template")
+    service="${name%.sh}"
     modified=$(stat -c '%y' "$template" 2>/dev/null | cut -d' ' -f1,2 | cut -d: -f1-2)
+    modified_epoch=$(stat -c '%Y' "$template" 2>/dev/null)
     size=$(du -h "$template" | cut -f1)
     
-    # Pad de naam voor mooie uitlijning
-    printf "${GREEN}%-24s${RESET}${CYAN}%s${RESET}  ${YELLOW}%6s${RESET}\n" "$name" "$modified" "$size"
+    if [[ "$SHOW_STATUS" == "true" ]]; then
+        status=$(get_deploy_status "$service" "$modified_epoch")
+        case "$status" in
+            deployed)
+                status_icon="🟢 deployed"
+                ;;
+            stale)
+                status_icon="🔴 stale"
+                ;;
+            *)
+                status_icon="🟡 ready"
+                ;;
+        esac
+        printf "${GREEN}%-20s${RESET}  ${CYAN}%-20s${RESET}  ${YELLOW}%6s${RESET}  %s\n" "$name" "$modified" "$size" "$status_icon"
+    else
+        printf "${GREEN}%-24s${RESET}${CYAN}%s${RESET}  ${YELLOW}%6s${RESET}\n" "$name" "$modified" "$size"
+    fi
 done
 
 echo ""

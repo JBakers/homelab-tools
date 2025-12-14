@@ -73,16 +73,9 @@ if [[ -n $(git status --porcelain) ]]; then
     echo ""
 fi
 
-echo -e "${YELLOW}[1/6]${RESET} Update script headers..."
-find . -type f \( -name "*.sh" -o -path "*/bin/*" \) \
-    ! -path "./.git/*" \
-    -exec sed -i "s/^# Version: [0-9]\+\.[0-9]\+\.[0-9]\+/# Version: $NEW_VERSION/g" {} \;
-sed -i "s/^# Version: .*/# Version: $NEW_VERSION/" lib/menu-helpers.sh 2>/dev/null || true
-
-# Update VERSION file
+echo -e "${YELLOW}[1/6]${RESET} Update VERSION file (single source of truth)..."
 echo "$NEW_VERSION" > VERSION
-
-echo -e "${GREEN}  ✓${RESET} Updated version headers"
+echo -e "${GREEN}  ✓${RESET} Updated VERSION file"
 echo ""
 
 echo -e "${YELLOW}[2/6]${RESET} Update README.md..."

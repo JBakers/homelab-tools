@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Export homelab tools to an archive
 # Author: J.Bakers
-# Version: 3.6.0-dev.13
+# Version: See VERSION file
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 ARCHIVE_NAME="homelab-tools_${TIMESTAMP}.tar.gz"

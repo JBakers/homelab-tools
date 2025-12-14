@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034
 # Homelab Tools Configuration Example
 # Author: J.Bakers
-# Version: 3.6.0-dev.13
+# Version: See VERSION file
 #
 # ⚠️  SECURITY WARNING ⚠️
 # This file contains your homelab configuration.

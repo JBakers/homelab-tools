@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Homelab Management Menu
 # Author: J.Bakers
-# Version: Centralized in VERSION file
+# Version: See VERSION file
 
 # Load shared menu helper library
 # Resolve symlinks to find the actual installation directory
@@ -116,10 +116,10 @@ wait_for_continue() {
     return 0
 }
 
-# Help functie (kort overzicht)
+# Short help overview
 show_help() {
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 Homelab Management Tools v3.5.0-dev            ║"
+    echo -e "║         🏠 Homelab Management Tools ${HLT_VERSION_DISPLAY}            ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "${BOLD}${CYAN}Available commands:${RESET}"

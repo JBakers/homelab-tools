@@ -36,7 +36,13 @@
 
 ### 🐛 Bug Fixes
 
-#### v3.6.0-dev.18 (Current)
+#### v3.6.0-dev.19 (Current)
+- Fixed edit-hosts hanging on startup (missing title argument to show_arrow_menu)
+- show_arrow_menu requires title as first parameter; edit-hosts was calling without title
+- Now properly displays interactive menu with all host options
+- Menu works correctly: arrow navigation, selection, q=quit
+
+#### v3.6.0-dev.18
 - Identified root cause: banner prompt on Update installation
 - Sed removes banner block before grep checks for HLT_BANNER
 - Solution: Save HLT_BANNER before cleanup, skip prompt if already configured

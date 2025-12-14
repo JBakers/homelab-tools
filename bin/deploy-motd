@@ -62,17 +62,17 @@ SERVICE=${1:-}
 
 if [[ -z "$SERVICE" ]]; then
     echo -e "${RED}✗ Error: No service name provided${RESET}"
-    echo -e "  Gebruik: ${GREEN}deploy-motd <service-naam>${RESET}"
-    echo -e "  Voorbeeld: ${GREEN}deploy-motd pihole${RESET}"
-    echo -e "  Of: ${CYAN}deploy-motd --help${RESET} voor meer informatie"
+    echo -e "  Usage: ${GREEN}deploy-motd <service-name>${RESET}"
+    echo -e "  Example: ${GREEN}deploy-motd pihole${RESET}"
+    echo -e "  Or: ${CYAN}deploy-motd --help${RESET} for more information"
     exit 1
 fi
 
 # Validate service name to prevent command injection
 if [[ ! "$SERVICE" =~ ^[a-zA-Z0-9._-]+$ ]]; then
     echo -e "${RED}✗ Error: Invalid service name${RESET}"
-    echo -e "  Alleen letters, cijfers, punten, underscores en streepjes zijn toegestaan"
-    echo -e "  Voorbeeld: ${GREEN}deploy-motd pihole${RESET}"
+    echo -e "  Only letters, digits, dots, underscores and hyphens are allowed"
+    echo -e "  Example: ${GREEN}deploy-motd pihole${RESET}"
     exit 1
 fi
 
@@ -95,23 +95,23 @@ echo -e "${BOLD}Service: ${GREEN}$SERVICE${RESET}"
 echo -e "Template: ${CYAN}$TEMPLATE_FILE${RESET}"
 echo ""
 
-# Test SSH connectie
-echo -e "${YELLOW}→${RESET} Test SSH connectie..."
+# Test SSH connection
+echo -e "${YELLOW}→${RESET} Test SSH connection..."
 if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$SERVICE" "echo 2>&1" &>/dev/null; then
-    echo -e "${RED}✗ Kan niet verbinden met $SERVICE${RESET}"
+    echo -e "${RED}✗ Cannot connect to $SERVICE${RESET}"
     echo -e ""
-    echo -e "  Controleer:"
+    echo -e "  Check:"
     echo -e "  1. SSH config: ${CYAN}~/.ssh/config${RESET}"
-    echo -e "  2. SSH keys zijn geconfigureerd"
+    echo -e "  2. SSH keys are configured"
     echo -e "  3. Container is online"
     echo -e ""
-    echo -e "  Voorbeeld SSH config entry:"
+    echo -e "  Example SSH config entry:"
     echo -e "  ${CYAN}Host $SERVICE${RESET}"
     echo -e "  ${CYAN}  HostName 192.168.178.xx${RESET}"
     echo -e "  ${CYAN}  User root${RESET}"
     exit 1
 fi
-echo -e "${GREEN}✓${RESET} SSH connectie OK"
+echo -e "${GREEN}✓${RESET} SSH connection OK"
 
 # Cleanup old MOTD files
 echo -e "${YELLOW}→${RESET} Cleaning up old MOTD..."

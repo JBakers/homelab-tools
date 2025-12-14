@@ -552,7 +552,7 @@ host_menu() {
         )
         
         local choice
-        if ! choice=$(show_arrow_menu "${options[@]}"); then
+        if ! choice=$(show_arrow_menu "📋 Host Options" "${options[@]}"); then
             return 0
         fi
         
@@ -714,7 +714,7 @@ bulk_operations_menu() {
         )
         
         local choice
-        if ! choice=$(show_arrow_menu "${options[@]}"); then
+        if ! choice=$(show_arrow_menu "📦 Bulk Operations" "${options[@]}"); then
             return 0
         fi
         
@@ -793,7 +793,7 @@ interactive_menu() {
                 host_array+=("← Back")
                 
                 local host_choice
-                if host_choice=$(show_arrow_menu "${host_array[@]}"); then
+                if host_choice=$(show_arrow_menu "📋 Select Host" "${host_array[@]}"); then
                     if [[ $host_choice -lt ${#host_array[@]}-1 ]]; then
                         host_menu "${host_array[$host_choice]}"
                     fi

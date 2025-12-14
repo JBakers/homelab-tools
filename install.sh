@@ -468,9 +468,9 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
     echo ""
     echo -e "  What is your homelab domain suffix?"
     echo -e "  ${CYAN}Examples:${RESET}"
-    echo -e "    .home  → http://jellyfin.home:8096"
-    echo -e "    .local → http://jellyfin.local:8096"
-    echo -e "    (empty) → http://jellyfin:8096"
+    echo -e "    .home  → http://pihole.home/admin"
+    echo -e "    .local → http://pihole.local/admin"
+    echo -e "    (empty) → http://pihole/admin"
     echo ""
     
     while true; do
@@ -586,7 +586,7 @@ if [[ -d "$SSH_DIR" ]] && [[ ! -f "$SSH_CONFIG" ]]; then
 # Manage with: edit-hosts
 
 # Example host configuration:
-# Host jellyfin
+# Host pihole
 #     HostName 192.168.1.100
 #     User youruser
 #     Port 22

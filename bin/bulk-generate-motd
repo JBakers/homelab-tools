@@ -483,7 +483,7 @@ while true; do
             echo ""
             echo -e "  ${BOLD}1. Deploy individual hosts:${RESET}"
             echo -e "     ${GREEN}deploy-motd <hostname>${RESET}"
-            echo -e "     Example: ${GREEN}deploy-motd jellyfin${RESET}"
+            echo -e "     Example: ${GREEN}deploy-motd pihole${RESET}"
             echo ""
             echo -e "  ${BOLD}2. View all templates:${RESET}"
             echo -e "     ${GREEN}list-templates${RESET}"

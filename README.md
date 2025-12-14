@@ -12,7 +12,7 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
 
 ### 🎯 Smart Detection
 
-- **60+ Services Auto-Detected** - Jellyfin, Plex, *arr stack, Pi-hole, Home Assistant, and more
+- **60+ Services Auto-Detected** - Pi-hole, Plex, *arr stack, Home Assistant, Nextcloud, and more
 - **Intelligent Defaults** - Automatic service names, descriptions, and port configurations
 - **Custom Services** - Easy fallback for any custom application
 
@@ -111,15 +111,15 @@ homelab
 
 ```bash
 # 1. Generate MOTD for your service
-generate-motd jellyfin
-# Auto-detects: "Jellyfin - Media Server" with port 8096
+generate-motd pihole
+# Auto-detects: "Pi-hole - Network-wide Ad Blocking" with port 80
 
 # 2. Deploy to your host
-deploy-motd jellyfin
+deploy-motd pihole
 # Uploads via SSH and activates MOTD
 
 # 3. Test it!
-ssh jellyfin
+ssh pihole
 # See your beautiful new MOTD!
 ```
 
@@ -135,18 +135,18 @@ The tool offers clean, functional MOTDs by default, with optional ASCII art for 
 
 ```
 ==========================================
-  Jellyfin
-  Media Server
+  Pi-hole
+  Network-wide Ad Blocking
   by J.Bakers
 ==========================================
 
 📊 System Information:
 
-  🖥️  Hostname:    jellyfin
+  🖥️  Hostname:    pihole
   🌐 IP Address:  192.168.1.10
   ⏱️  Uptime:      3 days, 12 hours
   🐋 Docker:      24.0.7
-  🔗 Web UI:      http://jellyfin:8096
+  🔗 Web UI:      http://pihole/admin
 
 ==========================================
 ```
@@ -226,7 +226,7 @@ All commands are available directly in your terminal:
 | `generate-motd` | Create MOTD template | `generate-motd plex` |
 | `bulk-generate-motd` | Generate for all hosts | `bulk-generate-motd` |
 | `deploy-motd` | Deploy to remote host | `deploy-motd pihole` |
-| `cleanup-keys` | Remove SSH host keys | `cleanup-keys jellyfin` |
+| `cleanup-keys` | Remove SSH host keys | `cleanup-keys pihole` |
 | `copykey` | Distribute SSH keys | `copykey` |
 | `list-templates` | Show all templates | `list-templates` |
 | `edit-hosts` | Edit SSH config | `edit-hosts` |
@@ -390,7 +390,7 @@ Host frigate
   HostName 192.168.1.30
   User root
 
-Host jellyfin
+Host nextcloud
   HostName 192.168.1.25
   User root
   
@@ -573,10 +573,10 @@ Templates are reusable - update and redeploy anytime:
 
 ```bash
 # Edit the template
-nano ~/.local/share/homelab-tools/templates/jellyfin.sh
+nano ~/.local/share/homelab-tools/templates/pihole.sh
 
 # Redeploy
-deploy-motd jellyfin
+deploy-motd pihole
 ```
 
 ### 📦 Bulk Operations
@@ -585,7 +585,7 @@ Process multiple services efficiently:
 
 ```bash
 # Deploy multiple services
-for service in jellyfin plex sonarr radarr; do
+for service in pihole plex sonarr radarr; do
     deploy-motd $service
 done
 
@@ -629,11 +629,11 @@ edit-hosts
 
 # Example structure:
 # --- Media Servers ---
-Host jellyfin
+Host plex
   HostName 192.168.1.10
   User root
 
-Host plex
+Host emby
   HostName 192.168.1.11
   User root
 

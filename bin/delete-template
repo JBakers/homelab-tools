@@ -28,7 +28,7 @@ ${BOLD}Usage:${RESET}
   delete-template -i                  # Interactive mode
 
 ${BOLD}Examples:${RESET}
-  delete-template jellyfin            # Delete jellyfin.sh
+  delete-template pihole              # Delete pihole.sh
   delete-template -i                  # Choose from list
 
 ${BOLD}Template Location:${RESET}

@@ -10,6 +10,13 @@
 - Version bumped to 3.5.0
 - Production ready
 
+### Post-release bugfixes (in develop):
+- [x] Fixed install.sh banner HLT_VERSION if/else order
+- [x] Fixed uninstall.sh .bashrc cleanup (awk state machine)
+- [x] Fixed install.sh clean_user_data() - was using simple sed, now uses full awk
+- [x] Fixed .bashrc ownership after sudo cleanup (chown to user)
+- [x] Added undeploy-motd script + menu integration
+
 ---
 
 ## 🟡 Medium Priority (v3.6.0)
@@ -21,20 +28,24 @@
   - Added to homelab menu (MOTD Tools → Undeploy MOTD)
   - Supports --all flag for bulk removal
 
-- [ ] **List templates with host status** - Show which hosts have MOTD templates
-  - Add `-s` or `--status` flag to list-templates
-  - Output format: `hostname | service | generated_date | last_deployed | status`
-  - Status: "ready", "deployed", "stale" (older than original host check)
-  - Track deployment info in ~/.local/share/homelab-tools/deployment-log or metadata file
-  - Color coding: 🟢 deployed, 🟡 ready, ⚪ not deployed
+- [x] **List templates with host status** - Show which hosts have MOTD templates
+  - Added `-s` or `--status` flag to list-templates
+  - Output format: `hostname | modified | size | status`
+  - Status: 🟢 deployed, 🟡 ready, 🔴 stale
+  - Tracks deployment info in ~/.local/share/homelab-tools/deploy-log
+  - deploy-motd now logs each deployment
 
-- [ ] **Show MOTD preview in template list** - Interactive option to view MOTD content
-  - Add `-v` or `--view` flag to list-templates to show MOTD preview (not just cat tip)
-  - Interactive menu: list → select template → show MOTD content in pager/preview
-  - Alternative: inline preview with arrow nav through templates
+- [x] **Show MOTD preview in template list** - Interactive option to view MOTD content
+  - Added `-v` or `--view` flag to list-templates for interactive preview
+  - Arrow key navigation through template list
+  - Executes template to show actual MOTD output
+  - Press Enter to return to menu, q to quit
 
-- [ ] **Verify Jellyfin auto-detection is not too aggressive**
-  - Audit scripts that assume Jellyfin as the standard/default
+- [x] **Verify Jellyfin auto-detection is not too aggressive**
+  - Removed Jellyfin as default example throughout codebase
+  - Replaced with Pi-hole (more universal homelab service)
+  - Updated all help texts, examples, and README
+  - Service auto-detection still works for all 60+ services
 
 ## 🟢 Low Priority
 

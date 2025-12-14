@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Homelab Tools Uninstaller
 # Author: J.Bakers
-# Version: 3.5.0-dev.31
+# Version: 3.5.0-dev.32
 
 # Kleuren
 CYAN='\033[0;36m'
@@ -191,6 +191,9 @@ if [[ -f "$HOME/.bashrc" ]] && grep -qi "homelab" "$HOME/.bashrc" 2>/dev/null; t
         in_banner = 0
         banner_depth = 0
     }
+
+    # Never touch VS Code shell integration or other tool sections
+    /locate-shell-integration-path/ { print; next }
     
     # Match tip section start
     /^# Homelab Tools tip$/ { 

@@ -182,8 +182,14 @@ if [[ "$INTERACTIVE_VIEW" == "true" ]]; then
     done
     menu_options+=("QUIT")
     
-    # Load menu helper
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    # Load menu helper (resolve symlinks)
+    SCRIPT_PATH="${BASH_SOURCE[0]}"
+    while [[ -L "$SCRIPT_PATH" ]]; do
+        SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+        SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+        [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+    done
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
     LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
     source "$LIB_DIR/menu-helpers.sh"
     

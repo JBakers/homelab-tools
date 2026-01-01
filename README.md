@@ -1,11 +1,9 @@
-# 🏠 Homelab Management Tools v3.6.0-dev.13
+# 🏠 Homelab Management Tools v3.6.0
 
-[![Version](https://img.shields.io/badge/version-3.6.0--dev.13-orange.svg)](https://github.com/JBakers/homelab-tools/releases)
+[![Version](https://img.shields.io/badge/version-3.6.0-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
 [![License](https://img.shields.io/badge/license-GPL--v3-blue.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/shell-bash-lightgrey.svg)](https://www.gnu.org/software/bash/)
-
-> [!WARNING]
-> **🚧 Active Development** - This project is currently under active development. Features may change, and bugs may exist. Use in production at your own risk. Feedback and contributions are welcome!
+[![Tests](https://img.shields.io/badge/tests-55%20passed-brightgreen.svg)](https://github.com/JBakers/homelab-tools)
 
 > **Professional command-line toolkit for managing homelab infrastructure with beautiful, colorful interfaces and intelligent automation.**
 
@@ -34,18 +32,24 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
 - **Bulk Operations** - Generate and deploy MOTDs for all hosts at once
 - **One-Click Deploy** - SSH-based deployment to remote hosts
 - **Template System** - Reusable, customizable MOTD templates
+- **Undeploy Support** - Remove MOTDs from hosts with `undeploy-motd`
+- **Deployment Status** - Track deployments with `list-templates -s`
 
 ### 🔐 SSH Management
 
 - **Setup Wizard** - Automated SSH key generation and configuration
 - **Key Distribution** - Push keys to all servers automatically
 - **Host Key Cleanup** - Interactive tool for managing known_hosts
+- **Host Configuration** - Interactive SSH config editor with `edit-hosts`
 
 ### 📚 Developer Experience
 
 - **Comprehensive Help** - Every command has detailed `--help` documentation
+- **Quick Reference** - Use `homelab --usage` for concise command overview
 - **Error Handling** - Robust error checking with `set -euo pipefail`
 - **Input Validation** - Protection against command injection attacks
+- **Non-Interactive Mode** - `install.sh --non-interactive` for automated setups
+- **Docker Test Suite** - Full integration testing with 55 automated tests
 
 ## 📦 Installation
 
@@ -58,10 +62,16 @@ git clone https://github.com/JBakers/homelab-tools.git
 
 # Run the installer (requires sudo for /opt installation)
 cd homelab-tools
-sudo ./install.sh
+./install.sh
 
 # Reload your shell
 source ~/.bashrc
+```
+
+**For automated/scripted installs:**
+
+```bash
+./install.sh --non-interactive
 ```
 
 **What the installer does:**
@@ -202,8 +212,7 @@ homelab
 
 ```
 ╔════════════════════════════════════════════════════════════╗
-║           🏠 HOMELAB MANAGEMENT TOOLS v3.4.0               ║
-║                    by J.Bakers                             ║
+║         🏠 Homelab Management Tools v3.6.0                 ║
 ╚════════════════════════════════════════════════════════════╝
 
 Available commands:
@@ -229,9 +238,11 @@ All commands are available directly in your terminal:
 | `generate-motd` | Create MOTD template | `generate-motd plex` |
 | `bulk-generate-motd` | Generate for all hosts | `bulk-generate-motd` |
 | `deploy-motd` | Deploy to remote host | `deploy-motd pihole` |
+| `undeploy-motd` | Remove deployed MOTD | `undeploy-motd pihole` |
+| `list-templates` | Show all templates | `list-templates -s` |
+| `delete-template` | Delete a template | `delete-template` |
 | `cleanup-keys` | Remove SSH host keys | `cleanup-keys pihole` |
 | `copykey` | Distribute SSH keys | `copykey` |
-| `list-templates` | Show all templates | `list-templates` |
 | `edit-hosts` | Edit SSH config | `edit-hosts` |
 | `edit-config` | Edit homelab config | `edit-config` |
 
@@ -240,9 +251,10 @@ All commands are available directly in your terminal:
 Every command has comprehensive help documentation:
 
 ```bash
-generate-motd --help    # Detailed usage and examples
-deploy-motd -h          # Quick reference
-homelab help            # Full documentation
+homelab --help          # Overview of all commands
+homelab --usage         # Quick reference (concise)
+homelab help            # Full detailed documentation
+generate-motd --help    # Command-specific help
 ```
 
 ## 📝 Complete Workflow Examples

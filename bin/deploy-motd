@@ -21,6 +21,7 @@ show_help() {
     echo ""
     echo -e "${BOLD}USAGE:${RESET}"
     echo "  deploy-motd <service-name>"
+    echo "  deploy-motd --all"
     echo ""
     echo -e "${BOLD}DESCRIPTION:${RESET}"
     echo "  Deploys an MOTD template to the corresponding container."
@@ -30,16 +31,13 @@ show_help() {
     echo "  3. Tests the connection"
     echo "  4. Makes the template executable"
     echo ""
-    echo -e "${BOLD}REQUIREMENTS:${RESET}"
-    echo "  - SSH access to the container"
-    echo "  - Same hostname as service name OR"
-    echo "  - SSH config entry for the service name"
+    echo -e "${BOLD}OPTIONS:${RESET}"
+    echo "  <service-name>  Deploy to specific host"
+    echo "  --all           Deploy all templates to their hosts"
     echo ""
     echo -e "${BOLD}EXAMPLE:${RESET}"
     echo -e "  ${GREEN}deploy-motd pihole${RESET}"
-    echo ""
-    echo "  This deploys to:"
-    echo "    ssh pihole"
+    echo -e "  ${GREEN}deploy-motd --all${RESET}"
     echo ""
     echo -e "${BOLD}SSH CONFIG:${RESET}"
     echo "  Make sure you have an entry in ~/.ssh/config:"
@@ -48,10 +46,6 @@ show_help() {
     echo "    HostName 192.168.1.25"
     echo "    User root"
     echo ""
-    echo -e "${BOLD}NOTE:${RESET}"
-    echo "  After deployment, the MOTD is automatically shown on"
-    echo "  every new SSH session with current information."
-    echo ""
 }
 
 if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
@@ -59,14 +53,75 @@ if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     exit 0
 fi
 
+# Deploy all templates function
+deploy_all() {
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         🚀 Deploy All MOTDs                              ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    
+    # Find all templates
+    if [[ ! -d "$TEMPLATES_DIR" ]] || [[ -z "$(ls -A "$TEMPLATES_DIR" 2>/dev/null)" ]]; then
+        echo -e "${YELLOW}No templates found in $TEMPLATES_DIR${RESET}"
+        echo -e "Generate templates first with: ${GREEN}generate-motd <service>${RESET}"
+        exit 0
+    fi
+    
+    local deployed=0
+    local failed=0
+    local failed_hosts=()
+    
+    for template in "$TEMPLATES_DIR"/*.sh; do
+        [[ -f "$template" ]] || continue
+        local hostname
+        hostname=$(basename "$template" .sh)
+        
+        echo -e "${BOLD}${CYAN}Deploying to: ${hostname}${RESET}"
+        
+        # Run deploy for this host (call ourselves recursively)
+        if "$0" "$hostname"; then
+            deployed=$((deployed + 1))
+        else
+            failed=$((failed + 1))
+            failed_hosts+=("$hostname")
+        fi
+        echo ""
+    done
+    
+    # Summary
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo -e "${BOLD}${CYAN}                Deployment Summary                         ${RESET}"
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo ""
+    echo -e "${GREEN}✓ Deployed:${RESET} $deployed"
+    if [[ $failed -gt 0 ]]; then
+        echo -e "${RED}✗ Failed:${RESET}   $failed"
+        echo ""
+        echo -e "${YELLOW}Failed hosts:${RESET}"
+        for host in "${failed_hosts[@]}"; do
+            echo -e "  ${RED}→${RESET} $host"
+        done
+    fi
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo ""
+    
+    exit 0
+}
+
 SERVICE=${1:-}
 
 if [[ -z "$SERVICE" ]]; then
     echo -e "${RED}✗ Error: No service name provided${RESET}"
     echo -e "  Usage: ${GREEN}deploy-motd <service-name>${RESET}"
+    echo -e "         ${GREEN}deploy-motd --all${RESET}"
     echo -e "  Example: ${GREEN}deploy-motd pihole${RESET}"
     echo -e "  Or: ${CYAN}deploy-motd --help${RESET} for more information"
     exit 1
+fi
+
+# Handle --all option
+if [[ "$SERVICE" == "--all" ]] || [[ "$SERVICE" == "-a" ]]; then
+    deploy_all
 fi
 
 # Validate service name to prevent command injection

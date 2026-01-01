@@ -25,14 +25,30 @@ fi
 CURRENT=$(cat VERSION)
 
 # Extract base version and build number
-if [[ "$CURRENT" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-dev\.([0-9]+)$ ]]; then
-    BASE="${BASH_REMATCH[1]}"
-    BUILD="${BASH_REMATCH[2]}"
-    NEW_BUILD=$((BUILD + 1))
-elif [[ "$CURRENT" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-dev$ ]]; then
-    BASE="${BASH_REMATCH[1]}"
+if [[ "$CURRENT" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)-dev\.([0-9]+)$ ]]; then
+    MAJOR="${BASH_REMATCH[1]}"
+    MINOR="${BASH_REMATCH[2]}"
+    PATCH="${BASH_REMATCH[3]}"
+    BUILD="${BASH_REMATCH[4]}"
+    
+    # Strip leading zeros to avoid octal interpretation
+    BUILD=$((10#$BUILD))
+    
+    # Check if we've reached dev.09 - time to bump minor version
+    if [[ $BUILD -ge 9 ]]; then
+        # Bump patch version and reset to dev.00
+        NEW_PATCH=$((PATCH + 1))
+        BASE="${MAJOR}.${MINOR}.${NEW_PATCH}"
+        NEW_BUILD=0
+        echo -e "${YELLOW}→${RESET} Reached dev.09 limit, bumping to ${BASE}-dev.00"
+    else
+        BASE="${MAJOR}.${MINOR}.${PATCH}"
+        NEW_BUILD=$((BUILD + 1))
+    fi
+elif [[ "$CURRENT" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)-dev$ ]]; then
+    BASE="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
     NEW_BUILD=1
-elif [[ "$CURRENT" =~ ^([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+elif [[ "$CURRENT" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
     # Released version - start new dev cycle
     BASE="$CURRENT"
     NEW_BUILD=1
@@ -41,7 +57,7 @@ else
     exit 1
 fi
 
-NEW_VERSION="${BASE}-dev.${NEW_BUILD}"
+NEW_VERSION="${BASE}-dev.$(printf "%02d" $NEW_BUILD)"
 
 echo -e "${BOLD}${CYAN}Version Bump${RESET}"
 echo -e "  Current: ${YELLOW}$CURRENT${RESET}"

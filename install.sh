@@ -21,18 +21,27 @@ run_sudo() {
 
 # Helper function for interactive read (works with curl|bash)
 # When stdin is piped, read from /dev/tty instead
-# Usage: value=$(read_input "prompt: ")
+# In non-interactive mode, returns default value
+# Usage: value=$(read_input "prompt: " "default_value")
 read_input() {
     local prompt="$1"
+    local default="${2:-}"
     local input
+    
+    # In non-interactive mode, use default
+    if [[ $NON_INTERACTIVE -eq 1 ]]; then
+        echo "$default"
+        return 0
+    fi
+    
     if [[ -t 0 ]]; then
         # stdin is a terminal, read normally
         read -r -p "$prompt" input
     else
         # stdin is piped (curl|bash), read from /dev/tty
-        read -r -p "$prompt" input </dev/tty
+        read -r -p "$prompt" input </dev/tty || input="$default"
     fi
-    echo "$input"
+    echo "${input:-$default}"
 }
 
 # Kleuren
@@ -46,11 +55,17 @@ RESET='\033[0m'
 # GitHub repo info
 GITHUB_REPO="https://github.com/JBakers/homelab-tools.git"
 DEFAULT_BRANCH="main"
+NON_INTERACTIVE=0
 
 # Parse command line arguments
 INSTALL_BRANCH="${1:-$DEFAULT_BRANCH}"
 if [[ "$INSTALL_BRANCH" == "--branch" ]] && [[ -n "${2:-}" ]]; then
     INSTALL_BRANCH="$2"
+fi
+
+# Check for non-interactive flag
+if [[ "${1:-}" == "--non-interactive" ]] || [[ "${2:-}" == "--non-interactive" ]]; then
+    NON_INTERACTIVE=1
 fi
 
 # Check if we're in a homelab-tools directory or need to clone
@@ -107,7 +122,7 @@ if [[ -d "$LEGACY_DIR" ]] && [[ "$LEGACY_DIR" != "$(pwd)" ]]; then
     echo -e "  ${CYAN}2${RESET}) Backup only"
 echo -e "  ${CYAN}3${RESET}) Keep it"
 echo ""
-legacy_choice="$(read_input "Choice (1/2/3): ")"
+legacy_choice="$(read_input "Choice (1/2/3): " "3")"
 legacy_choice=${legacy_choice:-1}
     
     case "$legacy_choice" in
@@ -394,8 +409,8 @@ if grep -q "HLT_BANNER" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
     echo -e "${GREEN}  ✓${RESET} Welcome banner already configured"
 else
     echo ""
-    add_banner=$(read_input "Add a welcome banner to your shell? (Y/n): ")
-    add_banner=${add_banner:-y}
+    add_banner=$(read_input "Add a welcome banner to your shell? (Y/n): " "n")
+    add_banner=${add_banner:-n}
     
     if [[ "$add_banner" =~ ^[Yy]$ ]]; then
         cat >> "$ACTUAL_HOME/.bashrc" << 'BANNER_EOF'

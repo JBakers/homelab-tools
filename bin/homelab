@@ -116,36 +116,56 @@ wait_for_continue() {
     return 0
 }
 
+show_usage_short() {
+    echo -e "homelab ${HLT_VERSION_DISPLAY}\n"
+    echo "Commands:"
+    echo "    generate-motd        Create a MOTD template"
+    echo "    bulk-generate-motd   Generate MOTDs for all hosts"
+    echo "    deploy-motd          Deploy a template to a host"
+    echo "    undeploy-motd        Remove deployed MOTDs"
+    echo "    list-templates       List / status / preview templates"
+    echo "    delete-template      Delete a template"
+    echo "    edit-hosts           Manage SSH config"
+    echo "    copykey              Distribute SSH keys"
+    echo "    cleanup-keys         Clean SSH known_hosts\n"
+    echo "Usage:"
+    echo "    homelab              Interactive menu"
+    echo "    homelab help         Detailed help"
+    echo "    homelab --usage      Concise help (this)"
+    echo "    <command> --help     Command-specific help"
+}
+
 # Short help overview
 show_help() {
-    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 Homelab Management Tools ${HLT_VERSION_DISPLAY}            ║"
-    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗${RESET}"
+    echo -e "${BOLD}${CYAN}║         🏠 Homelab Management Tools ${HLT_VERSION_DISPLAY}            ║${RESET}"
+    echo -e "${BOLD}${CYAN}╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "${BOLD}${CYAN}Available commands:${RESET}"
-    echo ""
-    echo -e "  ${YELLOW}generate-motd${RESET}         Generate MOTD for a service"
-    echo -e "  ${YELLOW}bulk-generate-motd${RESET}    Generate MOTDs for all hosts"
-    echo -e "  ${YELLOW}deploy-motd${RESET}           Deploy MOTD to container"
-    echo -e "  ${YELLOW}delete-template${RESET}       Delete MOTD template"
-    echo -e "  ${YELLOW}list-templates${RESET}        Show all MOTD templates"
-    echo -e "  ${YELLOW}cleanup-keys${RESET}          Remove old SSH keys"
-    echo -e "  ${YELLOW}edit-hosts${RESET}            Edit SSH configuration"
-    echo -e "  ${YELLOW}copykey${RESET}               Distribute SSH keys"
+    echo -e "    ${YELLOW}generate-motd${RESET}         Generate MOTD for a service"
+    echo -e "    ${YELLOW}bulk-generate-motd${RESET}    Generate MOTDs for all hosts"
+    echo -e "    ${YELLOW}deploy-motd${RESET}           Deploy MOTD to container"
+    echo -e "    ${YELLOW}undeploy-motd${RESET}         Remove deployed MOTDs"
+    echo -e "    ${YELLOW}delete-template${RESET}       Delete MOTD template"
+    echo -e "    ${YELLOW}list-templates${RESET}        Show all MOTD templates"
+    echo -e "    ${YELLOW}cleanup-keys${RESET}          Remove old SSH keys"
+    echo -e "    ${YELLOW}edit-hosts${RESET}            Edit SSH configuration"
+    echo -e "    ${YELLOW}copykey${RESET}               Distribute SSH keys"
     echo ""
     echo -e "${BOLD}${CYAN}Usage:${RESET}"
-    echo -e "  ${GREEN}homelab${RESET}               Show interactive menu"
-    echo -e "  ${GREEN}homelab help${RESET}          Show detailed help"
-    echo -e "  ${GREEN}<command> --help${RESET}     Show help for specific command"
+    echo -e "    ${GREEN}homelab${RESET}               Show interactive menu"
+    echo -e "    ${GREEN}homelab help${RESET}          Show detailed help"
+    echo -e "    ${GREEN}homelab --usage${RESET}       Concise help"
+    echo -e "    ${GREEN}<command> --help${RESET}     Show help for specific command"
     echo ""
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 }
 
 # Gedetailleerde help
 show_detailed_help() {
-    echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗"
-    echo -e "║         🏠 Homelab Tools - Detailed Help                   ║"
-    echo -e "╚════════════════════════════════════════════════════════════╝${RESET}"
+    echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗${RESET}"
+    echo -e "${BOLD}${CYAN}║         🏠 Homelab Tools - Detailed Help                   ║${RESET}"
+    echo -e "${BOLD}${CYAN}╚════════════════════════════════════════════════════════════╝${RESET}"
     echo ""
     echo -e "${BOLD}${CYAN}MOTD (Message of the Day) system:${RESET}"
     echo -e "────────────────────────────────────────"
@@ -158,10 +178,7 @@ show_detailed_help() {
     echo -e "${BOLD}${YELLOW}Workflow:${RESET}"
     echo -e "  1. ${GREEN}generate-motd <hostname>${RESET}  → Create template"
     echo -e "  2. ${GREEN}deploy-motd <hostname>${RESET}    → Deploy to host"
-    echo -e "  3. ${GREEN}ssh <hostname>${RESET}            → See your beautiful MOTD!"
-    echo ""
-    echo -e "The MOTD is generated dynamically at each login,"
-    echo -e "so information like uptime is always current."
+    echo -e "  3. ${GREEN}ssh <hostname>${RESET}            → See your MOTD"
     echo ""
     echo -e "${BOLD}${CYAN}Host management:${RESET}"
     echo -e "────────────────────────────────────────"
@@ -173,7 +190,7 @@ show_detailed_help() {
     echo ""
     echo -e "${BOLD}${CYAN}Requirements:${RESET}"
     echo -e "────────────────────────────────────────"
-    echo -e "  • toilet (for ASCII art): ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
+    echo -e "  • toilet (ASCII art): ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
     echo -e "  • figlet (fallback): ${GREEN}sudo apt install figlet${RESET}"
     echo ""
     echo -e "${BOLD}${CYAN}Examples:${RESET}"
@@ -293,11 +310,20 @@ show_ssh_help() {
 # Note: Menu display functions removed - now using show_arrow_menu from lib/menu-helpers.sh
 
 # Als --help of help wordt meegegeven
-if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+if [[ "${1:-}" == "--usage" ]]; then
+    show_usage_short
+    exit 0
+elif [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     show_help
     exit 0
 elif [[ "${1:-}" == "help" ]]; then
     show_detailed_help
+    exit 0
+fi
+
+# If stdin is not a TTY and no args were provided, print concise usage and exit
+if [[ ! -t 0 && $# -eq 0 ]]; then
+    show_usage_short
     exit 0
 fi
 

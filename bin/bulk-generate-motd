@@ -417,6 +417,9 @@ while true; do
         exit 0
     fi
 
+    # Initialize failed_hosts array (used by retry option)
+    failed_hosts=()
+
     # Bulk deploy option
     if [[ $generated -gt 0 ]]; then
         echo -e "${BOLD}${CYAN}Step 3: Deployment${RESET}"

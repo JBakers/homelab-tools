@@ -57,6 +57,22 @@ show_help() {
     echo ""
 }
 
+# Confirmation prompt
+# Args: $1 = prompt message
+# Returns: 0 if confirmed (y/Y), 1 otherwise
+confirm_action() {
+    local prompt="${1:-Are you sure?}"
+    local response
+    
+    read -rp "$(echo -e "${YELLOW}${prompt} (y/N): ${RESET}")" response
+    
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Initialize SSH config structure
 init_ssh_config() {
     if [[ ! -d "$HOME/.ssh" ]]; then
@@ -552,7 +568,10 @@ host_menu() {
         )
         
         local choice
-        if ! choice=$(show_arrow_menu "📋 Host Options" "${options[@]}"); then
+        show_arrow_menu "📋 Host Options" "${options[@]}"
+        choice="$MENU_RESULT"
+        
+        if [[ "$choice" == "-1" ]]; then
             return 0
         fi
         
@@ -623,12 +642,6 @@ backup_ssh_config_timestamped() {
 
 # Batch delete hosts
 batch_delete_hosts() {
-    clear
-    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║              🗑️  Batch Delete Hosts                      ║"
-    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
-    echo ""
-    
     local hosts
     hosts=$(get_all_hosts)
     
@@ -638,31 +651,144 @@ batch_delete_hosts() {
         return 0
     fi
     
-    echo -e "${BOLD}Enter host names to delete (space-separated):${RESET}"
-    echo -e "${DIM}Example: pihole jellyfin proxmox${RESET}"
-    echo ""
-    read -r -p "> " input
+    # Build host array
+    local -a host_array=()
+    local -a selected=()
+    while IFS= read -r host; do
+        host_array+=("$host")
+        selected+=(0)  # 0 = not selected, 1 = selected
+    done <<< "$hosts"
     
-    if [[ -z "$input" ]]; then
+    local current=0
+    local total=${#host_array[@]}
+    
+    # Interactive checkbox menu
+    while true; do
+        clear
+        echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+        echo -e "║              🗑️  Batch Delete Hosts                      ║"
+        echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+        echo ""
+        echo -e "${DIM}↑/↓ Navigate  │  Space: Toggle  │  Enter: Confirm  │  q: Cancel${RESET}"
+        echo ""
+        
+        # Count selected
+        local selected_count=0
+        for s in "${selected[@]}"; do
+            if [[ $s -eq 1 ]]; then
+                selected_count=$((selected_count + 1))
+            fi
+        done
+        
+        echo -e "${BOLD}Select hosts to delete:${RESET} ${YELLOW}($selected_count selected)${RESET}"
+        echo ""
+        
+        # Display hosts with checkboxes
+        for i in "${!host_array[@]}"; do
+            local checkbox
+            if [[ ${selected[$i]} -eq 1 ]]; then
+                checkbox="${RED}[x]${RESET}"
+            else
+                checkbox="[ ]"
+            fi
+            
+            if [[ $i -eq $current ]]; then
+                echo -e "  ${CYAN}►${RESET} $checkbox ${BOLD}${host_array[$i]}${RESET}"
+            else
+                echo -e "    $checkbox ${host_array[$i]}"
+            fi
+        done
+        
+        echo ""
+        
+        # Read key
+        local key
+        IFS= read -rsn1 key < /dev/tty 2>/dev/null || read -rsn1 key
+        
+        case "$key" in
+            $'\x1b')  # Escape sequence
+                read -rsn2 -t 0.1 key2 < /dev/tty 2>/dev/null || read -rsn2 -t 0.1 key2
+                case "$key2" in
+                    '[A')  # Up arrow
+                        if [[ $current -gt 0 ]]; then
+                            current=$((current - 1))
+                        fi
+                        ;;
+                    '[B')  # Down arrow
+                        if [[ $current -lt $((total - 1)) ]]; then
+                            current=$((current + 1))
+                        fi
+                        ;;
+                esac
+                ;;
+            ' ')  # Space - toggle selection
+                if [[ ${selected[$current]} -eq 0 ]]; then
+                    selected[$current]=1
+                else
+                    selected[$current]=0
+                fi
+                ;;
+            'j')  # Vim down
+                if [[ $current -lt $((total - 1)) ]]; then
+                    current=$((current + 1))
+                fi
+                ;;
+            'k')  # Vim up
+                if [[ $current -gt 0 ]]; then
+                    current=$((current - 1))
+                fi
+                ;;
+            'a'|'A')  # Select all
+                for i in "${!selected[@]}"; do
+                    selected[$i]=1
+                done
+                ;;
+            'n'|'N')  # Select none
+                for i in "${!selected[@]}"; do
+                    selected[$i]=0
+                done
+                ;;
+            'q'|'Q')  # Quit
+                return 0
+                ;;
+            '')  # Enter - confirm
+                break
+                ;;
+        esac
+    done
+    
+    # Build list of hosts to delete
+    local -a hosts_to_delete=()
+    for i in "${!host_array[@]}"; do
+        if [[ ${selected[$i]} -eq 1 ]]; then
+            hosts_to_delete+=("${host_array[$i]}")
+        fi
+    done
+    
+    if [[ ${#hosts_to_delete[@]} -eq 0 ]]; then
+        echo -e "${YELLOW}No hosts selected${RESET}"
+        sleep 1
         return 0
     fi
     
-    read -ra hosts_to_delete <<< "$input"
-    
+    # Show confirmation
+    clear
+    echo -e "${BOLD}${RED}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║              ⚠️  Confirm Deletion                        ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-    echo -e "${YELLOW}─────────────────────────────────────────────────────────${RESET}"
-    echo -e "${BOLD}Hosts to delete:${RESET}"
+    echo -e "${BOLD}The following ${#hosts_to_delete[@]} host(s) will be deleted:${RESET}"
+    echo ""
     for host in "${hosts_to_delete[@]}"; do
-        if host_exists "$host"; then
-            echo -e "  ${RED}•${RESET} $host"
-        else
-            echo -e "  ${DIM}• $host (not found)${RESET}"
-        fi
+        echo -e "  ${RED}✗${RESET} $host"
     done
+    echo ""
     echo -e "${YELLOW}─────────────────────────────────────────────────────────${RESET}"
     echo ""
     
-    if ! confirm_action "Delete ${#hosts_to_delete[@]} host(s)?"; then
+    read -rp "$(echo -e "${RED}${BOLD}Type 'DELETE' to confirm: ${RESET}")" confirm
+    
+    if [[ "$confirm" != "DELETE" ]]; then
         echo -e "${YELLOW}✗ Cancelled${RESET}"
         sleep 1
         return 0
@@ -688,7 +814,8 @@ batch_delete_hosts() {
             ' "$SSH_CONFIG" > "${SSH_CONFIG}.tmp"
             
             mv "${SSH_CONFIG}.tmp" "$SSH_CONFIG"
-            ((deleted++))
+            deleted=$((deleted + 1))
+            echo -e "  ${GREEN}✓${RESET} Deleted: $host"
         fi
     done
     
@@ -714,7 +841,10 @@ bulk_operations_menu() {
         )
         
         local choice
-        if ! choice=$(show_arrow_menu "📦 Bulk Operations" "${options[@]}"); then
+        show_arrow_menu "📦 Bulk Operations" "${options[@]}"
+        choice="$MENU_RESULT"
+        
+        if [[ "$choice" == "-1" ]]; then
             return 0
         fi
         
@@ -750,7 +880,10 @@ interactive_menu() {
         )
         
         local choice
-        if ! choice=$(show_arrow_menu "$menu_title" "${options[@]}"); then
+        show_arrow_menu "$menu_title" "${options[@]}"
+        choice="$MENU_RESULT"
+        
+        if [[ "$choice" == "-1" ]]; then
             clear
             echo -e "${GREEN}✓ Goodbye!${RESET}"
             exit 0
@@ -779,10 +912,11 @@ interactive_menu() {
                 host_array+=("← Back")
                 
                 local host_choice
-                if host_choice=$(show_arrow_menu "📋 Select Host" "${host_array[@]}"); then
-                    if [[ $host_choice -lt ${#host_array[@]}-1 ]]; then
-                        host_menu "${host_array[$host_choice]}"
-                    fi
+                show_arrow_menu "📋 Select Host" "${host_array[@]}"
+                host_choice="$MENU_RESULT"
+                
+                if [[ "$host_choice" != "-1" ]] && [[ $host_choice -lt $((${#host_array[@]}-1)) ]]; then
+                    host_menu "${host_array[$host_choice]}"
                 fi
                 ;;
             2) search_hosts ;;

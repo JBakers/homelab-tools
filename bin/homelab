@@ -18,12 +18,13 @@ LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
 source "$LIB_DIR/menu-helpers.sh"
 source "$LIB_DIR/version.sh"
 
-# Colors (from menu-helpers.sh, but keep for backwards compat)
+# Colors
 CYAN="$MENU_CYAN"
 GREEN="$MENU_GREEN"
 YELLOW="$MENU_YELLOW"
 RED="$MENU_RED"
 BOLD="$MENU_BOLD"
+DIM="$MENU_DIM"
 RESET="$MENU_RESET"
 
 # Fallback simple menu (numbered) for terminals where arrow navigation fails.
@@ -118,191 +119,451 @@ wait_for_continue() {
 
 show_usage_short() {
     echo -e "homelab ${HLT_VERSION_DISPLAY}\n"
+    echo "Quick Start:"
+    echo "    generate-motd pihole   Create MOTD for Pi-hole"
+    echo "    deploy-motd pihole     Deploy to host"
+    echo "    ssh pihole             See your MOTD!"
+    echo ""
     echo "Commands:"
-    echo "    generate-motd        Create a MOTD template"
-    echo "    bulk-generate-motd   Generate MOTDs for all hosts"
-    echo "    deploy-motd          Deploy a template to a host"
-    echo "    undeploy-motd        Remove deployed MOTDs"
-    echo "    list-templates       List / status / preview templates"
-    echo "    delete-template      Delete a template"
-    echo "    edit-hosts           Manage SSH config"
-    echo "    copykey              Distribute SSH keys"
-    echo "    cleanup-keys         Clean SSH known_hosts\n"
-    echo "Usage:"
-    echo "    homelab              Interactive menu"
-    echo "    homelab help         Detailed help"
-    echo "    homelab --usage      Concise help (this)"
-    echo "    <command> --help     Command-specific help"
+    echo "    homelab                Interactive menu (recommended)"
+    echo "    homelab help           Show full help"
+    echo "    <command> --help       Command-specific help"
 }
 
 # Short help overview
 show_help() {
+    clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗${RESET}"
-    echo -e "${BOLD}${CYAN}║         🏠 Homelab Management Tools ${HLT_VERSION_DISPLAY}            ║${RESET}"
+    echo -e "${BOLD}${CYAN}║         🏠 Homelab Tools ${HLT_VERSION_DISPLAY}                       ║${RESET}"
     echo -e "${BOLD}${CYAN}╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-    echo -e "${BOLD}${CYAN}Available commands:${RESET}"
-    echo -e "    ${YELLOW}generate-motd${RESET}         Generate MOTD for a service"
-    echo -e "    ${YELLOW}bulk-generate-motd${RESET}    Generate MOTDs for all hosts"
-    echo -e "    ${YELLOW}deploy-motd${RESET}           Deploy MOTD to container"
-    echo -e "    ${YELLOW}undeploy-motd${RESET}         Remove deployed MOTDs"
-    echo -e "    ${YELLOW}delete-template${RESET}       Delete MOTD template"
-    echo -e "    ${YELLOW}list-templates${RESET}        Show all MOTD templates"
-    echo -e "    ${YELLOW}cleanup-keys${RESET}          Remove old SSH keys"
-    echo -e "    ${YELLOW}edit-hosts${RESET}            Edit SSH configuration"
-    echo -e "    ${YELLOW}copykey${RESET}               Distribute SSH keys"
+    echo -e "${BOLD}${GREEN}Quick Start:${RESET}"
+    echo -e "  ${CYAN}1.${RESET} generate-motd pihole   → Create MOTD template"
+    echo -e "  ${CYAN}2.${RESET} deploy-motd pihole     → Deploy to host"
+    echo -e "  ${CYAN}3.${RESET} ssh pihole             → See your MOTD!"
+    echo ""
+    echo -e "${BOLD}${CYAN}All Commands:${RESET}"
+    echo -e "  ${YELLOW}generate-motd${RESET}      Create MOTD for a service"
+    echo -e "  ${YELLOW}deploy-motd${RESET}        Deploy MOTD to host"
+    echo -e "  ${YELLOW}undeploy-motd${RESET}      Remove MOTD from host"
+    echo -e "  ${YELLOW}list-templates${RESET}     View/preview templates"
+    echo -e "  ${YELLOW}edit-hosts${RESET}         Manage SSH hosts"
+    echo -e "  ${YELLOW}copykey${RESET}            Distribute SSH keys"
+    echo -e "  ${YELLOW}cleanup-keys${RESET}       Remove stale host keys"
     echo ""
     echo -e "${BOLD}${CYAN}Usage:${RESET}"
-    echo -e "    ${GREEN}homelab${RESET}               Show interactive menu"
-    echo -e "    ${GREEN}homelab help${RESET}          Show detailed help"
-    echo -e "    ${GREEN}homelab --usage${RESET}       Concise help"
-    echo -e "    ${GREEN}<command> --help${RESET}     Show help for specific command"
+    echo -e "  ${GREEN}homelab${RESET}            Interactive menu (recommended)"
+    echo -e "  ${GREEN}homelab help${RESET}       This help"
+    echo -e "  ${GREEN}<cmd> --help${RESET}       Command-specific help"
     echo ""
-    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo -e "${DIM}GitHub: github.com/JBakers/homelab-tools${RESET}"
+    echo ""
 }
 
 # Gedetailleerde help
 show_detailed_help() {
+    clear
     echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗${RESET}"
-    echo -e "${BOLD}${CYAN}║         🏠 Homelab Tools - Detailed Help                   ║${RESET}"
+    echo -e "${BOLD}${CYAN}║         🏠 Homelab Tools - Full Guide                      ║${RESET}"
     echo -e "${BOLD}${CYAN}╚════════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-    echo -e "${BOLD}${CYAN}MOTD (Message of the Day) system:${RESET}"
-    echo -e "────────────────────────────────────────"
-    echo -e "Creates beautiful, dynamic login screens for your servers with:"
-    echo -e "  • Rainbow ASCII art (using toilet)"
-    echo -e "  • System information (hostname, IP, uptime)"
-    echo -e "  • Service-specific info (Docker, Pi-hole, etc.)"
-    echo -e "  • Clickable Web UI links"
+    echo -e "${BOLD}${GREEN}🚀 Quick Start${RESET}"
+    echo -e "  ${CYAN}1.${RESET} ${GREEN}generate-motd pihole${RESET}   Create a MOTD template"
+    echo -e "  ${CYAN}2.${RESET} ${GREEN}deploy-motd pihole${RESET}     Deploy to your host"
+    echo -e "  ${CYAN}3.${RESET} ${GREEN}ssh pihole${RESET}             Login and see your MOTD!"
     echo ""
-    echo -e "${BOLD}${YELLOW}Workflow:${RESET}"
-    echo -e "  1. ${GREEN}generate-motd <hostname>${RESET}  → Create template"
-    echo -e "  2. ${GREEN}deploy-motd <hostname>${RESET}    → Deploy to host"
-    echo -e "  3. ${GREEN}ssh <hostname>${RESET}            → See your MOTD"
+    echo -e "${BOLD}${CYAN}📝 MOTD Management${RESET}"
+    echo -e "  ${YELLOW}generate-motd${RESET} <host>    Create template (60+ auto-detected services)"
+    echo -e "  ${YELLOW}bulk-generate-motd${RESET}      Create for all hosts at once"
+    echo -e "  ${YELLOW}deploy-motd${RESET} <host>      Upload to remote host"
+    echo -e "  ${YELLOW}undeploy-motd${RESET} <host>    Remove from host (or --all)"
+    echo -e "  ${YELLOW}list-templates${RESET}          View templates (-s status, -v preview)"
+    echo -e "  ${YELLOW}delete-template${RESET}         Remove template files"
     echo ""
-    echo -e "${BOLD}${CYAN}Host management:${RESET}"
-    echo -e "────────────────────────────────────────"
-    echo -e "Your hosts are configured in ~/.ssh/config"
-    echo -e "All homelab tools use this for host access."
+    echo -e "${BOLD}${CYAN}🖥️  Configuration${RESET}"
+    echo -e "  ${YELLOW}edit-hosts${RESET}              Manage SSH hosts (add/edit/delete/bulk)"
+    echo -e "  ${YELLOW}edit-config${RESET}             Settings (domain suffix, IP detection)"
+    echo -e "  ${YELLOW}copykey${RESET}                 Distribute SSH key to all hosts"
+    echo -e "  ${YELLOW}cleanup-keys${RESET} <host>     Remove stale known_hosts entries"
     echo ""
-    echo -e "  ${GREEN}edit-hosts${RESET}     Edit your host configuration"
-    echo -e "  ${GREEN}copykey${RESET}        Distribute SSH keys to all hosts"
+    echo -e "${BOLD}${CYAN}💾 Backups${RESET}"
+    echo -e "  Access via: ${GREEN}homelab${RESET} → Backups"
+    echo -e "  View, archive, move or delete backup files"
     echo ""
-    echo -e "${BOLD}${CYAN}Requirements:${RESET}"
-    echo -e "────────────────────────────────────────"
-    echo -e "  • toilet (ASCII art): ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
-    echo -e "  • figlet (fallback): ${GREEN}sudo apt install figlet${RESET}"
+    echo -e "${BOLD}${CYAN}💡 Tips${RESET}"
+    echo -e "  • Use ${GREEN}homelab${RESET} for the interactive menu"
+    echo -e "  • Press ${YELLOW}q${RESET} to cancel any prompt"
+    echo -e "  • Navigate with ${YELLOW}↑↓${RESET} arrow keys or ${YELLOW}j/k${RESET}"
     echo ""
-    echo -e "${BOLD}${CYAN}Examples:${RESET}"
-    echo -e "────────────────────────────────────────"
-    echo -e "  ${GREEN}bulk-generate-motd${RESET}"
-    echo -e "    → Scan host list and generate MOTDs for all hosts"
+    echo -e "${DIM}GitHub: github.com/JBakers/homelab-tools${RESET}"
     echo ""
-    echo -e "  ${GREEN}generate-motd pihole${RESET}"
-    echo -e "    → Create template for Pi-hole server"
-    echo ""
-    echo -e "  ${GREEN}deploy-motd pihole${RESET}"
-    echo -e "    → Deploy MOTD to Pi-hole server"
-    echo ""
-    echo -e "  ${GREEN}cleanup-keys 192.168.1.30${RESET}"
-    echo -e "    → Remove old SSH keys for this IP"
-    echo ""
-    echo -e "${BOLD}${CYAN}More info:${RESET}"
-    echo -e "────────────────────────────────────────"
-    echo -e "  GitHub: https://github.com/JBakers/homelab-tools"
-    echo -e "  Each command: ${GREEN}<command> --help${RESET}"
-    echo ""
-    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 }
 
 # MOTD submenu help
 show_motd_help() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         📝 MOTD Tools - Help                              ║"
+    echo -e "║         📝 MOTD Management - Help                         ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-    echo -e "${BOLD}${CYAN}Available Commands:${RESET}"
+    echo -e "${BOLD}${GREEN}Workflow:${RESET}"
+    echo -e "  ${CYAN}1.${RESET} Generate  → Create template for a host"
+    echo -e "  ${CYAN}2.${RESET} Deploy    → Upload to remote host"
+    echo -e "  ${CYAN}3.${RESET} SSH login → See your MOTD!"
     echo ""
-    echo -e "${BOLD}1. Generate MOTD${RESET}"
-    echo -e "   Create a custom MOTD template for a single host."
-    echo -e "   Choose from multiple ASCII art styles or clean functional design."
-    echo -e "   ${GREEN}Usage:${RESET} Select option 1, enter hostname (e.g., pihole)"
+    echo -e "${BOLD}${CYAN}Menu Options:${RESET}"
+    echo -e "  ${YELLOW}Generate${RESET}          Create MOTD for one host"
+    echo -e "  ${YELLOW}Bulk Generate${RESET}     Create for all hosts at once"
+    echo -e "  ${YELLOW}Deploy${RESET}            Upload template to host"
+    echo -e "  ${YELLOW}Undeploy${RESET}          Remove MOTD from host"
+    echo -e "  ${YELLOW}List Templates${RESET}    View, preview or check status"
+    echo -e "  ${YELLOW}Delete Templates${RESET}  Remove template files"
     echo ""
-    echo -e "${BOLD}2. Bulk Generate${RESET}"
-    echo -e "   Generate MOTDs for all hosts in your SSH config at once."
-    echo -e "   Choose Default or ASCII style, then Interactive or Smart-detect mode."
-    echo -e "   ${GREEN}Usage:${RESET} Select option 2, follow the prompts"
-    echo ""
-    echo -e "${BOLD}3. Deploy MOTD${RESET}"
-    echo -e "   Upload a generated template to a remote host via SSH."
-    echo -e "   The MOTD will be shown when you log in to that host."
-    echo -e "   ${GREEN}Usage:${RESET} Select option 3, enter hostname"
-    echo ""
-    echo -e "${BOLD}4. List Templates${RESET}"
-    echo -e "   View all generated MOTD templates with details."
-    echo -e "   Shows hostname, last modified date, and file size."
-    echo -e "   ${GREEN}Usage:${RESET} Select option 4"
-    echo ""
-    echo -e "${BOLD}5. Delete Template${RESET}"
-    echo -e "   Remove a MOTD template you no longer need."
-    echo -e "   Interactive selection from list of templates."
-    echo -e "   ${GREEN}Usage:${RESET} Select option 5, choose template to delete"
-    echo ""
-    echo -e "${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo -e "${BOLD}${CYAN}Tips:${RESET}"
+    echo -e "  • 60+ services auto-detected (Pi-hole, Plex, *arr, etc.)"
+    echo -e "  • Choose clean design or ASCII art styles"
+    echo -e "  • Templates saved in ~/.local/share/homelab-tools/templates/"
     echo ""
     wait_for_continue
+}
+
+# Backup Management Menu
+backup_management_menu() {
+    while true; do
+        clear
+        echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+        echo -e "║         💾 Backup Management                              ║"
+        echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+        echo ""
+        
+        # Find all backups
+        local -a backup_files=()
+        local -a backup_types=()
+        local -a backup_sizes=()
+        
+        # .bashrc backups
+        while IFS= read -r -d '' file; do
+            backup_files+=("$file")
+            backup_types+=("bashrc")
+            backup_sizes+=("$(du -h "$file" 2>/dev/null | cut -f1)")
+        done < <(find "$HOME" -maxdepth 1 -name ".bashrc.backup*" -type f -print0 2>/dev/null)
+        
+        # homelab-tools backups in home (renamed from legacy)
+        while IFS= read -r -d '' file; do
+            backup_files+=("$file")
+            backup_types+=("home")
+            backup_sizes+=("$(du -sh "$file" 2>/dev/null | cut -f1)")
+        done < <(find "$HOME" -maxdepth 1 -name "homelab-tools.backup*" -type d -print0 2>/dev/null)
+        
+        # /opt backups
+        while IFS= read -r -d '' file; do
+            backup_files+=("$file")
+            backup_types+=("install")
+            backup_sizes+=("$(du -sh "$file" 2>/dev/null | cut -f1)")
+        done < <(find /opt -maxdepth 1 -name "homelab-tools.backup*" -type d -print0 2>/dev/null)
+        
+        # SSH config backups
+        while IFS= read -r -d '' file; do
+            backup_files+=("$file")
+            backup_types+=("ssh")
+            backup_sizes+=("$(du -h "$file" 2>/dev/null | cut -f1)")
+        done < <(find "$HOME/.ssh" -maxdepth 1 -name "config.backup*" -type f -print0 2>/dev/null)
+        
+        # Template exports
+        while IFS= read -r -d '' file; do
+            backup_files+=("$file")
+            backup_types+=("export")
+            backup_sizes+=("$(du -h "$file" 2>/dev/null | cut -f1)")
+        done < <(find "$HOME" -maxdepth 1 -name "ssh-hosts-export-*.txt" -type f -print0 2>/dev/null)
+        
+        local total=${#backup_files[@]}
+        
+        if [[ $total -eq 0 ]]; then
+            echo -e "${YELLOW}No backups found${RESET}"
+            echo ""
+            echo -e "${DIM}Backups are created automatically when:${RESET}"
+            echo -e "  - Installing/updating homelab-tools"
+            echo -e "  - Editing hosts (SSH config backup)"
+            echo -e "  - Making changes to .bashrc"
+            echo ""
+            read -rp "$(echo -e "${CYAN}Press Enter to go back...${RESET}")"
+            return 0
+        fi
+        
+        # Calculate total size
+        local total_size
+        total_size=$(du -ch "${backup_files[@]}" 2>/dev/null | tail -1 | cut -f1)
+        
+        echo -e "${BOLD}Found ${GREEN}$total${RESET}${BOLD} backup(s) (Total: ${YELLOW}$total_size${RESET}${BOLD})${RESET}"
+        echo ""
+        echo -e "${DIM}─────────────────────────────────────────────────────────${RESET}"
+        echo ""
+        
+        # Display backups grouped by type
+        echo -e "${BOLD}${CYAN}bashrc${RESET} ${DIM}(~/.bashrc.backup*)${RESET}"
+        local bashrc_count=0
+        for i in "${!backup_files[@]}"; do
+            if [[ "${backup_types[$i]}" == "bashrc" ]]; then
+                local name
+                name=$(basename "${backup_files[$i]}")
+                echo -e "  ${GREEN}•${RESET} $name ${DIM}(${backup_sizes[$i]})${RESET}"
+                bashrc_count=$((bashrc_count + 1))
+            fi
+        done
+        [[ $bashrc_count -eq 0 ]] && echo -e "  ${DIM}(none)${RESET}"
+        echo ""
+        
+        echo -e "${BOLD}${CYAN}SSH Config${RESET} ${DIM}(~/.ssh/config.backup*)${RESET}"
+        local ssh_count=0
+        for i in "${!backup_files[@]}"; do
+            if [[ "${backup_types[$i]}" == "ssh" ]]; then
+                local name
+                name=$(basename "${backup_files[$i]}")
+                echo -e "  ${GREEN}•${RESET} $name ${DIM}(${backup_sizes[$i]})${RESET}"
+                ssh_count=$((ssh_count + 1))
+            fi
+        done
+        [[ $ssh_count -eq 0 ]] && echo -e "  ${DIM}(none)${RESET}"
+        echo ""
+        
+        echo -e "${BOLD}${CYAN}HLT Install${RESET} ${DIM}(/opt/homelab-tools.backup*)${RESET}"
+        local install_count=0
+        for i in "${!backup_files[@]}"; do
+            if [[ "${backup_types[$i]}" == "install" ]]; then
+                local name
+                name=$(basename "${backup_files[$i]}")
+                echo -e "  ${GREEN}•${RESET} $name ${DIM}(${backup_sizes[$i]})${RESET}"
+                install_count=$((install_count + 1))
+            fi
+        done
+        [[ $install_count -eq 0 ]] && echo -e "  ${DIM}(none)${RESET}"
+        echo ""
+        
+        echo -e "${BOLD}${CYAN}Home Backups${RESET} ${DIM}(~/homelab-tools.backup*)${RESET}"
+        local home_count=0
+        for i in "${!backup_files[@]}"; do
+            if [[ "${backup_types[$i]}" == "home" ]]; then
+                local name
+                name=$(basename "${backup_files[$i]}")
+                echo -e "  ${GREEN}•${RESET} $name ${DIM}(${backup_sizes[$i]})${RESET}"
+                home_count=$((home_count + 1))
+            fi
+        done
+        [[ $home_count -eq 0 ]] && echo -e "  ${DIM}(none)${RESET}"
+        echo ""
+        
+        echo -e "${DIM}─────────────────────────────────────────────────────────${RESET}"
+        echo ""
+        
+        # Menu options
+        choose_menu "💾 Backup Actions" \
+            "Archive all|Create .tar.gz of all backups" \
+            "Move to folder|Move backups to custom location" \
+            "Delete all|Remove all backup files" \
+            "Delete by type|Remove specific backup types" \
+            "BACK"
+        local choice="$MENU_RESULT"
+        
+        case "$choice" in
+            0)
+                # Archive all
+                clear
+                echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+                echo -e "║         📦 Archive Backups                                ║"
+                echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+                echo ""
+                
+                local default_archive="$HOME/homelab-backups-$(date +%Y%m%d-%H%M%S).tar.gz"
+                echo -e "${BOLD}Archive destination:${RESET}"
+                echo -e "${DIM}Default: $default_archive${RESET}"
+                echo ""
+                read -rp "$(echo -e "${CYAN}Path (Enter for default, q to cancel): ${RESET}")" archive_path
+                
+                if [[ "$archive_path" == "q" ]] || [[ "$archive_path" == "Q" ]]; then
+                    continue
+                fi
+                
+                archive_path="${archive_path:-$default_archive}"
+                
+                echo ""
+                echo -e "${YELLOW}→${RESET} Creating archive..."
+                
+                if tar -czf "$archive_path" "${backup_files[@]}" 2>/dev/null; then
+                    echo -e "${GREEN}✓${RESET} Archive created: $archive_path"
+                    echo -e "  Size: $(du -h "$archive_path" | cut -f1)"
+                else
+                    echo -e "${RED}✗${RESET} Failed to create archive"
+                fi
+                echo ""
+                read -rp "$(echo -e "${CYAN}Press Enter to continue...${RESET}")"
+                ;;
+            1)
+                # Move to folder
+                clear
+                echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+                echo -e "║         📁 Move Backups                                   ║"
+                echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+                echo ""
+                
+                echo -e "${BOLD}Enter destination folder:${RESET}"
+                echo -e "${DIM}Example: ~/backup-archive or /mnt/nas/backups${RESET}"
+                echo ""
+                read -rp "$(echo -e "${CYAN}Path (q to cancel): ${RESET}")" dest_folder
+                
+                if [[ "$dest_folder" == "q" ]] || [[ "$dest_folder" == "Q" ]] || [[ -z "$dest_folder" ]]; then
+                    continue
+                fi
+                
+                # Expand ~ if used
+                dest_folder="${dest_folder/#\~/$HOME}"
+                
+                if [[ ! -d "$dest_folder" ]]; then
+                    read -rp "$(echo -e "${YELLOW}Create directory $dest_folder? (y/N): ${RESET}")" create_dir
+                    if [[ "$create_dir" =~ ^[Yy]$ ]]; then
+                        mkdir -p "$dest_folder" || { echo -e "${RED}✗ Failed to create directory${RESET}"; sleep 2; continue; }
+                    else
+                        continue
+                    fi
+                fi
+                
+                echo ""
+                local moved=0
+                for file in "${backup_files[@]}"; do
+                    if mv "$file" "$dest_folder/" 2>/dev/null; then
+                        echo -e "${GREEN}✓${RESET} Moved: $(basename "$file")"
+                        moved=$((moved + 1))
+                    else
+                        echo -e "${RED}✗${RESET} Failed: $(basename "$file") ${DIM}(may need sudo)${RESET}"
+                    fi
+                done
+                
+                echo ""
+                echo -e "${GREEN}✓${RESET} Moved $moved backup(s) to $dest_folder"
+                read -rp "$(echo -e "${CYAN}Press Enter to continue...${RESET}")"
+                ;;
+            2)
+                # Delete all
+                clear
+                echo -e "${BOLD}${RED}╔══════════════════════════════════════════════════════════╗"
+                echo -e "║         ⚠️  Delete ALL Backups                           ║"
+                echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+                echo ""
+                echo -e "${BOLD}The following $total backup(s) will be deleted:${RESET}"
+                echo ""
+                for file in "${backup_files[@]}"; do
+                    echo -e "  ${RED}✗${RESET} $file"
+                done
+                echo ""
+                
+                read -rp "$(echo -e "${RED}${BOLD}Type 'DELETE' to confirm: ${RESET}")" confirm
+                
+                if [[ "$confirm" == "DELETE" ]]; then
+                    local deleted=0
+                    for file in "${backup_files[@]}"; do
+                        if rm -rf "$file" 2>/dev/null; then
+                            deleted=$((deleted + 1))
+                        else
+                            # Try with sudo for /opt backups
+                            if sudo rm -rf "$file" 2>/dev/null; then
+                                deleted=$((deleted + 1))
+                            fi
+                        fi
+                    done
+                    echo ""
+                    echo -e "${GREEN}✓${RESET} Deleted $deleted backup(s)"
+                else
+                    echo -e "${YELLOW}✗ Cancelled${RESET}"
+                fi
+                sleep 2
+                ;;
+            3)
+                # Delete by type
+                clear
+                echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+                echo -e "║         🗑️  Delete by Type                               ║"
+                echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+                echo ""
+                
+                choose_menu "Select type to delete" \
+                    "bashrc backups|~/.bashrc.backup* ($bashrc_count files)" \
+                    "SSH config backups|~/.ssh/config.backup* ($ssh_count files)" \
+                    "HLT install backups|/opt/*.backup* ($install_count folders)" \
+                    "Home backups|~/homelab-tools.backup* ($home_count folders)" \
+                    "BACK"
+                local type_choice="$MENU_RESULT"
+                
+                local type_to_delete=""
+                case "$type_choice" in
+                    0) type_to_delete="bashrc" ;;
+                    1) type_to_delete="ssh" ;;
+                    2) type_to_delete="install" ;;
+                    3) type_to_delete="home" ;;
+                    *) continue ;;
+                esac
+                
+                # Collect files of this type
+                local -a files_to_delete=()
+                for i in "${!backup_files[@]}"; do
+                    if [[ "${backup_types[$i]}" == "$type_to_delete" ]]; then
+                        files_to_delete+=("${backup_files[$i]}")
+                    fi
+                done
+                
+                if [[ ${#files_to_delete[@]} -eq 0 ]]; then
+                    echo -e "${YELLOW}No backups of this type${RESET}"
+                    sleep 1
+                    continue
+                fi
+                
+                echo ""
+                echo -e "${BOLD}Delete ${#files_to_delete[@]} $type_to_delete backup(s)?${RESET}"
+                read -rp "$(echo -e "${YELLOW}Confirm (y/N): ${RESET}")" confirm
+                
+                if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                    local deleted=0
+                    for file in "${files_to_delete[@]}"; do
+                        if rm -rf "$file" 2>/dev/null || sudo rm -rf "$file" 2>/dev/null; then
+                            echo -e "${GREEN}✓${RESET} Deleted: $(basename "$file")"
+                            deleted=$((deleted + 1))
+                        fi
+                    done
+                    echo ""
+                    echo -e "${GREEN}✓${RESET} Deleted $deleted backup(s)"
+                else
+                    echo -e "${YELLOW}✗ Cancelled${RESET}"
+                fi
+                sleep 2
+                ;;
+            -1|4)
+                return 0
+                ;;
+        esac
+    done
 }
 
 # Configuration submenu help
 show_config_help() {
     clear
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         ⚙️  Configuration - Help                           ║"
+    echo -e "║         🖥️  Configuration - Help                          ║"
     echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
     echo ""
-    echo -e "${BOLD}${CYAN}Available Commands:${RESET}"
+    echo -e "${BOLD}${CYAN}Menu Options:${RESET}"
+    echo -e "  ${YELLOW}Manage Hosts${RESET}        Add, edit, delete SSH hosts"
+    echo -e "  ${YELLOW}Distribute Key${RESET}      Copy SSH key to all hosts"
+    echo -e "  ${YELLOW}Cleanup Keys${RESET}        Remove stale known_hosts entries"
+    echo -e "  ${YELLOW}Settings${RESET}            Domain suffix & IP detection"
+    echo -e "  ${YELLOW}Uninstall${RESET}           Remove homelab-tools"
     echo ""
-    echo -e "${BOLD}1. Edit Hosts${RESET}"
-    echo -e "   Manage your host list via SSH config file (~/.ssh/config)."
-    echo -e "   Add, edit, or remove host entries for your homelab servers."
-    echo -e "   ${GREEN}Usage:${RESET} Select option 1, edit in your preferred editor"
+    echo -e "${BOLD}${CYAN}Host Management Features:${RESET}"
+    echo -e "  • Add new hosts with guided wizard"
+    echo -e "  • Edit existing host settings"
+    echo -e "  • Search and filter hosts"
+    echo -e "  • Bulk operations (export, backup, batch delete)"
     echo ""
-    echo -e "${BOLD}2. Edit Settings${RESET}"
-    echo -e "   Configure homelab tools global settings."
-    echo -e "   Set domain suffix (.home, .local) and IP detection method."
-    echo -e "   ${GREEN}Usage:${RESET} Select option 2, enter new settings"
-    echo ""
-    echo -e "${BOLD}3. Uninstall${RESET}"
-    echo -e "   Remove homelab-tools from your system."
-    echo -e "   Your templates and SSH config will be preserved."
-    echo -e "   ${GREEN}Usage:${RESET} Select option 3, confirm uninstall"
-    echo ""
-    echo -e "${CYAN}════════════════════════════════════════════════════════════${RESET}"
-    echo ""
-    wait_for_continue
-}
-
-# SSH submenu help
-show_ssh_help() {
-    clear
-    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-    echo -e "║         🔑 SSH Tools - Help                               ║"
-    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
-    echo ""
-    echo -e "${BOLD}${CYAN}Available Commands:${RESET}"
-    echo ""
-    echo -e "${BOLD}1. Copy SSH Key${RESET}"
-    echo -e "   Distribute your SSH public key to all hosts in your config."
-    echo -e "   Enables passwordless SSH login for easier management."
-    echo -e "   ${GREEN}Usage:${RESET} Select option 1, confirm distribution"
-    echo ""
-    echo -e "${BOLD}2. Cleanup Old Keys${RESET}"
-    echo -e "   Remove outdated or conflicting SSH host keys."
-    echo -e "   Useful when hosts are rebuilt or IPs change."
-    echo -e "   ${GREEN}Usage:${RESET} Select option 2, confirm cleanup"
-    echo ""
-    echo -e "${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo -e "${BOLD}${CYAN}SSH Key Tips:${RESET}"
+    echo -e "  • Use ${GREEN}copykey${RESET} after adding new hosts"
+    echo -e "  • Use ${GREEN}cleanup-keys${RESET} after rebuilding containers"
     echo ""
     wait_for_continue
 }
@@ -330,10 +591,10 @@ fi
 # Interactief menu met arrow navigation
 while true; do
     # Show main menu with arrow navigation (version from lib/version.sh)
-    choose_menu "🏠 Homelab Management Tools ${HLT_VERSION_DISPLAY}" \
-        "📝 MOTD Tools|Generate/deploy/list MOTDs" \
-        "⚙️  Configuration|Edit hosts & settings" \
-        "🔑 SSH Management|Keys & cleanup" \
+    choose_menu "🏠 Homelab Tools ${HLT_VERSION_DISPLAY}" \
+        "📝 MOTD Management|Generate, deploy & manage MOTDs" \
+        "🖥️  Configuration|Hosts, SSH keys & settings" \
+        "💾 Backups|View & manage backup files" \
         "HELP" "QUIT"
     result="$MENU_RESULT"
 
@@ -341,25 +602,70 @@ while true; do
         0)
             # MOTD submenu
             while true; do
-                choose_menu "📝 MOTD Tools" \
-                    "Generate MOTD|Create template for one host" \
-                    "Bulk Generate|Create for all hosts" \
-                    "Deploy MOTD|Upload to host" \
-                    "Undeploy MOTD|Remove from host" \
-                    "List Templates|View all templates" \
-                    "Delete Template|Remove a template" \
+                choose_menu "📝 MOTD Management" \
+                    "✨ Generate|Create MOTD for one host" \
+                    "📦 Bulk Generate|Create for all hosts at once" \
+                    "🚀 Deploy|Upload MOTD to remote host" \
+                    "➖ Undeploy|Remove MOTD from host" \
+                    "📋 List Templates|View & preview templates" \
+                    "❌ Delete Templates|Remove template files" \
                     "HELP" "BACK"
                 submenu_result="$MENU_RESULT"
 
                 case "$submenu_result" in
                     0)
-                        # Generate MOTD
+                        # Generate MOTD - with host selection
                         clear
                         echo ""
-                        if read_input "Service name" service && [[ -n "$service" ]]; then
-                            generate-motd "$service"
+                        echo -e "${BOLD}Generate MOTD${RESET}"
+                        echo ""
+                        
+                        # Get list of hosts from SSH config
+                        ssh_config="$HOME/.ssh/config"
+                        hosts=()
+                        if [[ -f "$ssh_config" ]]; then
+                            mapfile -t hosts < <(grep "^Host " "$ssh_config" | awk '{print $2}' | grep -v '\*' | sort -u)
+                        fi
+                        
+                        if [[ ${#hosts[@]} -gt 0 ]]; then
+                            echo -e "${CYAN}Choose option:${RESET}"
+                            echo -e "  ${GREEN}1${RESET}) Select from existing hosts (${#hosts[@]} found)"
+                            echo -e "  ${GREEN}2${RESET}) Enter new service name"
                             echo ""
-                            wait_for_continue
+                            read -p "$(echo -e "${CYAN}Choice (1/2):${RESET} ")" gen_choice
+                            
+                            if [[ "$gen_choice" == "1" ]]; then
+                                # Build menu options from hosts
+                                host_options=()
+                                for host in "${hosts[@]}"; do
+                                    host_options+=("$host|Generate MOTD for $host")
+                                done
+                                host_options+=("BACK")
+                                
+                                choose_menu "Select Host" "${host_options[@]}"
+                                host_idx="$MENU_RESULT"
+                                
+                                if [[ $host_idx -ge 0 ]] && [[ $host_idx -lt ${#hosts[@]} ]]; then
+                                    selected_host="${hosts[$host_idx]}"
+                                    clear
+                                    generate-motd "$selected_host"
+                                    echo ""
+                                    wait_for_continue
+                                fi
+                            elif [[ "$gen_choice" == "2" ]]; then
+                                if read_input "Service name" service && [[ -n "$service" ]]; then
+                                    generate-motd "$service"
+                                    echo ""
+                                    wait_for_continue
+                                fi
+                            fi
+                        else
+                            # No hosts found, fall back to manual entry
+                            if read_input "Service name" service && [[ -n "$service" ]]; then
+                                generate-motd "$service"
+                                echo ""
+                                wait_for_continue
+                            fi
                         fi
                         ;;
                     1)
@@ -428,11 +734,13 @@ while true; do
             done
             ;;
         1)
-            # Configuration submenu
+            # Configuration submenu (now includes SSH)
             while true; do
-                choose_menu "⚙️  Configuration" \
-                    "Edit Hosts|Manage host list (~/.ssh/config)" \
-                    "Edit Settings|Configure homelab tools" \
+                choose_menu "🖥️  Configuration" \
+                    "📋 Manage Hosts|Add, edit, delete SSH hosts" \
+                    "🔑 Distribute SSH Key|Copy key to all hosts" \
+                    "🔓 Cleanup Host Keys|Remove stale known_hosts entries" \
+                    "⚙️  Settings|Domain suffix & IP detection" \
                     "🗑️  Uninstall|Remove homelab-tools" \
                     "HELP" "BACK"
                 submenu_result="$MENU_RESULT"
@@ -445,24 +753,41 @@ while true; do
                         # No wait_for_continue - has own menu
                         ;;
                     1)
+                        # Copy SSH Key
+                        clear
+                        copykey
+                        echo ""
+                        wait_for_continue
+                        ;;
+                    2)
+                        # Cleanup Old Keys
+                        clear
+                        echo ""
+                        if read_input "IP address or hostname" host && [[ -n "$host" ]]; then
+                            cleanup-keys "$host"
+                            echo ""
+                            wait_for_continue
+                        fi
+                        ;;
+                    3)
                         # Edit Settings
                         clear
                         edit-config
                         echo ""
                         wait_for_continue
                         ;;
-                    2)
+                    4)
                         # Uninstall
                         clear
                         echo ""
-                        echo -e "${RED}${BOLD}⚠️  Uninstall Homelab Tools${RESET}"
+                        echo -e "${YELLOW}${BOLD}⚠️  Uninstall Homelab Tools${RESET}"
                         echo ""
                         echo -e "This will remove homelab-tools from your system."
                         echo -e "Your templates and SSH config will be preserved."
                         echo ""
-                        echo -e "${YELLOW}Are you sure?${RESET}"
+                        echo -e "${CYAN}Are you sure?${RESET}"
                         echo ""
-                        echo -e "  ${YELLOW}1${RESET}) Yes, uninstall"
+                        echo -e "  ${GREEN}1${RESET}) Yes, uninstall"
                         echo -e "  ${YELLOW}2${RESET}) No, cancel"
                         echo ""
                         read -p "$(echo -e ${CYAN}Choice \(1/2\):${RESET} )" uninstall_choice
@@ -479,11 +804,11 @@ while true; do
                             exit 0
                         fi
                         ;;
-                    3)
+                    5)
                         # Help
                         show_config_help
                         ;;
-                    4|-1)
+                    6|-1)
                         # Back (selected or ESC)
                         break
                         ;;
@@ -491,42 +816,8 @@ while true; do
             done
             ;;
         2)
-            # SSH submenu
-            while true; do
-                choose_menu "🔑 SSH Tools" \
-                    "Copy SSH Key|Distribute key to hosts" \
-                    "Cleanup Old Keys|Remove outdated host keys" \
-                    "HELP" "BACK"
-                submenu_result="$MENU_RESULT"
-
-                case "$submenu_result" in
-                    0)
-                        # Copy SSH Key
-                        clear
-                        copykey
-                        echo ""
-                        wait_for_continue
-                        ;;
-                    1)
-                        # Cleanup Old Keys
-                        clear
-                        echo ""
-                        if read_input "IP address or hostname" host && [[ -n "$host" ]]; then
-                            cleanup-keys "$host"
-                            echo ""
-                            wait_for_continue
-                        fi
-                        ;;
-                    2)
-                        # Help
-                        show_ssh_help
-                        ;;
-                    3|-1)
-                        # Back (selected or ESC)
-                        break
-                        ;;
-                esac
-            done
+            # Backup Management
+            backup_management_menu
             ;;
         3)
             # Help

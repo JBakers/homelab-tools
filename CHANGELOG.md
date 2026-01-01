@@ -1,8 +1,44 @@
 # Changelog - Homelab Tools
 
-## v3.6.0-dev (In Development)
+## v3.6.2-dev (In Development)
 
-**Current development branch** - v3.6.0-dev.35 - Building on v3.5.0 release
+**Current development branch** - v3.6.2-dev.00 - Building on v3.6.1
+
+### ✨ New Features
+
+#### Menu Restructuring
+- SSH key management moved to Configuration submenu
+- Simplified help menus (`homelab --usage`, `--help`, `help`)
+- Generate MOTD: host selection from SSH config hosts
+
+#### MOTD Protection System
+- HLT markers in templates (`# === HLT-MOTD-START ===` / `# === HLT-MOTD-END ===`)
+- Deploy protection: detects existing MOTDs, offers replace/append/cancel
+- Undeploy protection: only removes HLT MOTDs, preserves third-party configs
+- Backup created before replacing non-HLT MOTDs
+
+#### Bulk Deploy Improvements
+- Visible output during deployment (was hidden causing hangs)
+- Failed hosts list with retry option
+- Compacter deploy output (less verbose)
+
+### 🐛 Bug Fixes
+- Fixed `local` outside function error in generate-motd menu
+- Fixed DIM variable undefined in deploy-motd and undeploy-motd
+- Fixed backslashes in prompts `\(y/N\)` → `(y/N)`
+- Removed debug connection prompts (auto-continue after 5s timeout)
+
+### 🧹 Cleanup
+- Removed legacy MOTD format detection (only HLT-MOTD-START marker now)
+- Removed ~/homelab-tools migration code from install.sh
+- Renamed "Legacy backups" to "Home Backups" in menu
+- Removed "backwards compat" comments
+
+---
+
+## v3.6.1 (1 January 2026)
+
+**Stable release** - Full-featured MOTD and SSH management
 
 ### ✨ New Features
 
@@ -12,26 +48,23 @@
 - `list-templates --view` - Interactive preview mode with arrow navigation
 - Deployment logging in `~/.local/share/homelab-tools/deploy-log`
 
-#### Developer Experience (dev.21-35)
-- `sync-dev.sh` - Quick sync workspace changes to /opt without git pull (dev.33)
-- Auto-bump patch version after dev.09 (3.6.0-dev.09 → 3.6.1-dev.00) (dev.35)
-- Exclude dev-only files from /opt installation (dev.34)
-- Exclude GitHub-only docs from /opt (CHANGELOG, CONTRIBUTING, SECURITY, QUICKSTART) (dev.35)
+#### Developer Experience
+- `sync-dev.sh` - Quick sync workspace changes to /opt without git pull
+- Auto-bump patch version after dev.09 (3.6.0-dev.09 → 3.6.1-dev.00)
+- Exclude dev-only files from /opt installation
 - Clean /opt structure: 15 → 11 essential files only
 
-#### Welcome Banner Enhancements (dev.28-31)
+#### Welcome Banner Enhancements
 - Special occasion messages (New Year, Christmas, Hanukkah, Halloween, Easter, July 4th)
-- Banner enabled by default in --non-interactive mode (dev.29)
-- Improved cleanup with standalone tip line detection (dev.30)
-- Increased cleanup line limit from 50 to 60 for banner with occasions (dev.31)
+- Banner enabled by default in --non-interactive mode
+- Improved cleanup with standalone tip line detection
 
-#### Enhanced generate-motd (dev.15-16)
+#### Enhanced generate-motd
 - Non-interactive mode for scripting: accepts Web UI choice + port via stdin
 - Creates minimal but functional templates from stdin input
 - Useful for automation and batch template generation
-- Translates remaining Dutch strings to English
 
-#### Enhanced edit-hosts (dev.13)
+#### Enhanced edit-hosts
 - Interactive host menu with arrow key navigation
 - Add new host wizard with validation (IP/hostname, port, username)
 - Host operations: view details, edit, delete, copy (with -copy1 suffix)
@@ -48,36 +81,76 @@
 - Centralized constants in `lib/constants.sh` with `UNSUPPORTED_SYSTEMS` array
 
 ### 🐛 Bug Fixes
-
-#### v3.6.0-dev.32-35 (Latest)
-- Fixed edit-hosts menu not showing due to clear conflict (dev.32)
-  - Removed pre-menu host list that conflicted with show_arrow_menu's clear()
-  - Host count now shown in menu title
-- Fixed sync-dev.sh and install.sh excludes (dev.33-35)
-  - Comprehensive exclude list for dev-only files
-  - Clean /opt with only essential production files
-
-#### v3.6.0-dev.26-31 (Banner fixes)
-- Fixed README for v3.6.0 release (dev.27)
-  - Updated version badge, removed dev warning
-  - Added tests badge (55 passed)
-  - Documented new commands and features
-- Fixed complete uninstall not removing banner (dev.30-31)
-  - Added standalone tip line detection to awk patterns
-  - Increased bashrc cleanup limit from 50 to 60 lines
-  - Banner with special occasions is ~51 lines
-- Fixed banner not installed with --non-interactive (dev.29)
-  - Changed default from 'n' to 'y' for banner prompt
-
-#### v3.6.0-dev.21-25 (Earlier fixes)
-- Fixed install.sh .bashrc escape codes (single quotes → echo -e)
+- Fixed edit-hosts menu not showing due to clear conflict
+- Fixed sync-dev.sh and install.sh excludes
+- Fixed complete uninstall not removing banner
+- Fixed banner not installed with --non-interactive
+- Fixed install.sh .bashrc escape codes
 - Fixed install.sh duplicate Homelab entries in .bashrc
 - Fixed test-runner.sh progress counter (72 tests, not 80)
-- All 72 tests now pass with 100% success rate
+- Fixed missing title arguments in edit-hosts show_arrow_menu calls
+- Fixed list-templates --view using wrong function
+- Fixed delete-template --help escape codes not displaying
 
-#### v3.6.0-dev.20
-- Fixed missing title arguments in edit-hosts show_arrow_menu calls (3 locations)
-  - Host Options menu, Bulk Operations menu, Select Host menu
+---
+
+## v3.5.0 (Released 2025-12-14)
+
+After v3.4.0 release, multiple critical bugs were discovered. Development was rolled back to the `develop` branch for systematic bugfixing before the next stable release.
+
+### 🐛 Bug Fixes
+
+#### Installation & Configuration
+- **dev.1** - Initial development build numbering system with bump-dev.sh
+- **dev.2** - Add run_sudo helper for root environments (container compatibility)
+- **dev.3** - Fix config.sh creation using temp file + proper sudo handling
+- **dev.4** - Fix templates directory ownership for actual user (not root)
+
+#### Bulk Generate & Loop Issues
+- **dev.5** - Remove conflicting stdin redirection in bulk-generate
+- **dev.6** - Replace `(())` arithmetic with `$(())`, fixes bulk-generate loop hang
+- **dev.11** - Replace all remaining `(())` arithmetic - fixes copykey & cleanup-keys loops
+
+#### Uninstall Improvements
+- **dev.7** - Improve bashrc cleanup + add backup removal option
+- **dev.8** - Simplify with numbered defaults (1/2) + fix backup removal
+- **dev.10** - Add remote MOTD removal option + fix menu borders
+
+#### MOTD Generation
+- **dev.9** - Remove duplicate help output + fix config write permissions + default hostname
+- **dev.12** - Fix grep exit code causing script hang with `set -e` (plex and others)
+- **dev.13** - Skip Home Assistant detection (Docker incompatible)
+- **dev.14** - Add global unsupported systems list for better service detection
+
+#### Installation & Migration
+- **dev.23** - Add VERSION file for centralized version management
+- **dev.23** - Add optional ASCII welcome banner with version info (HLT_BANNER=0 to disable)
+- **dev.23** - Convert all Dutch text to English in install.sh (complete)
+
+#### Security & Privacy
+- **dev.23** - Create SECURITY.md with security policy and responsible disclosure
+- **dev.23** - Add security warning to config.sh.example (DO NOT commit sensitive data)
+
+### ✨ New Features (dev.24)
+
+#### Interactive Menu System
+- **dev.24** - Fix arrow key navigation in xfce4-terminal (read from /dev/tty)
+- **dev.24** - Fix timeout handling with set -e (proper set +e around read)
+- **dev.24** - Add global MENU_RESULT variable to avoid subshell issues
+- **dev.24** - Add q=cancel support to all user input prompts
+- **dev.24** - Add wait_for_continue helper with q=back option
+
+#### Configuration Menu
+- **dev.24** - Add Uninstall option to Configuration menu
+- **dev.24** - Update Configuration help with Uninstall documentation
+
+#### Code Cleanup
+- **dev.24** - Fix all ShellCheck warnings (unused vars, non-constant source)
+- **dev.24** - Add shellcheck directives for false positives
+
+---
+
+## v3.4.0 (16 November 2025)
 - Fixed list-templates --view using wrong function (choose_menu → show_arrow_menu)
 - Fixed delete-template --help escape codes not displaying (heredoc → echo -e)
 

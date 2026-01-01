@@ -112,69 +112,6 @@ INSTALL_DIR="/opt/homelab-tools"
 echo -e "${BOLD}Installation directory: ${CYAN}$INSTALL_DIR${RESET}"
 echo ""
 
-# Check for legacy installation in ~/homelab-tools
-# Skip if it's the clone source we're running from, or if it contains .git (fresh clone)
-LEGACY_DIR="$ACTUAL_HOME/homelab-tools"
-SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-IS_CLONE_SOURCE=0
-
-# Detect if ~/homelab-tools is the clone source (has .git and is where we're running from)
-if [[ -d "$LEGACY_DIR" ]]; then
-    if [[ "$SOURCE_DIR" == "$LEGACY_DIR" ]]; then
-        IS_CLONE_SOURCE=1
-    elif [[ -d "$LEGACY_DIR/.git" ]] && [[ ! -f "$LEGACY_DIR/.dev-workspace" ]]; then
-        # Fresh clone (has .git but no .dev-workspace marker) - treat as source, not legacy
-        IS_CLONE_SOURCE=1
-    fi
-fi
-
-if [[ -d "$LEGACY_DIR" ]] && [[ $IS_CLONE_SOURCE -eq 0 ]]; then
-    echo -e "${YELLOW}⚠ Old installation found in ~/homelab-tools${RESET}"
-    echo ""
-    echo -e "${BOLD}What do you want to do with the old installation?${RESET}"
-    echo -e "  ${CYAN}1${RESET}) Backup and remove ${YELLOW}(recommended)${RESET}"
-    echo -e "  ${CYAN}2${RESET}) Backup only"
-echo -e "  ${CYAN}3${RESET}) Keep it"
-echo ""
-legacy_choice="$(read_input "Choice (1/2/3): " "3")"
-legacy_choice=${legacy_choice:-1}
-    
-    case "$legacy_choice" in
-        1)
-            # Backup and remove
-            BACKUP_DIR="$ACTUAL_HOME/homelab-tools.backup.$(date +%Y%m%d_%H%M%S)"
-            echo -e "${YELLOW}→${RESET} Creating backup to $BACKUP_DIR..."
-            cp -r "$LEGACY_DIR" "$BACKUP_DIR"
-            chown -R "$ACTUAL_USER:$ACTUAL_USER" "$BACKUP_DIR"
-            echo -e "${GREEN}✓${RESET} Backup created"
-            
-            echo -e "${YELLOW}→${RESET} Removing old installation..."
-            rm -rf "$LEGACY_DIR"
-            echo -e "${GREEN}✓${RESET} Old installation removed"
-            echo ""
-            ;;
-        2)
-            # Backup only
-            BACKUP_DIR="$ACTUAL_HOME/homelab-tools.backup.$(date +%Y%m%d_%H%M%S)"
-            echo -e "${YELLOW}→${RESET} Creating backup to $BACKUP_DIR..."
-            cp -r "$LEGACY_DIR" "$BACKUP_DIR"
-            chown -R "$ACTUAL_USER:$ACTUAL_USER" "$BACKUP_DIR"
-            echo -e "${GREEN}✓${RESET} Backup created"
-            echo -e "${YELLOW}⚠${RESET} Old installation kept in ~/homelab-tools"
-            echo ""
-            ;;
-        3)
-            # Keep
-            echo -e "${YELLOW}⚠${RESET} Old installation kept"
-            echo ""
-            ;;
-        *)
-            echo -e "${RED}✗${RESET} Invalid choice, old installation kept"
-            echo ""
-            ;;
-    esac
-fi
-
 # 1. Install files to /opt
 echo -e "${YELLOW}[1/5]${RESET} Installing to /opt (requires sudo)..."
 

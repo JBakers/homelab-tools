@@ -1,9 +1,9 @@
-# 🏠 Homelab Management Tools v3.6.0
+# 🏠 Homelab Management Tools v3.6.2
 
-[![Version](https://img.shields.io/badge/version-3.6.0-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
+[![Version](https://img.shields.io/badge/version-3.6.2-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
 [![License](https://img.shields.io/badge/license-GPL--v3-blue.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/shell-bash-lightgrey.svg)](https://www.gnu.org/software/bash/)
-[![Tests](https://img.shields.io/badge/tests-55%20passed-brightgreen.svg)](https://github.com/JBakers/homelab-tools)
+[![Tests](https://img.shields.io/badge/tests-72%20passed-brightgreen.svg)](https://github.com/JBakers/homelab-tools)
 
 > **Professional command-line toolkit for managing homelab infrastructure with beautiful, colorful interfaces and intelligent automation.**
 
@@ -19,28 +19,39 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
 
 ### 🎨 Beautiful Interface
 
-### 🎨 Beautiful Interface
-
 - **Clean & Functional MOTDs** - Professional login screens with system info (default)
 - **Optional ASCII Art** - 5 colorful styles including rainbow banners with `toilet -F gay`
 - **Color-Coded Output** - Clear visual feedback with ANSI colors
-- **Interactive Menus** - Arrow key navigation, q=cancel on all prompts
-- **Uninstall from Menu** - Easy removal via Configuration menu
+- **Interactive Menus** - Arrow key navigation (↑↓, j/k), q=cancel everywhere
+- **Checkbox Selection** - Multi-select for batch operations
 
 ### ⚡ Automation & Efficiency
 
 - **Bulk Operations** - Generate and deploy MOTDs for all hosts at once
 - **One-Click Deploy** - SSH-based deployment to remote hosts
 - **Template System** - Reusable, customizable MOTD templates
-- **Undeploy Support** - Remove MOTDs from hosts with `undeploy-motd`
+- **MOTD Protection** - Detects existing MOTDs, offers replace/append/cancel
+- **Undeploy Support** - Remove MOTDs from single host or all hosts
+- **Retry Failed** - Bulk deploy shows failed hosts with retry option
 - **Deployment Status** - Track deployments with `list-templates -s`
+- **Interactive Preview** - Preview templates with `list-templates -v`
 
 ### 🔐 SSH Management
 
-- **Setup Wizard** - Automated SSH key generation and configuration
-- **Key Distribution** - Push keys to all servers automatically
+- **Host Manager** - Full interactive SSH config editor (`edit-hosts`)
+  - Add/edit/delete hosts with guided wizard
+  - Search and filter hosts
+  - Bulk operations (export, backup, batch delete with checkboxes)
+- **Key Distribution** - Push SSH keys to all servers automatically
 - **Host Key Cleanup** - Interactive tool for managing known_hosts
-- **Host Configuration** - Interactive SSH config editor with `edit-hosts`
+
+### 💾 Backup Management
+
+- **Centralized View** - See all backups from one menu
+- **Supported Types** - .bashrc, SSH config, HLT installs, home backups
+- **Archive** - Create .tar.gz of all backups
+- **Move** - Transfer backups to custom folder (e.g., NAS)
+- **Delete** - Remove by type or all at once
 
 ### 📚 Developer Experience
 
@@ -49,7 +60,7 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
 - **Error Handling** - Robust error checking with `set -euo pipefail`
 - **Input Validation** - Protection against command injection attacks
 - **Non-Interactive Mode** - `install.sh --non-interactive` for automated setups
-- **Docker Test Suite** - Full integration testing with 55 automated tests
+- **Optional toilet install** - Installer prompts to install ASCII art support
 
 ## 📦 Installation
 
@@ -212,19 +223,17 @@ homelab
 
 ```
 ╔════════════════════════════════════════════════════════════╗
-║         🏠 Homelab Management Tools v3.6.0                 ║
+║         🏠 Homelab Management Tools v3.6.1                 ║
 ╚════════════════════════════════════════════════════════════╝
 
-Available commands:
+  ► 📝 MOTD Tools           Generate/deploy/list MOTDs
+    ⚙️  Configuration        Edit hosts & settings
+    🔑 SSH Management        Keys & cleanup
+    💾 Backup Management     View & manage backups
+    HELP
+    QUIT
 
-  1) generate-motd     - Generate a new MOTD
-  2) deploy-motd       - Deploy MOTD to container
-  3) cleanup-keys      - Remove old SSH keys
-  4) list-templates    - View all templates
-  5) copykey           - Distribute SSH keys
-  
-  h) help              - Detailed help
-  q) quit              - Exit
+Navigate: ↑/↓ arrows or j/k  │  Select: Enter  │  Quit: q
 ```
 
 </details>
@@ -238,13 +247,13 @@ All commands are available directly in your terminal:
 | `generate-motd` | Create MOTD template | `generate-motd plex` |
 | `bulk-generate-motd` | Generate for all hosts | `bulk-generate-motd` |
 | `deploy-motd` | Deploy to remote host | `deploy-motd pihole` |
-| `undeploy-motd` | Remove deployed MOTD | `undeploy-motd pihole` |
-| `list-templates` | Show all templates | `list-templates -s` |
-| `delete-template` | Delete a template | `delete-template` |
-| `cleanup-keys` | Remove SSH host keys | `cleanup-keys pihole` |
-| `copykey` | Distribute SSH keys | `copykey` |
-| `edit-hosts` | Edit SSH config | `edit-hosts` |
+| `undeploy-motd` | Remove deployed MOTD | `undeploy-motd --all` |
+| `list-templates` | Show/preview templates | `list-templates -v` |
+| `delete-template` | Delete template(s) | `delete-template` |
+| `edit-hosts` | Manage SSH hosts | `edit-hosts` |
 | `edit-config` | Edit homelab config | `edit-config` |
+| `copykey` | Distribute SSH keys | `copykey` |
+| `cleanup-keys` | Remove SSH host keys | `cleanup-keys pihole` |
 
 ### 📖 Built-in Help
 

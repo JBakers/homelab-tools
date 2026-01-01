@@ -150,7 +150,7 @@ while true; do
                 echo -e "  ${CYAN}5${RESET}) Big Mono          ${YELLOW}(Large, bold)${RESET}"
                 echo -e "  ${CYAN}6${RESET}) Small/Smblock     ${YELLOW}(Compact)${RESET}"
                 echo ""
-                read -r -p "$(echo -e "${CYAN}Choose ASCII style \(1-6, p=preview, q=cancel\):${RESET} ")" ascii_choice
+                read -r -p "$(echo -e "${CYAN}Choose ASCII style (1-6, p=preview, q=cancel):${RESET} ")" ascii_choice
                 ascii_choice=${ascii_choice:-1}
                 
                 # Handle cancel
@@ -447,6 +447,7 @@ while true; do
 
             deployed=0
             deploy_failed=0
+            failed_hosts=()
 
             for hostname in $hosts; do
                 template_file="$TEMPLATES_DIR/${hostname}.sh"
@@ -455,13 +456,16 @@ while true; do
                 if [[ -f "$template_file" ]]; then
                     echo -e "${BOLD}${CYAN}Deploying to: ${hostname}${RESET}"
 
-                    if deploy-motd "$hostname" &>/dev/null; then
+                    # Run deploy-motd with visible output (may need user input for non-HLT MOTDs)
+                    if deploy-motd "$hostname"; then
                         echo -e "  ${GREEN}✓${RESET} Deployed successfully"
                         deployed=$((deployed + 1))
                     else
                         echo -e "  ${RED}✗${RESET} Deployment failed"
                         deploy_failed=$((deploy_failed + 1))
+                        failed_hosts+=("$hostname")
                     fi
+                    echo ""
                 fi
             done
 
@@ -473,9 +477,17 @@ while true; do
             echo -e "${GREEN}✓ Deployed:${RESET} $deployed"
             if [[ $deploy_failed -gt 0 ]]; then
                 echo -e "${RED}✗ Failed:${RESET}   $deploy_failed"
+                echo ""
+                echo -e "${YELLOW}Failed hosts:${RESET}"
+                for failed_host in "${failed_hosts[@]}"; do
+                    echo -e "  ${RED}→${RESET} $failed_host"
+                done
             fi
             echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
             echo ""
+            
+            # Store failed hosts for retry option
+            export BULK_FAILED_HOSTS="${failed_hosts[*]}"
         else
             echo ""
             echo -e "${BOLD}${YELLOW}Manual Deployment Instructions:${RESET}"
@@ -505,9 +517,18 @@ while true; do
     echo ""
     echo -e "  ${YELLOW}1${RESET}) Back to Homelab menu"
     echo -e "  ${YELLOW}2${RESET}) Generate more (restart bulk-generate)"
-    echo -e "  ${YELLOW}3${RESET}) Quit"
+    if [[ ${#failed_hosts[@]} -gt 0 ]]; then
+        echo -e "  ${YELLOW}3${RESET}) Retry failed deployments (${#failed_hosts[@]} hosts)"
+        echo -e "  ${YELLOW}4${RESET}) Quit"
+    else
+        echo -e "  ${YELLOW}3${RESET}) Quit"
+    fi
     echo ""
-    read -p "$(echo -e ${CYAN}Choice \(1/2/3, q=back\):${RESET} )" next_action
+    if [[ ${#failed_hosts[@]} -gt 0 ]]; then
+        read -p "$(echo -e "${CYAN}Choice (1/2/3/4, q=back):${RESET} ")" next_action
+    else
+        read -p "$(echo -e "${CYAN}Choice (1/2/3, q=back):${RESET} ")" next_action
+    fi
     if [[ "$next_action" == "q" || "$next_action" == "Q" ]]; then
         break  # Return to homelab menu
     fi
@@ -519,8 +540,64 @@ while true; do
             break
             ;;
         2)
-            # Restart bulk-generate loop
+            # Restart bulk-generate loop - clear screen first
+            clear
             continue
+            ;;
+        3)
+            if [[ ${#failed_hosts[@]} -gt 0 ]]; then
+                # Retry failed deployments
+                clear
+                echo ""
+                echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+                echo -e "${BOLD}${CYAN}           🔄 Retry Failed Deployments                      ${RESET}"
+                echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+                echo ""
+                
+                retry_deployed=0
+                retry_failed=0
+                
+                for hostname in "${failed_hosts[@]}"; do
+                    echo -e "${BOLD}${CYAN}Deploying to: ${hostname}${RESET}"
+                    if deploy-motd "$hostname"; then
+                        echo -e "  ${GREEN}✓${RESET} Deployed successfully"
+                        retry_deployed=$((retry_deployed + 1))
+                    else
+                        echo -e "  ${RED}✗${RESET} Deployment failed again"
+                        retry_failed=$((retry_failed + 1))
+                    fi
+                    echo ""
+                done
+                
+                echo ""
+                echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+                echo -e "${BOLD}${CYAN}                Retry Summary                              ${RESET}"
+                echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+                echo ""
+                echo -e "${GREEN}✓ Deployed:${RESET} $retry_deployed"
+                if [[ $retry_failed -gt 0 ]]; then
+                    echo -e "${RED}✗ Still failed:${RESET} $retry_failed"
+                fi
+                echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+                echo ""
+                
+                # Clear failed hosts after retry
+                failed_hosts=()
+                continue
+            else
+                # Quit
+                echo ""
+                echo -e "${GREEN}✓${RESET} Done! Have a great day!"
+                echo ""
+                exit 0
+            fi
+            ;;
+        4)
+            # Quit (only available when there are failed hosts)
+            echo ""
+            echo -e "${GREEN}✓${RESET} Done! Have a great day!"
+            echo ""
+            exit 0
             ;;
         *)
             # Quit

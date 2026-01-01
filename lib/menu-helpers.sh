@@ -5,11 +5,13 @@
 # Version: See VERSION file
 
 # Standard menu colors
-readonly MENU_CYAN='\033[0;36m'
-readonly MENU_GREEN='\033[0;32m'
-readonly MENU_YELLOW='\033[1;33m'
-readonly MENU_RED='\033[0;31m'
+# Note: Using bright/bold variants for better readability on dark terminals
+readonly MENU_CYAN='\033[0;96m'      # Bright cyan
+readonly MENU_GREEN='\033[0;92m'     # Bright green
+readonly MENU_YELLOW='\033[0;93m'    # Bright yellow
+readonly MENU_RED='\033[0;95m'       # Magenta (more readable than red)
 readonly MENU_BOLD='\033[1m'
+readonly MENU_DIM='\033[2m'
 readonly MENU_RESET='\033[0m'
 readonly MENU_INVERSE='\033[7m'
 
@@ -129,16 +131,16 @@ show_arrow_menu() {
             # Determine color based on option type
             if [[ "$label" == "HELP" ]]; then
                 color="$MENU_CYAN"
-                label="Help"
+                label="❓ Help"
                 desc="Show detailed help"
             elif [[ "$label" == "BACK" ]]; then
                 color="$MENU_YELLOW"
-                label="Back"
-                desc="Return to previous menu"
+                label="← Back"
+                desc=""
             elif [[ "$label" == "QUIT" ]]; then
                 color="$MENU_RED"
-                label="Quit"
-                desc="Exit homelab tools"
+                label="✕ Quit"
+                desc=""
             else
                 color="$MENU_GREEN"
             fi

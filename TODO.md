@@ -7,52 +7,36 @@
 
 - [x] **Fix undeploy-motd bug** - Searches for `99-homelab-*.sh` but deploy-motd creates `00-motd.sh`
 
-## 🎯 Status - 3.6.1-dev.00 (ready for 3.6.0 release) 🎉
+## 🎯 Status - 3.6.2-dev.00 (building on 3.6.1)
 
-**Current version:** 3.6.1-dev.00 (auto patch bump after dev.09 tested)
+**Current version:** 3.6.2-dev.00
 **Branch:** develop
-**Tests:** 72/72 ✅
-**Release target:** 3.6.0 (remove -dev, follow steps below)
+**Tests:** Need to run
 
-**New features completed:**
-- [x] undeploy-motd - Remove MOTDs from hosts
-- [x] list-templates --status - Deployment tracking
-- [x] list-templates --view - Interactive preview
-- [x] Removed Jellyfin examples, replaced with Pi-hole
-- [x] Enhanced edit-hosts - Full interactive SSH config manager
-- [x] Centralized version management (VERSION file + lib/version.sh)
-- [x] Special occasion messages in banner (New Year, Christmas, etc.)
-- [x] sync-dev.sh - Quick sync workspace to /opt for rapid testing
-- [x] Auto-bump patch version after dev.09 (3.6.0-dev.09 → 3.6.1-dev.00)
-- [x] Exclude dev-only files from /opt (bump-dev.sh, TODO.md, etc.)
-- [x] Exclude GitHub-only docs from /opt (CHANGELOG, CONTRIBUTING, etc.)
-- [x] Clean /opt structure (15 → 11 items)
-- [x] bulk-generate-motd: spacing fix after progress bar (dev.36)
+**New features completed (this session):**
+- [x] Menu restructure: SSH keys moved to Configuration submenu
+- [x] Help menu's vereenvoudigd (homelab --help, homelab help)
+- [x] Generate MOTD: host selection menu (select from SSH config hosts)
+- [x] HLT MOTD protection markers (HLT-MOTD-START/END)
+- [x] Deploy protection: detect non-HLT MOTDs, ask replace/append/cancel
+- [x] Undeploy protection: only remove HLT MOTDs, preserve others
+- [x] Bulk deploy: show output (was hidden with &>/dev/null causing hangs)
+- [x] Bulk deploy: retry failed deployments option
+- [x] Bulk deploy: show failed hosts list
+- [x] Removed all debug connection prompts (auto-continue after timeout)
+- [x] Removed legacy code (old MOTD format detection, ~/homelab-tools migration)
+- [x] Renamed "Legacy backups" to "Home Backups" in menu
+- [x] Compacter deploy output (less verbose)
+- [x] Fixed backslashes in prompts (y/N) instead of \(y/N\)
 
-**Bug fixes (v3.6.0-dev.21-35):**
-- [x] edit-hosts: Fixed 3 missing title arguments in show_arrow_menu calls
-- [x] list-templates --view: Fixed wrong function name (choose_menu → show_arrow_menu)
-- [x] delete-template: Fixed escape codes in help (heredoc → echo -e)
-- [x] README: Updated to v3.6.0, removed dev warning
-- [x] Banner: Fixed complete uninstall not removing banner (increased line limit 50→60)
-- [x] Banner: Fixed cleanup not removing standalone tip line
-- [x] Banner: Now enabled by default in --non-interactive mode
-- [x] Banner: Fixed special occasions auto-reload
-- [x] edit-hosts: Fixed menu not showing due to clear() conflict
-- [x] uninstall.sh: Increased bashrc cleanup limit from 50 to 60 lines
-- [x] Banner special occasions fully fixed (auto-reload, cleanup)
-- [x] Banner enabled by default in --non-interactive mode
+**Bug fixes:**
+- [x] Fixed `local` outside function error in generate-motd menu
+- [x] Fixed DIM variable undefined in deploy-motd and undeploy-motd
 
-**Repository cleanup:**
-- [x] Archive `bump-version.sh` → `.archive/`
-- [x] Archive `update-version.sh` → `.archive/`
-- [x] Translate all Dutch text to English
-- [x] Installed expect tool for automated menu testing
-- [x] Updated test-runner.sh: 16 MANUAL tests → 0 MANUAL tests
-- [x] All 72 tests PASSED (100%) ✅
-- [x] sync-dev.sh in .gitignore
-- [x] Exclude dev-only files from /opt (15→11 items)
-- [x] Clean /opt structure - only production files
+**Cleanup:**
+- [x] Removed legacy MOTD detection (only check HLT-MOTD-START now)
+- [x] Removed ~/homelab-tools migration code from install.sh
+- [x] Renamed legacy → home in backup menu
 
 ---
 ## 🚀 NEXT STEPS

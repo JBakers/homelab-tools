@@ -6,10 +6,11 @@ set -euo pipefail
 # Version: See VERSION file
 
 # Colors
-CYAN='\033[0;36m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
+CYAN='\033[0;96m'
+GREEN='\033[0;92m'
+YELLOW='\033[0;93m'
+RED='\033[0;95m'
+DIM='\033[2m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
@@ -45,34 +46,56 @@ fi
 undeploy_single() {
     local service="$1"
     
-    echo -e "${CYAN}→${RESET} Undeploying from ${BOLD}$service${RESET}..."
+    echo -e "${CYAN}→${RESET} Checking ${BOLD}$service${RESET}..."
     
-    # Test SSH connection
+    # Test SSH connection with timeout
     if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$service" "echo 2>&1" &>/dev/null; then
-        echo -e "${RED}  ✗${RESET} Cannot connect to $service"
-        read -p "$(echo -e ${YELLOW}Debug connection? \(y/N\):${RESET} )" debug
-        if [[ "$debug" =~ ^[Yy]$ ]]; then
-            echo -e "${CYAN}=== SSH Connection Debug ===${RESET}"
-            ssh -v "$service" "echo 2>&1" 2>&1 | tail -20
-        fi
+        echo -e "${RED}  ✗${RESET} Cannot connect to $service (timeout after 5s)"
         return 1
     fi
     
-    # Remove MOTD script (matches what deploy-motd creates: 00-motd.sh)
-    if ssh "$service" "sudo rm -f /etc/profile.d/00-motd.sh" 2>/dev/null; then
-        echo -e "${GREEN}  ✓${RESET} MOTD script removed"
-    else
-        echo -e "${YELLOW}  →${RESET} No MOTD found or removal failed"
+    # Check if MOTD exists on remote
+    if ! ssh "$service" "[[ -f /etc/profile.d/00-motd.sh ]]" 2>/dev/null; then
+        echo -e "${YELLOW}  →${RESET} No MOTD deployed on $service"
+        return 0
     fi
     
-    # Restore original /etc/motd if backup exists
-    if ssh "$service" "[[ -f /etc/motd.backup ]]" 2>/dev/null; then
-        if ssh "$service" "sudo mv /etc/motd.backup /etc/motd" 2>/dev/null; then
-            echo -e "${GREEN}  ✓${RESET} Original /etc/motd restored"
+    # Check if it's an HLT MOTD
+    local remote_motd
+    remote_motd=$(ssh "$service" "cat /etc/profile.d/00-motd.sh 2>/dev/null" || true)
+    
+    if [[ "$remote_motd" != *"HLT-MOTD-START"* ]]; then
+        echo -e "${YELLOW}  ⚠${RESET} MOTD exists but was not created by HLT"
+        echo -e "${DIM}     (no HLT-MOTD-START marker found)${RESET}"
+        echo -e "${YELLOW}     Skipping to protect existing configuration${RESET}"
+        return 0
+    fi
+    
+    # Check if there's content outside HLT markers (appended mode)
+    if [[ "$remote_motd" == *"# === Appended by HLT ==="* ]]; then
+        echo -e "${YELLOW}  →${RESET} Found appended HLT MOTD, removing only HLT section..."
+        # Remove only the HLT section (from marker to end)
+        ssh "$service" "sudo sed -i '/# === Appended by HLT ===/,\$d' /etc/profile.d/00-motd.sh" 2>/dev/null
+        echo -e "${GREEN}  ✓${RESET} HLT section removed (original MOTD preserved)"
+        return 0
+    fi
+    
+    # Full HLT MOTD - remove entirely
+    echo -e "${CYAN}→${RESET} Removing HLT MOTD from ${BOLD}$service${RESET}..."
+    if ssh "$service" "sudo rm -f /etc/profile.d/00-motd.sh" 2>/dev/null; then
+        echo -e "${GREEN}  ✓${RESET} MOTD removed"
+    else
+        echo -e "${RED}  ✗${RESET} Failed to remove MOTD"
+        return 1
+    fi
+    
+    # Restore backup if exists
+    if ssh "$service" "[[ -f /etc/profile.d/00-motd.sh.backup ]]" 2>/dev/null; then
+        if ssh "$service" "sudo mv /etc/profile.d/00-motd.sh.backup /etc/profile.d/00-motd.sh" 2>/dev/null; then
+            echo -e "${GREEN}  ✓${RESET} Original MOTD restored from backup"
         fi
     fi
     
-    echo -e "${GREEN}  ✓${RESET} Undeploy complete for $service"
     return 0
 }
 
@@ -114,6 +137,9 @@ undeploy_all() {
     local success=0
     local failed=0
     
+    # Temporarily disable exit-on-error for the loop
+    set +e
+    
     for hostname in $hosts; do
         if undeploy_single "$hostname"; then
             ((success++))
@@ -122,6 +148,9 @@ undeploy_all() {
         fi
         echo ""
     done
+    
+    # Re-enable exit-on-error
+    set -e
     
     echo -e "${BOLD}Summary:${RESET}"
     echo -e "  ${GREEN}✓${RESET} Success: $success"

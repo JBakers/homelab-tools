@@ -646,25 +646,6 @@ if ! command -v toilet &> /dev/null; then
     fi
 fi
 
-# Cleanup clone source directory if it exists in ~/homelab-tools
-if [[ $IS_CLONE_SOURCE -eq 1 ]] && [[ -d "$LEGACY_DIR" ]]; then
-    echo -e "${YELLOW}→${RESET} Clone source detected in ~/homelab-tools"
-    if [[ $NON_INTERACTIVE -eq 1 ]]; then
-        # Non-interactive: auto-remove clone source
-        rm -rf "$LEGACY_DIR"
-        echo -e "${GREEN}✓${RESET} Clone source removed"
-    else
-        cleanup_choice="$(read_input "Remove clone source ~/homelab-tools? (Y/n): " "y")"
-        if [[ "$cleanup_choice" =~ ^[Yy]$ ]] || [[ -z "$cleanup_choice" ]]; then
-            rm -rf "$LEGACY_DIR"
-            echo -e "${GREEN}✓${RESET} Clone source removed"
-        else
-            echo -e "${YELLOW}⚠${RESET} Clone source kept in ~/homelab-tools"
-        fi
-    fi
-    echo ""
-fi
-
 # Completion
 echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════════╗"
 echo -e "║           ✅ INSTALLATION COMPLETE                      ║"

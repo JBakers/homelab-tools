@@ -18,8 +18,25 @@ echo -e "║         🗑️  HOMELAB TOOLS - UNINSTALL                ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
-# Safety check - don't uninstall from development directory
+# Safety check - don't uninstall from the actual development workspace
+# Only block if we're in a directory that looks like active development
+# (has .git, has uncommitted changes or is in a Workspace/dev folder)
+CURRENT_DIR="$(pwd)"
+IS_DEV_DIR=false
+
 if [[ -d ".git" ]] && [[ -f "uninstall.sh" ]]; then
+    # Check if this looks like active development:
+    # 1. Directory path contains "Workspace" or "Development" or "dev"
+    # 2. Has uncommitted changes
+    if [[ "$CURRENT_DIR" =~ (Workspace|Development|Projects|src/homelab) ]]; then
+        IS_DEV_DIR=true
+    elif git status --porcelain 2>/dev/null | grep -q .; then
+        # Has uncommitted changes - likely active development
+        IS_DEV_DIR=true
+    fi
+fi
+
+if [[ "$IS_DEV_DIR" == "true" ]]; then
     echo -e "${RED}✗ ERROR: You're running uninstall from the development directory!${RESET}"
     echo ""
     echo -e "  This will delete your entire project, including:"
@@ -29,7 +46,7 @@ if [[ -d ".git" ]] && [[ -f "uninstall.sh" ]]; then
     echo ""
     echo -e "${YELLOW}To uninstall safely:${RESET}"
     echo -e "  1. ${CYAN}cd ~${RESET}  (change to home directory)"
-    echo -e "  2. ${CYAN}./homelab-tools/uninstall.sh${RESET}"
+    echo -e "  2. ${CYAN}/opt/homelab-tools/uninstall.sh${RESET}"
     echo ""
     echo -e "Or if you want to keep development folder:"
     echo -e "  • Just remove scripts: ${CYAN}rm ~/.local/bin/{homelab,generate-motd,deploy-motd,cleanup-keys,list-templates,edit-hosts,edit-config,copykey,bulk-generate-motd}${RESET}"

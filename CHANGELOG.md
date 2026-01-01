@@ -21,6 +21,7 @@
 - Visible output during deployment (was hidden causing hangs)
 - Failed hosts list with retry option
 - Compacter deploy output (less verbose)
+- `deploy-motd --all` - Deploy all templates at once
 
 ### 🐛 Bug Fixes
 - Fixed `local` outside function error in generate-motd menu

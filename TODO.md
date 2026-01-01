@@ -23,11 +23,12 @@
 - [x] Bulk deploy: show output (was hidden with &>/dev/null causing hangs)
 - [x] Bulk deploy: retry failed deployments option
 - [x] Bulk deploy: show failed hosts list
+- [x] `deploy-motd --all` - Deploy all templates at once
 - [x] Removed all debug connection prompts (auto-continue after timeout)
 - [x] Removed legacy code (old MOTD format detection, ~/homelab-tools migration)
 - [x] Renamed "Legacy backups" to "Home Backups" in menu
 - [x] Compacter deploy output (less verbose)
-- [x] Fixed backslashes in prompts (y/N) instead of \(y/N\)
+- [x] GUI-focused help (removed CLI command references)
 
 **Bug fixes:**
 - [x] Fixed `local` outside function error in generate-motd menu

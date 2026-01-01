@@ -189,6 +189,7 @@ git checkout develop
 - ✅ Use `./sync-dev.sh` for quick testing (no git operations)
 - ✅ Batch changes, commit only when user approves
 - ✅ After commit: run `./bump-dev.sh` to update version
+- ✅ Update TODO.md and CHANGELOG.md when adding features/fixes
 - ❌ Never merge directly to `main` (use `merge-to-main.sh`)
 - ❌ Never commit dev-only files to `main`
 

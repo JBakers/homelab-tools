@@ -189,11 +189,15 @@ clean_user_data() {
         # Never touch VS Code shell integration
         /locate-shell-integration-path/ { print; next }
         
-        # Match tip section
+        # Skip standalone tip lines (with or without header)
         /^# Homelab Tools tip$/ { 
             getline
             next 
         }
+        
+        # Skip tip echo line without header
+        /^echo -e.*Tip:.*homelab.*commands/ { next }
+        /^echo.*Tip:.*homelab/ { next }
         
         # Match banner section start
         /^# ===============================================$/ {

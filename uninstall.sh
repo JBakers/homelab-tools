@@ -195,6 +195,10 @@ if [[ -f "$HOME/.bashrc" ]] && grep -qi "homelab" "$HOME/.bashrc" 2>/dev/null; t
         next 
     }
     
+    # Skip standalone tip echo lines (without header comment)
+    /^echo -e.*Tip:.*homelab.*commands/ { next }
+    /^echo.*Tip:.*homelab/ { next }
+    
     # Match banner section start (exact 3-line header)
     /^# ===============================================$/ {
         line1 = $0

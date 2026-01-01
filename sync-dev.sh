@@ -41,12 +41,22 @@ echo -e "${CYAN}→${RESET} Syncing files..."
 sudo rsync -av --delete \
     --exclude='.git' \
     --exclude='.gitignore' \
-    --exclude='.dev-workspace' \
-    --exclude='*.backup.*' \
-    --exclude='.test-env' \
-    --exclude='TEST_*.txt' \
-    --exclude='test-runner.sh' \
     --exclude='sync-dev.sh' \
+    --exclude='bump-dev.sh' \
+    --exclude='merge-to-main.sh' \
+    --exclude='release.sh' \
+    --exclude='export.sh' \
+    --exclude='TESTING_CHECKLIST.md' \
+    --exclude='TEST_SUMMARY.txt' \
+    --exclude='TODO.md' \
+    --exclude='test-runner.sh' \
+    --exclude='.test-env' \
+    --exclude='.archive' \
+    --exclude='*.backup.*' \
+    --exclude='.dev-workspace' \
+    --exclude='claude.md' \
+    --exclude='notes*.md' \
+    --exclude='conversation*.md' \
     "$SOURCE_DIR/" "$TARGET_DIR/"
 
 # Fix permissions

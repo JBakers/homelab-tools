@@ -44,6 +44,9 @@ test-checklist.sh
 TESTING_COMMANDS.md
 .homelab-test-progress
 
+# Dev sync tool
+sync-dev.sh
+
 # Archive folder
 .archive/
 

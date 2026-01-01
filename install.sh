@@ -304,8 +304,27 @@ fi
 # Copy files to /opt (requires sudo)
 echo -e "${YELLOW}  →${RESET} Copying files to $INSTALL_DIR..."
 run_sudo mkdir -p "$INSTALL_DIR"
-run_sudo cp -r "$(pwd)"/* "$INSTALL_DIR/"
-run_sudo cp -r "$(pwd)"/.gitignore "$INSTALL_DIR/" 2>/dev/null || true
+
+# Copy all files except dev-only files
+run_sudo rsync -a --exclude='.git' \
+    --exclude='sync-dev.sh' \
+    --exclude='bump-dev.sh' \
+    --exclude='merge-to-main.sh' \
+    --exclude='release.sh' \
+    --exclude='export.sh' \
+    --exclude='TESTING_CHECKLIST.md' \
+    --exclude='TEST_SUMMARY.txt' \
+    --exclude='TODO.md' \
+    --exclude='test-runner.sh' \
+    --exclude='.test-env' \
+    --exclude='.archive' \
+    --exclude='*.backup.*' \
+    --exclude='.dev-workspace' \
+    --exclude='claude.md' \
+    --exclude='notes*.md' \
+    --exclude='conversation*.md' \
+    "$(pwd)/" "$INSTALL_DIR/"
+
 echo -e "${GREEN}  ✓${RESET} Files installed in /opt"
 # Remove old config.sh so it will be recreated
 run_sudo rm -f "$INSTALL_DIR/config.sh" 2>/dev/null || true

@@ -732,27 +732,13 @@ interactive_menu() {
     init_ssh_config
     
     while true; do
-        clear
-        echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
-        echo -e "║         ⚙️  SSH Host Configuration Manager               ║"
-        echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
-        echo ""
-        
         local hosts
         hosts=$(get_all_hosts)
         local host_count
         host_count=$(echo "$hosts" | grep -c "." || echo "0")
         
-        echo -e "${BOLD}Configured hosts:${RESET} ${GREEN}$host_count${RESET}"
-        echo ""
-        
-        if [[ $host_count -gt 0 ]]; then
-            echo -e "${DIM}Hosts:${RESET}"
-            while IFS= read -r host; do
-                echo -e "  ${CYAN}•${RESET} $host"
-            done <<< "$hosts"
-            echo ""
-        fi
+        # Build menu options with host count in the title
+        local menu_title="🔧 SSH Host Configuration Manager (${host_count} hosts)"
         
         local options=(
             "➕ Add new host"
@@ -764,7 +750,7 @@ interactive_menu() {
         )
         
         local choice
-        if ! choice=$(show_arrow_menu "🔧 SSH Host Configuration Manager" "${options[@]}"); then
+        if ! choice=$(show_arrow_menu "$menu_title" "${options[@]}"); then
             clear
             echo -e "${GREEN}✓ Goodbye!${RESET}"
             exit 0

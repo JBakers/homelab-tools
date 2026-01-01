@@ -221,7 +221,7 @@ _____________________________________________________________________________
 ## Running Test-Runner
 
 ```bash
-cd /home/youruser/Workspace/homelab-tools
+cd ~/homelab-tools
 
 # Start interactive test runner
 ./test-runner.sh

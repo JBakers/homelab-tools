@@ -41,7 +41,7 @@
 
 1. **RUN TESTS FIRST** (before any commit/merge decision)
    ```bash
-   cd /home/youruser/Workspace/homelab-tools
+   cd ~/homelab-tools
    ./test-runner.sh
    ```
    - Run all 80 tests (automated, ~5-10 minutes)

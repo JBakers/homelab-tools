@@ -5,88 +5,74 @@
 
 ## 🔴 CRITICAL
 
+- [ ] **Phase 2 Changes LOST** - Arrow navigation changes from 1b4875d not in current HEAD
+  - Root cause: git reset --hard after commitlint issue wiped out Phase 2 implementation
+  - Impact: All 15 menu conversions to choose_menu are missing
+  - Status: Need to reimplement + test in .test-env BEFORE committing
+  - Action: Reapply all arrow navigation changes with proper testing
+
 - [x] **Fix undeploy-motd bug** - Searches for `99-homelab-*.sh` but deploy-motd creates `00-motd.sh`
 
-## 🎯 Status - 3.6.2-dev.09 (building on 3.6.1)
+## 🎯 Status - 3.6.3-dev.02 (Arrow Navigation Complete)
 
-**Current version:** 3.6.2-dev.09
+**Current version:** 3.6.3-dev.02
 **Branch:** develop
-**Tests:** ✅ **41/42 PASSED (98% success rate)** 🎉
+**Status:** ✅ Phase 2 COMPLETE - All 15 menus → Arrow Navigation
 
-**Test Suite Expansion (Session 2026-01-01):**
-- [x] Fixed all skipped tests (list-templates now tested)
-- [x] Fixed deploy-motd test (MOTD protection with auto-reply)
-- [x] Fixed CLI options test suite (syntax error, removed non-existent commands)
-- [x] Added 6 new test scenarios:
-  - Multiple template generation (test1, test2, test3)
-  - List templates with multiple templates
-  - Delete template functionality
-  - Deploy MOTD protection scenarios (jellyfin, docker-host)
-  - Undeploy from multiple hosts
-  - Enhanced CLI options coverage
-- [x] Docker test environment fixes:
-  - Added rsync to Dockerfile
-  - Fixed expect script timeouts (5s → 10s)
-  - Simplified expect scripts (menu structure changes)
-  - Added `< /dev/null` and `echo 'q'` for non-interactive tests
-- [x] Test coverage: 36 tests → 42 tests (+17%)
-- [x] Success rate: 89% → 98% (+9%)
-- [x] Zero failures (was 2 failures)
+**Phase 2 Results (v3.6.3-dev.01):**
+- [x] bulk-generate-motd (5 menus) → arrow navigation
+- [x] deploy-motd (1 menu) → arrow navigation
+- [x] generate-motd (3 menus) → arrow navigation
+- [x] homelab (4 menus) → arrow navigation
+- [x] list-templates (1 menu) → arrow navigation
+- [x] delete-template (1 menu) → arrow navigation
+- [x] cleanup-keys (1 menu) → arrow navigation
+- [x] All scripts: bash -n syntax check ✓
+- [x] All scripts: ShellCheck clean ✓
+- [x] VERSION bumped (dev.00 → dev.01)
 
-**Previous session features (v3.6.2-dev.00 - dev.08):**
-- [x] Menu restructure: SSH keys moved to Configuration submenu
-- [x] Help menu's vereenvoudigd (homelab --help, homelab help)
-- [x] Generate MOTD: host selection menu (select from SSH config hosts)
-- [x] HLT MOTD protection markers (HLT-MOTD-START/END)
-- [x] Deploy protection: detect non-HLT MOTDs, ask replace/append/cancel
-- [x] Undeploy protection: only remove HLT MOTDs, preserve others
-- [x] Bulk deploy: show output, retry failed, failed hosts list
-- [x] `deploy-motd --all` - Deploy all templates at once
-- [x] Removed all debug connection prompts
-- [x] Removed legacy code (old MOTD format detection, ~/homelab-tools migration)
-- [x] Renamed "Legacy backups" to "Home Backups" in menu
-- [x] Compacter deploy output
-- [x] GUI-focused help
-
-**Bug fixes:**
-- [x] Fixed `local` outside function error in generate-motd menu
-- [x] Fixed DIM variable undefined in deploy-motd and undeploy-motd
-- [x] Fixed test suite hangs (timeouts, input handling)
-- [x] Fixed CLI options syntax error (extra `)` in commands array)
+**Phase 2.5 Results (v3.6.3-dev.02):**
+- [x] Commitlint + Husky installed
+- [x] Conventional commits enforced (type: message)
+- [x] bump-dev.sh fixed (no "Version:" prefix)
+- [x] .gitignore updated (node_modules, .husky/)
+- [x] copilot-instructions.md updated with COMMIT APPROVAL WORKFLOW
+- [x] All commits validated automatically
+- [x] Copilot restricted to develop branch only
+- [x] Merge to main restricted to user only
 
 ---
 ## 🚀 NEXT STEPS
 
-**Release 3.6.0 (ready to ship)**
-- ✅ All features complete
-- ✅ All bugs fixed
-- ✅ Tests passing (72/72)
-- ✅ Documentation updated
+### Phase 3: Per-Menu Testing & Validation (IN PROGRESS)
+**Goal:** Test all 15 menus for functionality, navigation, edge cases
 
-**Release Process:**
-```bash
-# 1. Final version bump (remove -dev)
-echo "3.6.0" > VERSION
+**Step 1: Manual Testing (Quick Validation)**
+- [ ] bulk-generate-motd: 5 menus (MOTD style, ASCII selection, generation mode, deploy, actions)
+- [ ] deploy-motd: 1 menu (MOTD protection - Replace/Append/Cancel)
+- [ ] generate-motd: 3 menus (Customize, Web UI, ASCII style)
+- [ ] homelab: 4 menus (Generation mode, Deploy choice, Undeploy choice, Uninstall)
+- [ ] list-templates: 1 menu (View vs Status)
+- [ ] delete-template: 1 menu (Template selection + Delete ALL)
+- [ ] cleanup-keys: 1 menu (Host selection + All hosts)
 
-# 2. Update CHANGELOG to stable
-# Edit CHANGELOG.md: v3.6.0-dev → v3.6.0
+**Step 2: Automated Expect Tests**
+- [ ] Create `expect/test-menu-navigation.exp` - Arrow keys (↑↓) and vim (j/k)
+- [ ] Create `expect/test-bulk-generate.exp` - Full workflow testing
+- [ ] Create `expect/test-deploy-protection.exp` - MOTD protection scenarios
+- [ ] Integrate into test-runner.sh
 
-# 3. Commit
-git add VERSION CHANGELOG.md
-git commit -m "chore: release v3.6.0"
-git push origin develop
+**Step 3: Integration Testing**
+- [ ] Test full workflow: generate → deploy → list → undeploy
+- [ ] Test bulk operations (--all flag)
+- [ ] Test edge cases (empty templates, invalid input, etc.)
 
-# 4. Merge to main
-./merge-to-main.sh
-
-# 5. Tag release
-git checkout main
-git tag -a v3.6.0 -m "Release v3.6.0 - Enhanced MOTD & SSH management"
-git push origin v3.6.0
-
-# 6. GitHub Release
-# Create release on GitHub with CHANGELOG
-```
+**Acceptance Criteria:**
+- [ ] All 15 menus navigable (↑↓, j/k, Enter, q/ESC)
+- [ ] All prompts functional
+- [ ] No crashes or hangs
+- [ ] Consistent UX across all scripts
+- [ ] 100% menu coverage in tests
 
 ---
 ## 🟠 Medium Priority (post-3.6.0)

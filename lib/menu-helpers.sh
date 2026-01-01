@@ -291,3 +291,12 @@ finish_progress() {
     fi
     tput cnorm  # Show cursor
 }
+
+# Wrapper function for show_arrow_menu for backwards compatibility
+# Usage: choose_menu "Title" "option1|description" "option2|description" ...
+choose_menu() {
+    local title="$1"
+    shift
+    show_arrow_menu "$title" "$@"
+    # show_arrow_menu sets MENU_RESULT globally
+}

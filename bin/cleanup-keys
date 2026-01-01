@@ -5,6 +5,21 @@ set -euo pipefail
 # Author: J.Bakers
 # Version: See VERSION file
 
+# Load paths and libraries
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
+# Source menu helpers for choose_menu function
+if [[ -f "$LIB_DIR/menu-helpers.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/menu-helpers.sh"
+fi
+
 # Colors
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
@@ -91,28 +106,29 @@ if [[ -z "$HOST" ]]; then
     echo -e "${BOLD}Available hosts:${RESET}"
     echo ""
     
-    # Show all hosts
-    i=1
+    # Build menu options
+    declare -a menu_opts
     declare -a host_array
+    i=1
     while IFS= read -r host; do
         host_array[$i]="$host"
-        echo -e "  ${CYAN}$i)${RESET} $host"
+        menu_opts+=("$host|Cleanup SSH keys for this host")
         i=$((i + 1))
     done <<< "$hosts"
     
-    echo ""
-    echo -e "  ${CYAN}a)${RESET} All hosts"
-    echo -e "  ${CYAN}q)${RESET} Quit"
-    echo ""
+    menu_opts+=("All hosts|Cleanup keys for all hosts")
     
-    read -p "Cleanup keys for which host(s)? " choice
+    choose_menu "Select Host" "${menu_opts[@]}"
+    choice=$MENU_RESULT
     
-    if [[ "$choice" == "q" ]]; then
+    # Check if cancelled
+    if [[ $choice -eq -1 ]]; then
         echo "Cancelled."
         exit 0
     fi
     
-    if [[ "$choice" == "a" ]]; then
+    # Check if "All hosts" selected (last option)
+    if [[ $choice -eq $((${#menu_opts[@]} - 1)) ]]; then
         # Cleanup all hosts
         echo ""
         echo -e "${YELLOW}→${RESET} Cleaning up all hosts..."

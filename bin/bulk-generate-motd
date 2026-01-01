@@ -123,13 +123,15 @@ while true; do
     # Step 1: Choose style type
     echo -e "${BOLD}${CYAN}Step 1: Choose MOTD Style${RESET}"
     echo ""
-    echo -e "  ${YELLOW}1${RESET}) ${BOLD}Default Clean MOTD${RESET}"
-    echo -e "     ${YELLOW}→${RESET} Functional & informative, no ASCII art"
-    echo ""
-    echo -e "  ${YELLOW}2${RESET}) ${BOLD}ASCII Art MOTD${RESET}"
-    echo -e "     ${YELLOW}→${RESET} Choose from 6 artistic styles"
-    echo ""
-    if ! read_choice "Choice (1/2)" style_type "1"; then
+    
+    choose_menu "Choose MOTD Style" \
+        "Default Clean MOTD|Functional & informative, no ASCII art" \
+        "ASCII Art MOTD|Choose from 6 artistic styles"
+    
+    style_type=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+    
+    # Check if cancelled
+    if [[ $MENU_RESULT -eq -1 ]]; then
         break  # Return to homelab menu
     fi
 
@@ -138,29 +140,28 @@ while true; do
     # shellcheck disable=SC2154
     if [[ "$style_type" == "2" ]]; then
         echo ""
-        echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
-        echo ""
-
+        
         if command -v toilet &> /dev/null; then
             while true; do
-                echo -e "  ${CYAN}1${RESET}) Clean & Functional ${YELLOW}(No ASCII - Default)${RESET}"
-                echo -e "  ${CYAN}2${RESET}) Rainbow Future    ${YELLOW}(Colorful, modern)${RESET}"
-                echo -e "  ${CYAN}3${RESET}) Rainbow Standard  ${YELLOW}(Colorful, classic)${RESET}"
-                echo -e "  ${CYAN}4${RESET}) Mono Future       ${YELLOW}(Black & white, modern)${RESET}"
-                echo -e "  ${CYAN}5${RESET}) Big Mono          ${YELLOW}(Large, bold)${RESET}"
-                echo -e "  ${CYAN}6${RESET}) Small/Smblock     ${YELLOW}(Compact)${RESET}"
-                echo ""
-                read -r -p "$(echo -e "${CYAN}Choose ASCII style (1-6, p=preview, q=cancel):${RESET} ")" ascii_choice
-                ascii_choice=${ascii_choice:-1}
+                choose_menu "Choose ASCII Art Style" \
+                    "Clean & Functional|No ASCII - Default" \
+                    "Rainbow Future|Colorful, modern" \
+                    "Rainbow Standard|Colorful, classic" \
+                    "Mono Future|Black & white, modern" \
+                    "Big Mono|Large, bold" \
+                    "Small/Smblock|Compact" \
+                    "PREVIEW|Show all styles"
                 
-                # Handle cancel
-                if [[ "$ascii_choice" == "q" ]] || [[ "$ascii_choice" == "Q" ]]; then
+                choice_idx=$MENU_RESULT
+                
+                # Check if cancelled
+                if [[ $choice_idx -eq -1 ]]; then
                     ascii_style=""
-                    break 2  # Break out of both loops, return to main menu
+                    break 2  # Break out of both loops
                 fi
-
-                # Handle preview
-                if [[ "$ascii_choice" == "p" ]] || [[ "$ascii_choice" == "P" ]]; then
+                
+                # Handle preview (last option)
+                if [[ $choice_idx -eq 6 ]]; then
                     clear
                     echo -e "${BOLD}${CYAN}ASCII Art Preview${RESET}"
                     echo ""
@@ -180,22 +181,12 @@ while true; do
                         break 2  # Return to main menu
                     fi
                     clear
-                    echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
-                    echo ""
                     continue
                 fi
-
-                # Validate choice
-                if [[ "$ascii_choice" =~ ^[1-6]$ ]]; then
-                    ascii_style="$ascii_choice"
-                    break
-                else
-                    echo -e "${RED}Invalid choice. Please enter 1-6 or 'p' for preview.${RESET}"
-                    sleep 1
-                    clear
-                    echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
-                    echo ""
-                fi
+                
+                # Valid style selected (convert 0-based to 1-based for ASCII mapping)
+                ascii_style=$((choice_idx + 1))
+                break
             done
         else
             echo -e "${YELLOW}⚠ Toilet not installed - ASCII art not available${RESET}"
@@ -216,16 +207,15 @@ while true; do
     # Step 2: Choose generation mode
     echo -e "${BOLD}${CYAN}Step 2: Choose Generation Mode${RESET}"
     echo ""
-    echo -e "  ${YELLOW}1${RESET}) ${BOLD}Interactive Mode${RESET}"
-    echo -e "     ${YELLOW}→${RESET} Customize each host individually"
-    echo -e "     ${YELLOW}→${RESET} Choose service name, description, web UI per host"
-    echo ""
-    echo -e "  ${YELLOW}2${RESET}) ${BOLD}Smart-Detect Mode${RESET} ${GREEN}[Recommended]${RESET}"
-    echo -e "     ${YELLOW}→${RESET} Automatic generation for all hosts"
-    echo -e "     ${YELLOW}→${RESET} Uses chosen style with auto-detected settings"
-    echo -e "     ${YELLOW}→${RESET} No prompts per host"
-    echo ""
-    if ! read_choice "Choice (1/2)" gen_mode "2"; then
+    
+    choose_menu "Choose Generation Mode" \
+        "Interactive Mode|Customize each host individually" \
+        "Smart-Detect Mode|Automatic generation for all hosts"
+    
+    gen_mode=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+    
+    # Check if cancelled
+    if [[ $MENU_RESULT -eq -1 ]]; then
         break  # Return to homelab menu
     fi
 
@@ -428,17 +418,16 @@ while true; do
         echo ""
         echo -e "${BOLD}Deploy all generated MOTDs to hosts now?${RESET}"
         echo ""
-        echo -e "  ${YELLOW}1${RESET}) Yes, deploy now via SSH"
-        echo -e "  ${YELLOW}2${RESET}) No, I'll deploy manually later"
-        echo ""
-        if [[ ! -t 0 ]]; then
-            deploy_all="2"  # default to No when non-interactive
-        else
-            read -r -p "$(echo -e ${CYAN}Choice \(1/2, q=cancel\):${RESET} )" deploy_all
-            if [[ "$deploy_all" == "q" || "$deploy_all" == "Q" ]]; then
-                break  # Return to main menu
-            fi
-            deploy_all=${deploy_all:-1}
+        
+        choose_menu "Deployment Choice" \
+            "Yes, deploy now via SSH|Start deployment immediately" \
+            "No, deploy manually later|Save templates, deploy later"
+        
+        deploy_all=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+        
+        # Check if cancelled
+        if [[ $MENU_RESULT -eq -1 ]]; then
+            break  # Return to main menu
         fi
 
         if [[ "$deploy_all" == "1" ]]; then
@@ -518,24 +507,26 @@ while true; do
     echo ""
     echo -e "${BOLD}What would you like to do next?${RESET}"
     echo ""
-    echo -e "  ${YELLOW}1${RESET}) Back to Homelab menu"
-    echo -e "  ${YELLOW}2${RESET}) Generate more (restart bulk-generate)"
+    
     if [[ ${#failed_hosts[@]} -gt 0 ]]; then
-        echo -e "  ${YELLOW}3${RESET}) Retry failed deployments (${#failed_hosts[@]} hosts)"
-        echo -e "  ${YELLOW}4${RESET}) Quit"
+        choose_menu "Next Action" \
+            "Back to Homelab menu|Return to main menu" \
+            "Generate more|Restart bulk-generate" \
+            "Retry failed deployments|Retry ${#failed_hosts[@]} hosts" \
+            "Quit|Exit program"
     else
-        echo -e "  ${YELLOW}3${RESET}) Quit"
+        choose_menu "Next Action" \
+            "Back to Homelab menu|Return to main menu" \
+            "Generate more|Restart bulk-generate" \
+            "Quit|Exit program"
     fi
-    echo ""
-    if [[ ${#failed_hosts[@]} -gt 0 ]]; then
-        read -p "$(echo -e "${CYAN}Choice (1/2/3/4, q=back):${RESET} ")" next_action
-    else
-        read -p "$(echo -e "${CYAN}Choice (1/2/3, q=back):${RESET} ")" next_action
-    fi
-    if [[ "$next_action" == "q" || "$next_action" == "Q" ]]; then
+    
+    next_action=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+    
+    # Check if cancelled
+    if [[ $MENU_RESULT -eq -1 ]]; then
         break  # Return to homelab menu
     fi
-    next_action=${next_action:-1}
 
     case "$next_action" in
         1)

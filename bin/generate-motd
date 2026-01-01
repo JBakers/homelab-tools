@@ -20,6 +20,11 @@ if [[ -f "$LIB_DIR/constants.sh" ]]; then
     # shellcheck source=/dev/null
     source "$LIB_DIR/constants.sh"
 fi
+# Source menu helpers for choose_menu function
+if [[ -f "$LIB_DIR/menu-helpers.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/menu-helpers.sh"
+fi
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -626,65 +631,63 @@ show_ascii_preview() {
 echo -e "${BOLD}Available MOTD styles:${RESET}"
 echo ""
 
-echo -e "${CYAN}1)${RESET} Clean & Functional ${YELLOW}(No ASCII - Clean & Informative)${RESET} ${GREEN}[Default]${RESET}"
-echo ""
-
 if command -v toilet &> /dev/null; then
-    echo -e "${BOLD}Optional ASCII art styles:${RESET}"
-    echo -e "${CYAN}2)${RESET} Rainbow Future   ${YELLOW}(Colorful, modern)${RESET}"
-    echo -e "${CYAN}3)${RESET} Rainbow Standard ${YELLOW}(Colorful, classic)${RESET}"
-    echo -e "${CYAN}4)${RESET} Mono Future      ${YELLOW}(Black-white, modern)${RESET}"
-    echo -e "${CYAN}5)${RESET} Big Mono         ${YELLOW}(Large, bold)${RESET}"
-    echo -e "${CYAN}6)${RESET} Small/Smblock    ${YELLOW}(Small, compact)${RESET}"
-    echo -e "${CYAN}p)${RESET} Preview ASCII styles"
-else
-    echo -e "${YELLOW}⚠ Toilet not installed - ASCII art not available${RESET}"
-    echo -e "  For ASCII art: ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
-fi
-
-echo ""
-read -p "$(echo -e ${GREEN}Choose style [1-6, p=preview, q=cancel]:${RESET} )" style_choice
-if [[ "$style_choice" == "q" || "$style_choice" == "Q" ]]; then
-    echo -e "${YELLOW}Cancelled${RESET}"
-    exit 0
-fi
-
-# Preview mode
-if [[ "$style_choice" == "p" ]] || [[ "$style_choice" == "P" ]]; then
-    if command -v toilet &> /dev/null; then
-        clear
-        echo -e "${BOLD}${CYAN}ASCII Art Preview - \"$service_name\"${RESET}"
-        echo ""
-
-        echo -e "${CYAN}2) Rainbow Future:${RESET}"
-        show_ascii_preview "$service_name" "future" "gay"
-        echo ""
-
-        echo -e "${CYAN}3) Rainbow Standard:${RESET}"
-        show_ascii_preview "$service_name" "standard" "gay"
-        echo ""
-
-        echo -e "${CYAN}4) Mono Future:${RESET}"
-        show_ascii_preview "$service_name" "future" ""
-        echo ""
-
-        echo -e "${CYAN}5) Big Mono:${RESET}"
-        show_ascii_preview "$service_name" "bigmono9" ""
-        echo ""
-
-        echo -e "${CYAN}6) Small/Smblock:${RESET}"
-        show_ascii_preview "$service_name" "smblock" ""
-        echo ""
-
-        read -p "$(echo -e ${GREEN}Choose style [1-6, q=cancel]:${RESET} )" style_choice
-        if [[ "$style_choice" == "q" || "$style_choice" == "Q" ]]; then
+    while true; do
+        choose_menu "Choose MOTD Style" \
+            "Clean & Functional|No ASCII - Clean & Informative" \
+            "Rainbow Future|Colorful, modern" \
+            "Rainbow Standard|Colorful, classic" \
+            "Mono Future|Black & white, modern" \
+            "Big Mono|Large, bold" \
+            "Small/Smblock|Small, compact" \
+            "PREVIEW|Show all styles"
+        
+        choice_idx=$MENU_RESULT
+        
+        # Check if cancelled
+        if [[ $choice_idx -eq -1 ]]; then
             echo -e "${YELLOW}Cancelled${RESET}"
             exit 0
         fi
-    else
-        echo -e "${YELLOW}⚠${RESET} Preview not available (toilet not installed)"
-        style_choice="1"
-    fi
+        
+        # Handle preview (last option)
+        if [[ $choice_idx -eq 6 ]]; then
+            clear
+            echo -e "${BOLD}${CYAN}ASCII Art Preview - \"$service_name\"${RESET}"
+            echo ""
+
+            echo -e "${CYAN}2) Rainbow Future:${RESET}"
+            show_ascii_preview "$service_name" "future" "gay"
+            echo ""
+
+            echo -e "${CYAN}3) Rainbow Standard:${RESET}"
+            show_ascii_preview "$service_name" "standard" "gay"
+            echo ""
+
+            echo -e "${CYAN}4) Mono Future:${RESET}"
+            show_ascii_preview "$service_name" "future" ""
+            echo ""
+
+            echo -e "${CYAN}5) Big Mono:${RESET}"
+            show_ascii_preview "$service_name" "bigmono9" ""
+            echo ""
+
+            echo -e "${CYAN}6) Small/Smblock:${RESET}"
+            show_ascii_preview "$service_name" "smblock" ""
+            echo ""
+
+            read -p "$(echo -e ${GREEN}Press Enter to continue...${RESET} )"
+            continue
+        fi
+        
+        # Valid style selected (convert 0-based to 1-based for ASCII mapping)
+        style_choice=$((choice_idx + 1))
+        break
+    done
+else
+    echo -e "${YELLOW}⚠ Toilet not installed - ASCII art not available${RESET}"
+    echo -e "  For ASCII art: ${GREEN}sudo apt install toilet toilet-fonts${RESET}"
+    style_choice="1"
 fi
 
 # Determine font and filter based on choice

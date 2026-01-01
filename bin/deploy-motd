@@ -5,6 +5,21 @@ set -euo pipefail
 # Author: J.Bakers
 # Version: See VERSION file
 
+# Load paths and libraries
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
+# Source menu helpers for choose_menu function
+if [[ -f "$LIB_DIR/menu-helpers.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/menu-helpers.sh"
+fi
+
 # Colors
 CYAN='\033[0;96m'
 GREEN='\033[0;92m'
@@ -189,11 +204,14 @@ if ssh "$SERVICE" "[[ -f /etc/profile.d/00-motd.sh ]]" 2>/dev/null; then
         echo -e "${DIM}  ...${RESET}"
         echo ""
         echo -e "${YELLOW}What would you like to do?${RESET}"
-        echo -e "  ${GREEN}1${RESET}) Replace (overwrite existing MOTD)"
-        echo -e "  ${CYAN}2${RESET}) Append (add HLT MOTD after existing)"
-        echo -e "  ${YELLOW}3${RESET}) Cancel"
         echo ""
-        read -p "$(echo -e "${CYAN}Choice (1/2/3): ${RESET}")" motd_choice
+        
+        choose_menu "MOTD Protection" \
+            "Replace|Overwrite existing MOTD" \
+            "Append|Add HLT MOTD after existing" \
+            "Cancel|Abort deployment"
+        
+        motd_choice=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
         
         case "$motd_choice" in
             1)
@@ -205,7 +223,7 @@ if ssh "$SERVICE" "[[ -f /etc/profile.d/00-motd.sh ]]" 2>/dev/null; then
                 echo -e "${YELLOW}→${RESET} Will append"
                 # We'll handle this later in the deployment
                 ;;
-            3|*)
+            -1|3|*)
                 echo -e "${YELLOW}Cancelled${RESET}"
                 exit 0
                 ;;

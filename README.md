@@ -1,9 +1,9 @@
-# 🏠 Homelab Management Tools v3.6.2
+# 🏠 Homelab Management Tools v3.6.3
 
-[![Version](https://img.shields.io/badge/version-3.6.2-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
+[![Version](https://img.shields.io/badge/version-3.6.3-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
 [![License](https://img.shields.io/badge/license-GPL--v3-blue.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/shell-bash-lightgrey.svg)](https://www.gnu.org/software/bash/)
-[![Tests](https://img.shields.io/badge/tests-72%20passed-brightgreen.svg)](https://github.com/JBakers/homelab-tools)
+[![Tests](https://img.shields.io/badge/tests-42%20tests%20%7C%2098%25-brightgreen.svg)](https://github.com/JBakers/homelab-tools)
 
 > **Professional command-line toolkit for managing homelab infrastructure with beautiful, colorful interfaces and intelligent automation.**
 
@@ -28,12 +28,16 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
 ### ⚡ Automation & Efficiency
 
 - **Bulk Operations** - Generate and deploy MOTDs for all hosts at once
-- **One-Click Deploy** - SSH-based deployment to remote hosts
-- **Template System** - Reusable, customizable MOTD templates
-- **MOTD Protection** - Detects existing MOTDs, offers replace/append/cancel
-- **Undeploy Support** - Remove MOTDs from single host or all hosts
+- **One-Click Deploy** - SSH-based deployment to remote hosts with `deploy-motd --all`
+- **Template System** - Reusable, customizable MOTD templates with HLT markers
+- **MOTD Protection** - Smart detection of existing MOTDs
+  - Detects HLT vs non-HLT MOTDs automatically
+  - Replace/Append/Cancel options for safe deployment
+  - Automatic backup before replacing non-HLT MOTDs
+  - Only removes HLT MOTDs on undeploy (preserves third-party configs)
+- **Undeploy Support** - Remove MOTDs from single host or all hosts (`undeploy-motd --all`)
 - **Retry Failed** - Bulk deploy shows failed hosts with retry option
-- **Deployment Status** - Track deployments with `list-templates -s`
+- **Deployment Status** - Track deployments with `list-templates -s` (🟢 deployed, 🟡 ready, 🔴 stale)
 - **Interactive Preview** - Preview templates with `list-templates -v`
 
 ### 🔐 SSH Management
@@ -61,6 +65,12 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
 - **Input Validation** - Protection against command injection attacks
 - **Non-Interactive Mode** - `install.sh --non-interactive` for automated setups
 - **Optional toilet install** - Installer prompts to install ASCII art support
+- **Test Suite** - 42 automated tests with 98% coverage in Docker environment
+  - Static tests (syntax, ShellCheck, help formatting)
+  - Functional tests (generate, deploy, list, delete)
+  - Menu navigation tests (expect scripts)
+  - SSH deployment tests (mock servers)
+  - Edge case handling
 
 ## 📦 Installation
 
@@ -223,12 +233,11 @@ homelab
 
 ```
 ╔════════════════════════════════════════════════════════════╗
-║         🏠 Homelab Management Tools v3.6.1                 ║
+║         🏠 Homelab Management Tools v3.6.3                 ║
 ╚════════════════════════════════════════════════════════════╝
 
-  ► 📝 MOTD Tools           Generate/deploy/list MOTDs
-    ⚙️  Configuration        Edit hosts & settings
-    🔑 SSH Management        Keys & cleanup
+  ► 📝 MOTD Management      Generate/deploy/list MOTDs
+    ⚙️  Configuration        Edit hosts, keys & settings
     💾 Backup Management     View & manage backups
     HELP
     QUIT
@@ -364,26 +373,34 @@ homelab-tools/
 ├── 📂 bin/                        # Executable commands
 │   ├── 🏠 homelab                # Main interactive menu
 │   ├── 📝 generate-motd          # MOTD generator (60+ services)
-│   ├── 📦 bulk-generate-motd     # Bulk MOTD generation
-│   ├── 🚀 deploy-motd            # MOTD deployment via SSH
-│   ├── 🧹 cleanup-keys           # SSH host key cleanup
-│   ├── 🔑 copykey                # SSH key distribution
+│   ├── � deploy-motd            # MOTD deployment via SSH
+│   ├── 🔄 undeploy-motd          # Remove deployed MOTDs
 │   ├── 📄 list-templates         # Template overview
-│   ├── ⚙️  edit-config            # Edit homelab config
-│   └── 🔧 edit-hosts             # Edit SSH config
+│   ├── 🗑️  delete-template        # Delete templates
+│   ├── 🔧 edit-hosts             # Edit SSH config
+│   ├── 🔑 copykey                # SSH key distribution
+│   └── 🧹 cleanup-keys           # SSH host key cleanup
+│
+├── 📂 lib/                        # Shared libraries
+│   ├── menu-helpers.sh           # Arrow navigation system
+│   ├── version.sh                # Version management
+│   └── constants.sh              # Shared constants
 │
 ├── 📂 config/                     # Example configurations
-│   ├── hosts.txt.example         # Example hosts file
 │   ├── ssh-config.example        # Example SSH config
 │   └── server-motd/              # Server-side MOTD scripts
 │
+├── 📂 .test-env/                  # Docker test environment
+│   ├── run-tests.sh              # 42 automated tests
+│   ├── Dockerfile.testhost       # Test container
+│   └── docker-compose.yml        # Test orchestration
+│
 ├── 🛠️  install.sh                # Installation script
 ├── 🗑️  uninstall.sh              # Uninstallation script
-├── 📦 export.sh                  # Export/backup tool
 ├── 📖 README.md                  # This file
 ├── 🚀 QUICKSTART.md              # Quick start guide
 ├── 📋 CHANGELOG.md               # Version history
-└── 📜 LICENSE                    # MIT License
+└── 📜 LICENSE                    # GPL-v3 License
 ```
 
 **User Data Locations:**
@@ -424,6 +441,49 @@ Host pihole
 ```
 
 Then use: `ssh frigate`
+
+## 🧪 Testing & Quality Assurance
+
+This project includes a comprehensive automated test suite:
+
+### Test Suite Overview
+
+- **42 Automated Tests** - 98% success rate
+- **Docker-based** - Isolated test environment with mock SSH servers
+- **Full Coverage** - Tests all major functionality
+
+### Test Categories
+
+| Category | Tests | Coverage |
+|----------|-------|----------|
+| Static Tests | 4 | Syntax, ShellCheck, help formatting |
+| Install Tests | 4 | Installation, symlinks, PATH |
+| Menu Navigation | 10 | Interactive menus, arrow keys |
+| Functional Tests | 5 | Generate, deploy, list, delete |
+| SSH Tests | 3 | Mock server deployment |
+| Edge Cases | 2 | Invalid input, unreachable hosts |
+| Uninstall Tests | 2 | Clean removal |
+| CLI Options | 33 | All command flags |
+| Additional Functional | 7 | Multiple templates, protection |
+| Service Presets | 1 | Auto-detection |
+| Full Menu Navigation | 4 | Complete workflows |
+
+### Running Tests
+
+```bash
+# Navigate to test directory
+cd .test-env
+
+# Start Docker containers
+docker compose up -d
+
+# Run all tests
+docker compose exec -T testhost bash /workspace/.test-env/run-tests.sh
+
+# Expected: ✓✓✓ ALL TESTS PASSED! 🎉 (41/42)
+```
+
+For more details, see [`.test-env/QUICK_START.md`](.test-env/QUICK_START.md)
 
 ## 🐛 Troubleshooting
 
@@ -697,7 +757,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## 📜 License
 
-MIT License © 2025 J.Bakers
+GPL-v3 License © 2025 J.Bakers
 
 See [LICENSE](LICENSE) for details.
 

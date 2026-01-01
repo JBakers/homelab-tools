@@ -1,45 +1,44 @@
 ═══════════════════════════════════════════════════════════════════════════════
-  TEST RUNNER UPDATED FOR v3.6.0-dev.20
+  TEST RUNNER STATUS FOR v3.6.0-dev.35
 ═══════════════════════════════════════════════════════════════════════════════
 
-CHANGES MADE:
-─────────────
+CURRENT STATUS:
+───────────────
 
-✅ Updated test-runner.sh
-   • Version bumped: 3.6.0-dev.13 → 3.6.0-dev.20
-   • Test count: 72 → 80 tests (8 new tests added)
-   • Section 4 renamed: "MOTD INTERACTIVE MODE" → "MOTD GENERATION"
-   • Section 5 renamed: "MOTD SMART-DETECT" → "DEPLOY & UNDEPLOY"
-   • Section 6 renamed: "TEMPLATES" → "TEMPLATE MANAGEMENT"
-   • Section 7 renamed: "ASCII ART STYLES" → "LIST TEMPLATES (all modes)"
+✅ test-runner.sh - Ready for use
+   • Version: 3.6.0-dev.35
+   • Test count: 72 tests (100% automated)
+   • Sections: 12 (6 tests each)
+   • Progress tracking: ~/.homelab-test-progress
+   • Runtime: ~5-10 minutes
 
-✅ New Tests Added (CRITICAL FOR v3.6.0)
-   • edit-hosts menu title validation (3 menus)
-   • list-templates --view mode testing
-   • list-templates --status indicator testing
-   • delete-template help color testing
-   • deploy-motd / undeploy-motd testing
-   • Escape code detection in all commands
+RECENT UPDATES (dev.21-35):
+───────────────────────────
 
-✅ Created TESTING_CHECKLIST.md
-   • 8 critical tests with step-by-step verification
-   • Integration tests for all menus
-   • Quick pass/fail summary template
-   • Known issues and future TODO items
+✅ All menu fixes validated (dev.20-32)
+   • edit-hosts menu title fixes (3 locations)
+   • list-templates --view function name fix
+   • delete-template help color fix
+   • edit-hosts clear() conflict fix
 
-BUGS FIXED (TESTED IN v3.6.0-dev.20):
-───────────────────────────────────────
+✅ New features tested (dev.26-35)
+   • Special occasion messages in banner
+   • Banner enabled by default in --non-interactive
+   • sync-dev.sh functionality
+   • Auto-bump patch version after dev.09
+   • Clean /opt structure (dev-only files excluded)
 
-1. ✅ edit-hosts: Missing title arguments (3 locations)
-   • Line 555: Host Options menu
-   • Line 717: Bulk Operations menu
-   • Line 796: Select Host menu
+BUGS FIXED & VERIFIED:
+───────────────────────
 
-2. ✅ list-templates --view: Wrong function name
-   • Line 197: choose_menu → show_arrow_menu
-
-3. ✅ delete-template --help: Escape codes not displayed
-   • Line 18-38: Heredoc → echo -e statements
+1. ✅ edit-hosts: Missing title arguments (3 locations) - dev.20
+2. ✅ list-templates --view: Wrong function name - dev.20
+3. ✅ delete-template --help: Escape codes not displaying - dev.20
+4. ✅ README: Updated to v3.6.0 - dev.27
+5. ✅ Banner: Not installed with --non-interactive - dev.29
+6. ✅ Banner: Not removed on complete uninstall - dev.30-31
+7. ✅ edit-hosts: Menu not showing due to clear conflict - dev.32
+8. ✅ /opt: Dev-only files excluded - dev.34-35
 
 WHAT TO TEST:
 ──────────────

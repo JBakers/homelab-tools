@@ -2,7 +2,7 @@
 
 ## v3.6.0-dev (In Development)
 
-**Current development branch** - Building on v3.5.0 release
+**Current development branch** - v3.6.0-dev.35 - Building on v3.5.0 release
 
 ### ✨ New Features
 
@@ -11,6 +11,19 @@
 - `list-templates --status` - Deployment tracking with 🟢🟡🔴 indicators
 - `list-templates --view` - Interactive preview mode with arrow navigation
 - Deployment logging in `~/.local/share/homelab-tools/deploy-log`
+
+#### Developer Experience (dev.21-35)
+- `sync-dev.sh` - Quick sync workspace changes to /opt without git pull (dev.33)
+- Auto-bump patch version after dev.09 (3.6.0-dev.09 → 3.6.1-dev.00) (dev.35)
+- Exclude dev-only files from /opt installation (dev.34)
+- Exclude GitHub-only docs from /opt (CHANGELOG, CONTRIBUTING, SECURITY, QUICKSTART) (dev.35)
+- Clean /opt structure: 15 → 11 essential files only
+
+#### Welcome Banner Enhancements (dev.28-31)
+- Special occasion messages (New Year, Christmas, Hanukkah, Halloween, Easter, July 4th)
+- Banner enabled by default in --non-interactive mode (dev.29)
+- Improved cleanup with standalone tip line detection (dev.30)
+- Increased cleanup line limit from 50 to 60 for banner with occasions (dev.31)
 
 #### Enhanced generate-motd (dev.15-16)
 - Non-interactive mode for scripting: accepts Web UI choice + port via stdin
@@ -36,7 +49,27 @@
 
 ### 🐛 Bug Fixes
 
-#### v3.6.0-dev.21 (Current)
+#### v3.6.0-dev.32-35 (Latest)
+- Fixed edit-hosts menu not showing due to clear conflict (dev.32)
+  - Removed pre-menu host list that conflicted with show_arrow_menu's clear()
+  - Host count now shown in menu title
+- Fixed sync-dev.sh and install.sh excludes (dev.33-35)
+  - Comprehensive exclude list for dev-only files
+  - Clean /opt with only essential production files
+
+#### v3.6.0-dev.26-31 (Banner fixes)
+- Fixed README for v3.6.0 release (dev.27)
+  - Updated version badge, removed dev warning
+  - Added tests badge (55 passed)
+  - Documented new commands and features
+- Fixed complete uninstall not removing banner (dev.30-31)
+  - Added standalone tip line detection to awk patterns
+  - Increased bashrc cleanup limit from 50 to 60 lines
+  - Banner with special occasions is ~51 lines
+- Fixed banner not installed with --non-interactive (dev.29)
+  - Changed default from 'n' to 'y' for banner prompt
+
+#### v3.6.0-dev.21-25 (Earlier fixes)
 - Fixed install.sh .bashrc escape codes (single quotes → echo -e)
 - Fixed install.sh duplicate Homelab entries in .bashrc
 - Fixed test-runner.sh progress counter (72 tests, not 80)

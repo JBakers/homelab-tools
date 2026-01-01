@@ -7,7 +7,7 @@
 
 - [x] **Fix undeploy-motd bug** - Searches for `99-homelab-*.sh` but deploy-motd creates `00-motd.sh`
 
-## 🎯 v3.6.0 IN PROGRESS 🚧
+## 🎯 v3.6.0 IN PROGRESS 🚧 (dev.35)
 
 **New features completed:**
 - [x] undeploy-motd - Remove MOTDs from hosts
@@ -16,11 +16,23 @@
 - [x] Removed Jellyfin examples, replaced with Pi-hole
 - [x] Enhanced edit-hosts - Full interactive SSH config manager
 - [x] Centralized version management (VERSION file + lib/version.sh)
+- [x] Special occasion messages in banner (New Year, Christmas, etc.)
+- [x] sync-dev.sh - Quick sync workspace to /opt for rapid testing
+- [x] Auto-bump patch version after dev.09 (3.6.0-dev.09 → 3.6.1-dev.00)
+- [x] Exclude dev-only files from /opt (bump-dev.sh, TODO.md, etc.)
+- [x] Exclude GitHub-only docs from /opt (CHANGELOG, CONTRIBUTING, etc.)
 
-**Bug fixes (v3.6.0-dev.20):**
+**Bug fixes (v3.6.0-dev.21-35):**
 - [x] edit-hosts: Fixed 3 missing title arguments in show_arrow_menu calls
 - [x] list-templates --view: Fixed wrong function name (choose_menu → show_arrow_menu)
 - [x] delete-template: Fixed escape codes in help (heredoc → echo -e)
+- [x] README: Updated to v3.6.0, removed dev warning
+- [x] Banner: Fixed complete uninstall not removing banner (increased line limit 50→60)
+- [x] Banner: Fixed cleanup not removing standalone tip line
+- [x] Banner: Now enabled by default in --non-interactive mode
+- [x] Banner: Fixed special occasions auto-reload
+- [x] edit-hosts: Fixed menu not showing due to clear() conflict
+- [x] uninstall.sh: Increased bashrc cleanup limit from 50 to 60 lines
 
 **Repository cleanup (audit 2025-12-14):**
 - [x] Archive `bump-version.sh` → `.archive/` (duplicate of smarter release.sh)
@@ -63,9 +75,12 @@
 
 ---
 ## � Medium Priority
-- [ ] **Skip banner prompt on Update** - Banner cleanup removes HLT_BANNER, so grep check fails
-  - [ ] Save HLT_BANNER setting before cleanup
-  - [ ] Restore after .bashrc cleanup (only if was previously set)
+- [x] **Skip banner prompt on Update** - Fixed by defaulting to 'y' in non-interactive mode
+- [ ] **Promote homelab command only** in README
+  - [x] README updated with all current features and commands
+  - [ ] Consider hiding individual command docs
+  - [ ] Keep standalone commands for power users/scripting, but don't promote
+- [ ] **Archive TESTING_GUIDE.md** → `.archive/` (outdated, manual testing via menu is simpler)
   - [ ] Skip banner prompt if already configured
   - Root cause: Sed removes banner block (L341), then grep for HLT_BANNER fails (L408)- [ ] **Consolidate all features into `homelab` menu** - Users only need to remember one command
   - [ ] Check all features are accessible via menu

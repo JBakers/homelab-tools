@@ -7,7 +7,12 @@
 
 - [x] **Fix undeploy-motd bug** - Searches for `99-homelab-*.sh` but deploy-motd creates `00-motd.sh`
 
-## 🎯 v3.6.0 STATUS - READY FOR RELEASE! 🎉 (dev.35)
+## 🎯 Status - 3.6.1-dev.00 (ready for 3.6.0 release) 🎉
+
+**Current version:** 3.6.1-dev.00 (auto patch bump after dev.09 tested)
+**Branch:** develop
+**Tests:** 72/72 ✅
+**Release target:** 3.6.0 (remove -dev, follow steps below)
 
 **New features completed:**
 - [x] undeploy-motd - Remove MOTDs from hosts
@@ -21,6 +26,8 @@
 - [x] Auto-bump patch version after dev.09 (3.6.0-dev.09 → 3.6.1-dev.00)
 - [x] Exclude dev-only files from /opt (bump-dev.sh, TODO.md, etc.)
 - [x] Exclude GitHub-only docs from /opt (CHANGELOG, CONTRIBUTING, etc.)
+- [x] Clean /opt structure (15 → 11 items)
+- [x] bulk-generate-motd: spacing fix after progress bar (dev.36)
 
 **Bug fixes (v3.6.0-dev.21-35):**
 - [x] edit-hosts: Fixed 3 missing title arguments in show_arrow_menu calls
@@ -33,6 +40,8 @@
 - [x] Banner: Fixed special occasions auto-reload
 - [x] edit-hosts: Fixed menu not showing due to clear() conflict
 - [x] uninstall.sh: Increased bashrc cleanup limit from 50 to 60 lines
+- [x] Banner special occasions fully fixed (auto-reload, cleanup)
+- [x] Banner enabled by default in --non-interactive mode
 
 **Repository cleanup:**
 - [x] Archive `bump-version.sh` → `.archive/`
@@ -48,7 +57,7 @@
 ---
 ## 🚀 NEXT STEPS
 
-**v3.6.0 READY FOR RELEASE!**
+**Release 3.6.0 (ready to ship)**
 - ✅ All features complete
 - ✅ All bugs fixed
 - ✅ Tests passing (72/72)
@@ -80,7 +89,7 @@ git push origin v3.6.0
 ```
 
 ---
-## �� Medium Priority (post-3.6.0)
+## 🟠 Medium Priority (post-3.6.0)
 
 - [ ] **Archive TESTING_GUIDE.md** → `.archive/` (outdated)
 - [ ] **Consolidate features into homelab menu**

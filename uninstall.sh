@@ -255,8 +255,8 @@ if [[ -f "$HOME/.bashrc" ]] && grep -qi "homelab" "$HOME/.bashrc" 2>/dev/null; t
         new_lines=$(wc -l < "$temp_file")
         removed=$((orig_lines - new_lines))
         
-        # Sanity check: we should remove 20-40 lines max (tip + banner)
-        if [[ $removed -ge 0 && $removed -le 50 ]]; then
+        # Sanity check: we should remove 60 lines max (tip + banner with special occasions)
+        if [[ $removed -ge 0 && $removed -le 60 ]]; then
             mv "$temp_file" "$HOME/.bashrc"
             # Ensure correct ownership
             chown "$(id -un):$(id -gn)" "$HOME/.bashrc" 2>/dev/null || true

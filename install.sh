@@ -409,8 +409,8 @@ if grep -q "HLT_BANNER" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
     echo -e "${GREEN}  ✓${RESET} Welcome banner already configured"
 else
     echo ""
-    add_banner=$(read_input "Add a welcome banner to your shell? (Y/n): " "n")
-    add_banner=${add_banner:-n}
+    add_banner=$(read_input "Add a welcome banner to your shell? (Y/n): " "y")
+    add_banner=${add_banner:-y}
     
     if [[ "$add_banner" =~ ^[Yy]$ ]]; then
         cat >> "$ACTUAL_HOME/.bashrc" << 'BANNER_EOF'

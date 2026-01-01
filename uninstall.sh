@@ -18,6 +18,19 @@ echo -e "║         🗑️  HOMELAB TOOLS - UNINSTALL                ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
+# Safety check - block uninstall if .dev-workspace marker exists
+# This file is created locally by developers and is in .gitignore
+if [[ -f ".dev-workspace" ]]; then
+    echo -e "${RED}✗ ERROR: This is a development workspace!${RESET}"
+    echo ""
+    echo -e "  Cannot uninstall from development directory."
+    echo -e "  Run uninstall from the installed location instead:"
+    echo ""
+    echo -e "  ${CYAN}/opt/homelab-tools/uninstall.sh${RESET}"
+    echo ""
+    exit 1
+fi
+
 # Ask for confirmation
 read -p "Uninstall Homelab Tools? (Y/n): " confirm
 confirm=${confirm:-y}

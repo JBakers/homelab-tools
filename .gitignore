@@ -93,3 +93,5 @@ __pycache__/
 
 # Misc
 commit-changes.md
+# Dev workspace marker (blocks uninstall from dev directory)
+.dev-workspace

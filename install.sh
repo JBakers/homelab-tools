@@ -436,6 +436,23 @@ ASCIIART
         echo "Hostname: $HOSTNAME"
         echo "$(date +'%A %d %B %Y, %H:%M')"
         
+        # Special occasion messages
+        TODAY_MD=$(date +%m-%d)
+        case "$TODAY_MD" in
+            01-01) echo -e "\033[1;33m🎆 Happy New Year! 🎆\033[0m" ;;
+            12-25) echo -e "\033[1;31m🎄 Merry Christmas! 🎄\033[0m" ;;
+            12-26) echo -e "\033[0;36m✡️  Happy Hanukkah! ✡️\033[0m" ;;
+            10-31) echo -e "\033[1;35m🎃 Happy Halloween! 🎃\033[0m" ;;
+            07-04) echo -e "\033[1;34m🎆 Happy Independence Day! 🎆\033[0m" ;;
+        esac
+        
+        # Easter is complex (varies by year), checking approximate range
+        MONTH=$(date +%m)
+        DAY=$(date +%d)
+        if [[ "$MONTH" == "03" || "$MONTH" == "04" ]] && [[ "$DAY" -ge 20 ]] && [[ "$DAY" -le 25 ]]; then
+            echo -e "\033[1;33m🐰 Happy Easter! 🐰\033[0m"
+        fi
+        
         # Show version if available
         if [[ -f /opt/homelab-tools/VERSION ]]; then
             HLT_VERSION=$(cat /opt/homelab-tools/VERSION)
@@ -651,7 +668,7 @@ echo -e "  • Config:    ${CYAN}/opt/homelab-tools/config.sh${RESET}"
 echo ""
 echo -e "${BOLD}${YELLOW}Next Steps:${RESET}"
 echo ""
-echo -e "1. ${CYAN}Start a new terminal or reload shell:${RESET}"
+echo -e "1. ${CYAN}Reload shell configuration:${RESET}"
 echo -e "   ${GREEN}source ~/.bashrc${RESET}"
 echo ""
 echo -e "2. ${CYAN}Start the menu:${RESET}"
@@ -668,6 +685,17 @@ echo -e "   ${GREEN}generate-motd --help${RESET}"
 echo ""
 echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 echo ""
+
+# Auto-reload bashrc if possible (only works if install was not run with sudo)
+if [[ -n "$ACTUAL_USER" ]] && [[ "$ACTUAL_USER" != "root" ]] && [[ $EUID -ne 0 ]]; then
+    echo -e "${CYAN}→ Reloading shell configuration...${RESET}"
+    # Export function to source .bashrc in current shell
+    if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
+        # This only works if the script is sourced, not executed
+        # So we'll just remind the user instead
+        echo -e "${YELLOW}  Please run: ${GREEN}source ~/.bashrc${RESET}"
+    fi
+fi
 
 # Cleanup temp directory if we cloned from GitHub
 if [[ "${1:-}" == "--from-clone" ]] && [[ "$(pwd)" == /tmp/* ]]; then

@@ -384,8 +384,8 @@ while true; do
     if [[ "$gen_mode" == "2" ]]; then
         finish_progress
         clear
+        echo ""  # Add spacing after clear
     fi
-
 
     # Summary
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"

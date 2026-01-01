@@ -305,7 +305,7 @@ fi
 echo -e "${YELLOW}  →${RESET} Copying files to $INSTALL_DIR..."
 run_sudo mkdir -p "$INSTALL_DIR"
 
-# Copy all files except dev-only files
+# Copy all files except dev-only and GitHub-only files
 run_sudo rsync -a --exclude='.git' \
     --exclude='sync-dev.sh' \
     --exclude='bump-dev.sh' \
@@ -323,6 +323,10 @@ run_sudo rsync -a --exclude='.git' \
     --exclude='claude.md' \
     --exclude='notes*.md' \
     --exclude='conversation*.md' \
+    --exclude='CHANGELOG.md' \
+    --exclude='CONTRIBUTING.md' \
+    --exclude='SECURITY.md' \
+    --exclude='QUICKSTART.md' \
     "$(pwd)/" "$INSTALL_DIR/"
 
 echo -e "${GREEN}  ✓${RESET} Files installed in /opt"

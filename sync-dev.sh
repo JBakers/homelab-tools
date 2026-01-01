@@ -36,7 +36,7 @@ echo -e "${YELLOW}Source:${RESET} $SOURCE_DIR"
 echo -e "${YELLOW}Target:${RESET} $TARGET_DIR"
 echo ""
 
-# Sync files (excluding dev files)
+# Sync files (excluding dev and GitHub-only files)
 echo -e "${CYAN}→${RESET} Syncing files..."
 sudo rsync -av --delete \
     --exclude='.git' \
@@ -57,6 +57,10 @@ sudo rsync -av --delete \
     --exclude='claude.md' \
     --exclude='notes*.md' \
     --exclude='conversation*.md' \
+    --exclude='CHANGELOG.md' \
+    --exclude='CONTRIBUTING.md' \
+    --exclude='SECURITY.md' \
+    --exclude='QUICKSTART.md' \
     "$SOURCE_DIR/" "$TARGET_DIR/"
 
 # Fix permissions

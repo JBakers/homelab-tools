@@ -383,8 +383,10 @@ while true; do
     # Finish progress display for Smart-detect mode
     if [[ "$gen_mode" == "2" ]]; then
         finish_progress
+        sleep 0.3  # Brief pause before clearing
         clear
-        echo ""  # Add spacing after clear
+        echo ""  # Spacing after clear
+        echo ""  # Extra spacing for readability
     fi
 
     # Summary

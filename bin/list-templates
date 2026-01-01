@@ -222,8 +222,28 @@ if [[ "$INTERACTIVE_VIEW" == "true" ]]; then
         clear
     done
 else
-    echo -e "${YELLOW}Tip:${RESET} View a template with:"
-    echo -e "  ${GREEN}cat $TEMPLATES_DIR/<name>.sh${RESET}"
-    echo -e "  ${GREEN}list-templates -v${RESET} for interactive preview"
+    # Show menu with options
+    echo -e "${BOLD}Options:${RESET}"
+    echo -e "  ${CYAN}1${RESET}) View template (interactive preview)"
+    echo -e "  ${CYAN}2${RESET}) Show deployment status"
+    echo -e "  ${CYAN}q${RESET}) Exit"
     echo ""
+    read -rp "$(echo -e "${CYAN}Choice (1/2/q):${RESET} ")" menu_choice
+    
+    case "$menu_choice" in
+        1)
+            # Re-run with -v flag
+            exec "$0" -v
+            ;;
+        2)
+            # Re-run with -s flag
+            exec "$0" -s
+            ;;
+        q|Q|"")
+            # Exit silently
+            ;;
+        *)
+            echo -e "${YELLOW}Invalid choice${RESET}"
+            ;;
+    esac
 fi

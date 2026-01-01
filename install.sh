@@ -113,8 +113,22 @@ echo -e "${BOLD}Installation directory: ${CYAN}$INSTALL_DIR${RESET}"
 echo ""
 
 # Check for legacy installation in ~/homelab-tools
+# Skip if it's the clone source we're running from, or if it contains .git (fresh clone)
 LEGACY_DIR="$ACTUAL_HOME/homelab-tools"
-if [[ -d "$LEGACY_DIR" ]] && [[ "$LEGACY_DIR" != "$(pwd)" ]]; then
+SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+IS_CLONE_SOURCE=0
+
+# Detect if ~/homelab-tools is the clone source (has .git and is where we're running from)
+if [[ -d "$LEGACY_DIR" ]]; then
+    if [[ "$SOURCE_DIR" == "$LEGACY_DIR" ]]; then
+        IS_CLONE_SOURCE=1
+    elif [[ -d "$LEGACY_DIR/.git" ]] && [[ ! -f "$LEGACY_DIR/.dev-workspace" ]]; then
+        # Fresh clone (has .git but no .dev-workspace marker) - treat as source, not legacy
+        IS_CLONE_SOURCE=1
+    fi
+fi
+
+if [[ -d "$LEGACY_DIR" ]] && [[ $IS_CLONE_SOURCE -eq 0 ]]; then
     echo -e "${YELLOW}⚠ Old installation found in ~/homelab-tools${RESET}"
     echo ""
     echo -e "${BOLD}What do you want to do with the old installation?${RESET}"
@@ -670,8 +684,47 @@ echo ""
 # Check if toilet is installed
 if ! command -v toilet &> /dev/null; then
     echo -e "${YELLOW}⚠ Optional: 'toilet' not found${RESET}"
-    echo -e "  For ASCII art, install with:"
-    echo -e "  ${CYAN}sudo apt install toilet toilet-fonts${RESET}"
+    echo -e "  For ASCII art MOTDs, toilet is recommended"
+    echo ""
+    
+    if [[ $NON_INTERACTIVE -eq 1 ]]; then
+        # Non-interactive: skip prompt
+        echo -e "  Install manually: ${CYAN}sudo apt install toilet toilet-fonts${RESET}"
+        echo ""
+    else
+        install_toilet="$(read_input "Install toilet now? (Y/n): " "y")"
+        if [[ "$install_toilet" =~ ^[Yy]$ ]] || [[ -z "$install_toilet" ]]; then
+            echo -e "${YELLOW}→${RESET} Installing toilet..."
+            if run_sudo apt-get update -qq && run_sudo apt-get install -y toilet toilet-fonts; then
+                echo -e "${GREEN}✓${RESET} Toilet installed successfully"
+            else
+                echo -e "${YELLOW}⚠${RESET} Failed to install toilet"
+                echo -e "  Install manually: ${CYAN}sudo apt install toilet toilet-fonts${RESET}"
+            fi
+        else
+            echo -e "${YELLOW}→${RESET} Skipped toilet installation"
+            echo -e "  Install later: ${CYAN}sudo apt install toilet toilet-fonts${RESET}"
+        fi
+        echo ""
+    fi
+fi
+
+# Cleanup clone source directory if it exists in ~/homelab-tools
+if [[ $IS_CLONE_SOURCE -eq 1 ]] && [[ -d "$LEGACY_DIR" ]]; then
+    echo -e "${YELLOW}→${RESET} Clone source detected in ~/homelab-tools"
+    if [[ $NON_INTERACTIVE -eq 1 ]]; then
+        # Non-interactive: auto-remove clone source
+        rm -rf "$LEGACY_DIR"
+        echo -e "${GREEN}✓${RESET} Clone source removed"
+    else
+        cleanup_choice="$(read_input "Remove clone source ~/homelab-tools? (Y/n): " "y")"
+        if [[ "$cleanup_choice" =~ ^[Yy]$ ]] || [[ -z "$cleanup_choice" ]]; then
+            rm -rf "$LEGACY_DIR"
+            echo -e "${GREEN}✓${RESET} Clone source removed"
+        else
+            echo -e "${YELLOW}⚠${RESET} Clone source kept in ~/homelab-tools"
+        fi
+    fi
     echo ""
 fi
 

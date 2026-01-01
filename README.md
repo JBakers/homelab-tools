@@ -76,12 +76,12 @@ source ~/.bashrc
 
 **What the installer does:**
 
-- ✅ Sets up `~/homelab-tools/` directory structure
+- ✅ Installs to `/opt/homelab-tools/` (system-wide)
+- ✅ Creates symlinks in `~/.local/bin/` for all commands
 - ✅ Adds commands to your `PATH` via `~/.bashrc`
 - ✅ Creates templates directory at `~/.local/share/homelab-tools/templates/`
-- ✅ Configures executable permissions
 - ✅ Optionally sets up SSH keys and config
-- ✅ Configures domain suffix for your homelab
+- ✅ Cleans up the clone source directory after install
 
 ### ⚙️ Manual Installation
 

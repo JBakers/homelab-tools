@@ -365,7 +365,7 @@ while true; do
                     1)
                         # Bulk Generate
                         bulk-generate-motd
-                        wait_for_continue
+                        # No wait_for_continue - has own flow
                         ;;
                     2)
                         # Deploy MOTD
@@ -408,15 +408,13 @@ while true; do
                         # List Templates
                         clear
                         list-templates
-                        echo ""
-                        wait_for_continue
+                        # No wait_for_continue - has own menu
                         ;;
                     5)
                         # Delete Template
                         clear
                         delete-template
-                        echo ""
-                        wait_for_continue
+                        # No wait_for_continue - has own menu
                         ;;
                     6)
                         # Help
@@ -444,8 +442,7 @@ while true; do
                         # Edit Hosts
                         clear
                         edit-hosts
-                        echo ""
-                        wait_for_continue
+                        # No wait_for_continue - has own menu
                         ;;
                     1)
                         # Edit Settings

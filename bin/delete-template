@@ -64,10 +64,29 @@ interactive_delete() {
     done < <(find "$TEMPLATE_DIR" -name "*.sh" -type f -exec basename {} \; | sort)
 
     echo ""
-    read -r -p "Select template number (or q to cancel): " choice
+    echo -e "  ${RED}A${RESET})  ${BOLD}Delete ALL templates${RESET}"
+    echo ""
+    read -r -p "Select template number (A=all, q=cancel): " choice
 
     if [[ "$choice" == "q" || "$choice" == "Q" ]]; then
-        echo -e "${YELLOW}Cancelled${RESET}"
+        return 0
+    fi
+
+    # Handle delete all
+    if [[ "$choice" == "a" || "$choice" == "A" ]]; then
+        echo ""
+        echo -e "${RED}${BOLD}⚠ WARNING: This will delete ALL ${#templates[@]} templates!${RESET}"
+        read -r -p "Are you sure? Type 'yes' to confirm: " confirm_all
+        if [[ "$confirm_all" == "yes" ]]; then
+            for tmpl in "${templates[@]}"; do
+                rm -f "$TEMPLATE_DIR/${tmpl}.sh"
+                echo -e "${GREEN}✓${RESET} Deleted: $tmpl"
+            done
+            echo ""
+            echo -e "${GREEN}✓ All templates deleted${RESET}"
+        else
+            echo -e "${YELLOW}Cancelled${RESET}"
+        fi
         return 0
     fi
 

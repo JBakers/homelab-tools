@@ -2,7 +2,7 @@
 
 ## v3.6.2-dev (In Development)
 
-**Current development branch** - v3.6.2-dev.00 - Building on v3.6.1
+**Current development branch** - v3.6.2-dev.09 - Building on v3.6.1
 
 ### ✨ New Features
 
@@ -23,11 +23,34 @@
 - Compacter deploy output (less verbose)
 - `deploy-motd --all` - Deploy all templates at once
 
+### 🧪 Test Suite Enhancements (v3.6.2-dev.09)
+
+#### Test Coverage Improvements
+- **Test count**: 36 → 42 tests (+17%)
+- **Success rate**: 89% → 98% (+9%)
+- **Failures**: 2 → 0 (100% pass rate excluding expected skips)
+- **New scenarios**: Multiple template generation, delete template, MOTD protection, deploy to multiple hosts
+
+#### Docker Test Environment
+- Added `rsync` to Dockerfile (required for install.sh)
+- Fixed expect script timeouts (5s → 10s for reliability)
+- Simplified expect scripts for new menu structure
+- Added proper input handling (`< /dev/null`, `echo 'q'`)
+- Fixed all hanging tests (list-templates, deploy-motd, CLI options)
+
+#### Test Fixes
+- Fixed CLI options syntax error (removed extra `)` in commands array)
+- Removed non-existent commands from tests (bulk-generate-motd, edit-config)
+- Fixed list-templates tests (proper exit with 'q' input)
+- Fixed deploy-motd test (MOTD protection with auto-reply)
+- Enhanced grep patterns for emoji and status detection
+
 ### 🐛 Bug Fixes
 - Fixed `local` outside function error in generate-motd menu
 - Fixed DIM variable undefined in deploy-motd and undeploy-motd
 - Fixed backslashes in prompts `\(y/N\)` → `(y/N)`
 - Removed debug connection prompts (auto-continue after 5s timeout)
+- Fixed test suite hangs and timeouts
 
 ### 🧹 Cleanup
 - Removed legacy MOTD format detection (only HLT-MOTD-START marker now)

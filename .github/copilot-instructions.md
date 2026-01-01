@@ -384,6 +384,45 @@ shellcheck bin/*
 6. **Commit broken code** - Test with `./test-runner.sh` before committing
 7. **Skip input validation** - All user inputs MUST be validated with regex
 
+### TODO.md Structure (REQUIRED)
+**Always maintain this structure:**
+1. **Top Section**: Uncompleted tasks ordered by priority
+   - 🔴 CRITICAL (highest priority)
+   - 🟠 HIGH PRIORITY
+   - 🟡 MEDIUM PRIORITY
+   - 🟢 LOW PRIORITY
+2. **Bottom Section**: Completed tasks archive (chronological)
+   - Mark with ✅ and completion date
+   - Keep for reference and version history
+
+**Format:**
+```markdown
+# TODO: Homelab-Tools
+
+## 🔴 CRITICAL
+- [ ] Task that needs immediate attention
+
+## 🟠 HIGH PRIORITY
+- [ ] Important feature or fix
+
+## 🟡 MEDIUM PRIORITY
+- [ ] Nice to have improvements
+
+## 🟢 LOW PRIORITY
+- [ ] Future enhancements
+
+---
+## ✅ COMPLETED (Archive)
+- [x] Completed task (2026-01-01)
+- [x] Previous feature (2025-12-31)
+```
+
+**Rules:**
+- Move completed tasks to archive section immediately
+- Keep archive chronological (newest first)
+- Never delete completed tasks (they document project history)
+- Update priorities as project evolves
+
 ### Code Standards (Enforced)
 - All scripts pass `shellcheck` and `bash -n` validation
 - English for code/docs, Dutch for team communication

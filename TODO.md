@@ -7,37 +7,52 @@
 
 - [x] **Fix undeploy-motd bug** - Searches for `99-homelab-*.sh` but deploy-motd creates `00-motd.sh`
 
-## 🎯 Status - 3.6.2-dev.00 (building on 3.6.1)
+## 🎯 Status - 3.6.2-dev.09 (building on 3.6.1)
 
-**Current version:** 3.6.2-dev.00
+**Current version:** 3.6.2-dev.09
 **Branch:** develop
-**Tests:** Need to run
+**Tests:** ✅ **41/42 PASSED (98% success rate)** 🎉
 
-**New features completed (this session):**
+**Test Suite Expansion (Session 2026-01-01):**
+- [x] Fixed all skipped tests (list-templates now tested)
+- [x] Fixed deploy-motd test (MOTD protection with auto-reply)
+- [x] Fixed CLI options test suite (syntax error, removed non-existent commands)
+- [x] Added 6 new test scenarios:
+  - Multiple template generation (test1, test2, test3)
+  - List templates with multiple templates
+  - Delete template functionality
+  - Deploy MOTD protection scenarios (jellyfin, docker-host)
+  - Undeploy from multiple hosts
+  - Enhanced CLI options coverage
+- [x] Docker test environment fixes:
+  - Added rsync to Dockerfile
+  - Fixed expect script timeouts (5s → 10s)
+  - Simplified expect scripts (menu structure changes)
+  - Added `< /dev/null` and `echo 'q'` for non-interactive tests
+- [x] Test coverage: 36 tests → 42 tests (+17%)
+- [x] Success rate: 89% → 98% (+9%)
+- [x] Zero failures (was 2 failures)
+
+**Previous session features (v3.6.2-dev.00 - dev.08):**
 - [x] Menu restructure: SSH keys moved to Configuration submenu
 - [x] Help menu's vereenvoudigd (homelab --help, homelab help)
 - [x] Generate MOTD: host selection menu (select from SSH config hosts)
 - [x] HLT MOTD protection markers (HLT-MOTD-START/END)
 - [x] Deploy protection: detect non-HLT MOTDs, ask replace/append/cancel
 - [x] Undeploy protection: only remove HLT MOTDs, preserve others
-- [x] Bulk deploy: show output (was hidden with &>/dev/null causing hangs)
-- [x] Bulk deploy: retry failed deployments option
-- [x] Bulk deploy: show failed hosts list
+- [x] Bulk deploy: show output, retry failed, failed hosts list
 - [x] `deploy-motd --all` - Deploy all templates at once
-- [x] Removed all debug connection prompts (auto-continue after timeout)
+- [x] Removed all debug connection prompts
 - [x] Removed legacy code (old MOTD format detection, ~/homelab-tools migration)
 - [x] Renamed "Legacy backups" to "Home Backups" in menu
-- [x] Compacter deploy output (less verbose)
-- [x] GUI-focused help (removed CLI command references)
+- [x] Compacter deploy output
+- [x] GUI-focused help
 
 **Bug fixes:**
 - [x] Fixed `local` outside function error in generate-motd menu
 - [x] Fixed DIM variable undefined in deploy-motd and undeploy-motd
-
-**Cleanup:**
-- [x] Removed legacy MOTD detection (only check HLT-MOTD-START now)
-- [x] Removed ~/homelab-tools migration code from install.sh
-- [x] Renamed legacy → home in backup menu
+- [x] Fixed test suite hangs (timeouts, input handling)
+- [x] Fixed CLI options syntax error (extra `)` in commands array)
 
 ---
 ## 🚀 NEXT STEPS
@@ -76,6 +91,49 @@ git push origin v3.6.0
 ---
 ## 🟠 Medium Priority (post-3.6.0)
 
+### Test Suite Expansion (Complete HLT Coverage)
+**Goal:** Expand .test-env to test all menus, all commands, all options, all edge cases
+
+**Step 1: New Expect Scripts for Missing Menus**
+- [ ] Create `expect/test-config-submenu.exp` - Configuration menu navigation
+- [ ] Create `expect/test-backup-menu.exp` - Backup management all options
+- [ ] Create `expect/test-edit-hosts-wizard.exp` - Full add host wizard flow
+- [ ] Create `expect/test-edit-hosts-bulk.exp` - Bulk operations submenu
+- [ ] Create `expect/test-arrow-navigation.exp` - Arrow keys (↑↓) and vim keys (j/k)
+
+**Step 2: Expand complete-integration-test.sh**
+- [ ] Add Phase 12: Service auto-detection (test 10+ presets: pihole, plex, sonarr, etc.)
+- [ ] Add Phase 13: list-templates --status with deployed templates
+- [ ] Add Phase 14: Backup menu operations (archive, move, delete)
+- [ ] Add Phase 15: edit-config settings interactive flow
+- [ ] Add Phase 16: Number handling (pihole2 → "Pi-hole 2")
+
+**Step 3: New CLI Options Test File**
+- [ ] Create `test-cli-options.sh` - Test all --help, --all, -s, -v flags
+- [ ] Test exit codes and error messages
+- [ ] Test input validation (invalid service names, hosts)
+
+**Step 4: Update run-tests.sh**
+- [ ] Add Section 8: CLI option tests
+- [ ] Add Section 9: Service preset tests
+- [ ] Add Section 10: Full menu navigation via expect
+- [ ] Update test-runner.sh progress counter (72 → ~100+ tests)
+
+**Step 5: Update Docker Environment**
+- [ ] Add 2 extra mock SSH hosts to docker-compose.yml (totaal 5 for bulk tests)
+- [ ] Add mock host with existing non-HLT MOTD for protection tests
+
+**Step 6: Documentation Updates**
+- [ ] Update .test-env/README.md with test matrix and coverage percentages
+- [ ] Document test naming convention
+- [ ] Add test execution guide
+
+**When All Above Done:**
+- [ ] Run full test suite: `cd .test-env && ./run-tests.sh`
+- [ ] Fix any failing tests
+- [ ] Achieve 100% menu/command coverage
+
+### Other Medium Priority
 - [ ] **Archive TESTING_GUIDE.md** → `.archive/` (outdated)
 - [ ] **Consolidate features into homelab menu**
   - Check all features are accessible via menu

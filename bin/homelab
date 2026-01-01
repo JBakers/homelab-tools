@@ -356,7 +356,8 @@ backup_management_menu() {
                 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
                 echo ""
                 
-                local default_archive="$HOME/homelab-backups-$(date +%Y%m%d-%H%M%S).tar.gz"
+                local default_archive
+                default_archive="$HOME/homelab-backups-$(date +%Y%m%d-%H%M%S).tar.gz"
                 echo -e "${BOLD}Archive destination:${RESET}"
                 echo -e "${DIM}Default: $default_archive${RESET}"
                 echo ""

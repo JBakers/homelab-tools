@@ -55,14 +55,14 @@ undeploy_single() {
     fi
     
     # Check if MOTD exists on remote
-    if ! ssh "$service" "[[ -f /etc/profile.d/00-motd.sh ]]" 2>/dev/null; then
+    if ! ssh "$service" -- "[[ -f /etc/profile.d/00-motd.sh ]]" 2>/dev/null; then
         echo -e "${YELLOW}  →${RESET} No MOTD deployed on $service"
         return 0
     fi
     
     # Check if it's an HLT MOTD
     local remote_motd
-    remote_motd=$(ssh "$service" "cat /etc/profile.d/00-motd.sh 2>/dev/null" || true)
+    remote_motd=$(ssh "$service" -- "cat /etc/profile.d/00-motd.sh 2>/dev/null" || true)
     
     if [[ "$remote_motd" != *"HLT-MOTD-START"* ]]; then
         echo -e "${YELLOW}  ⚠${RESET} MOTD exists but was not created by HLT"
@@ -75,14 +75,14 @@ undeploy_single() {
     if [[ "$remote_motd" == *"# === Appended by HLT ==="* ]]; then
         echo -e "${YELLOW}  →${RESET} Found appended HLT MOTD, removing only HLT section..."
         # Remove only the HLT section (from marker to end)
-        ssh "$service" "sudo sed -i '/# === Appended by HLT ===/,\$d' /etc/profile.d/00-motd.sh" 2>/dev/null
+        ssh "$service" -- "sudo sed -i '/# === Appended by HLT ===/,\$d' /etc/profile.d/00-motd.sh" 2>/dev/null
         echo -e "${GREEN}  ✓${RESET} HLT section removed (original MOTD preserved)"
         return 0
     fi
     
     # Full HLT MOTD - remove entirely
     echo -e "${CYAN}→${RESET} Removing HLT MOTD from ${BOLD}$service${RESET}..."
-    if ssh "$service" "sudo rm -f /etc/profile.d/00-motd.sh" 2>/dev/null; then
+    if ssh "$service" -- "sudo rm -f /etc/profile.d/00-motd.sh" 2>/dev/null; then
         echo -e "${GREEN}  ✓${RESET} MOTD removed"
     else
         echo -e "${RED}  ✗${RESET} Failed to remove MOTD"
@@ -90,8 +90,8 @@ undeploy_single() {
     fi
     
     # Restore backup if exists
-    if ssh "$service" "[[ -f /etc/profile.d/00-motd.sh.backup ]]" 2>/dev/null; then
-        if ssh "$service" "sudo mv /etc/profile.d/00-motd.sh.backup /etc/profile.d/00-motd.sh" 2>/dev/null; then
+    if ssh "$service" -- "[[ -f /etc/profile.d/00-motd.sh.backup ]]" 2>/dev/null; then
+        if ssh "$service" -- "sudo mv /etc/profile.d/00-motd.sh.backup /etc/profile.d/00-motd.sh" 2>/dev/null; then
             echo -e "${GREEN}  ✓${RESET} Original MOTD restored from backup"
         fi
     fi

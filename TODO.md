@@ -15,64 +15,33 @@
 
 ## 🚨 CRITICAL SECURITY (Fix Immediately)
 
-### AUDIT-1: Command Injection via SSH Variabelen
-**Severity:** CRITICAL | **Fix Time:** 2-3h
-**Locatie:** `bin/deploy-motd:171,192`, `bin/undeploy-motd:52`, `bin/copykey:85-86`
+### ✅ AUDIT-1: Command Injection via SSH Variabelen - FIXED
+**Severity:** CRITICAL | **Fix Time:** 2-3h | **Status:** ✅ FIXED (2026-01-02)
 
-**Probleem:** SSH commands gebruiken variabelen zonder volledige escaping:
-```bash
-ssh "$SERVICE" "[[ -f /etc/profile.d/00-motd.sh ]]"
-```
-
-**Risico:** Command injection mogelijk als validatie omzeild wordt.
-
-**Fix:**
-```bash
-# Gebruik explicit -- separator
-ssh "$SERVICE" -- "command here"
-```
+**Fix Applied:** Added `--` separator to all SSH commands in:
+- `bin/deploy-motd` (8 locations)
+- `bin/undeploy-motd` (6 locations)  
+- `bin/copykey` (1 location)
 
 ---
 
-### AUDIT-2: Onveilige Temporary File Handling
-**Severity:** CRITICAL | **Fix Time:** 30m
-**Locatie:** `bin/edit-config:65`, `bin/deploy-motd:255`
+### ✅ AUDIT-2: Onveilige Temporary File Handling - FIXED
+**Severity:** CRITICAL | **Fix Time:** 30m | **Status:** ✅ FIXED (2026-01-02)
 
-**Probleem:** Geen trap handler voor cleanup:
-```bash
-TEMP_CONFIG=$(mktemp)
-# Geen cleanup bij errors!
-```
-
-**Fix:**
-```bash
-TEMP_CONFIG=$(mktemp)
-trap 'rm -f "$TEMP_CONFIG"' EXIT
-```
+**Fix Applied:** Added `trap 'rm -f "$TEMP_FILE"' EXIT` to:
+- `bin/edit-config:65`
+- `bin/deploy-motd:255`
 
 ---
 
-### AUDIT-3: Geen CI/CD Pipeline
-**Severity:** CRITICAL | **Fix Time:** 4-6h
-**Locatie:** `.github/workflows/` - NIET AANWEZIG
+### ✅ AUDIT-3: Geen CI/CD Pipeline - FIXED
+**Severity:** CRITICAL | **Fix Time:** 4-6h | **Status:** ✅ FIXED (2026-01-02)
 
-**Probleem:** 48+ tests beschikbaar maar niet geautomatiseerd.
-
-**Fix:** Maak `.github/workflows/test.yml`:
-```yaml
-name: Tests
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run test suite
-        run: |
-          cd .test-env
-          docker compose up -d
-          docker compose exec -T testhost bash /workspace/.test-env/run-tests.sh
-```
+**Fix Applied:** Created `.github/workflows/test.yml` with:
+- Static analysis (syntax check, ShellCheck)
+- Docker integration tests (48+ tests)
+- Version consistency check
+- Runs on push/PR to develop and main
 
 ---
 

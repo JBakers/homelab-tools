@@ -189,8 +189,8 @@ echo -e "${YELLOW}→${RESET} Checking for existing MOTD..."
 existing_motd=""
 is_hlt_motd=false
 
-if ssh "$SERVICE" "[[ -f /etc/profile.d/00-motd.sh ]]" 2>/dev/null; then
-    existing_motd=$(ssh "$SERVICE" "cat /etc/profile.d/00-motd.sh 2>/dev/null" || true)
+if ssh "$SERVICE" -- "[[ -f /etc/profile.d/00-motd.sh ]]" 2>/dev/null; then
+    existing_motd=$(ssh "$SERVICE" -- "cat /etc/profile.d/00-motd.sh 2>/dev/null" || true)
     
     # Check for HLT marker
     if [[ "$existing_motd" == *"HLT-MOTD-START"* ]]; then
@@ -217,7 +217,7 @@ if ssh "$SERVICE" "[[ -f /etc/profile.d/00-motd.sh ]]" 2>/dev/null; then
             1)
                 echo -e "${YELLOW}→${RESET} Will replace"
                 # Backup existing MOTD
-                ssh "$SERVICE" "cp /etc/profile.d/00-motd.sh /etc/profile.d/00-motd.sh.backup 2>/dev/null || sudo cp /etc/profile.d/00-motd.sh /etc/profile.d/00-motd.sh.backup 2>/dev/null" || true
+                ssh "$SERVICE" -- "cp /etc/profile.d/00-motd.sh /etc/profile.d/00-motd.sh.backup 2>/dev/null || sudo cp /etc/profile.d/00-motd.sh /etc/profile.d/00-motd.sh.backup 2>/dev/null" || true
                 ;;
             2)
                 echo -e "${YELLOW}→${RESET} Will append"
@@ -235,11 +235,11 @@ fi
 
 # Cleanup old MOTD files (only if replacing or no existing)
 if [[ "$is_hlt_motd" == "true" ]] || [[ -z "$existing_motd" ]] || [[ "${motd_choice:-1}" == "1" ]]; then
-    ssh "$SERVICE" "rm -f /etc/motd /etc/update-motd.d/* 2>/dev/null || sudo rm -f /etc/motd /etc/update-motd.d/* 2>/dev/null" || true
+    ssh "$SERVICE" -- "rm -f /etc/motd /etc/update-motd.d/* 2>/dev/null || sudo rm -f /etc/motd /etc/update-motd.d/* 2>/dev/null" || true
 fi
 
 # Create profile.d directory if it doesn't exist
-ssh "$SERVICE" "mkdir -p /etc/profile.d 2>/dev/null || sudo mkdir -p /etc/profile.d 2>/dev/null"
+ssh "$SERVICE" -- "mkdir -p /etc/profile.d 2>/dev/null || sudo mkdir -p /etc/profile.d 2>/dev/null"
 
 # Create/initialize deployment log EARLY (before any SSH operations)
 # This ensures status tracking even if deployment fails
@@ -253,6 +253,7 @@ echo -e "${YELLOW}→${RESET} Deploying..."
 if [[ "${motd_choice:-}" == "2" ]]; then
     # Create temp file with existing + new MOTD
     temp_combined=$(mktemp)
+    trap 'rm -f "$temp_combined"' EXIT
     echo "$existing_motd" > "$temp_combined"
     echo "" >> "$temp_combined"
     echo "# === Appended by HLT ===" >> "$temp_combined"
@@ -266,7 +267,7 @@ if scp "$TEMPLATE_FILE" "$SERVICE:/etc/profile.d/00-motd.sh" 2>/dev/null; then
 else
     # Als dat faalt, kopieer naar /tmp en verplaats met sudo
     if scp "$TEMPLATE_FILE" "$SERVICE:/tmp/00-motd.sh" 2>/dev/null; then
-        ssh "$SERVICE" "sudo mv /tmp/00-motd.sh /etc/profile.d/00-motd.sh" 2>/dev/null
+        ssh "$SERVICE" -- "sudo mv /tmp/00-motd.sh /etc/profile.d/00-motd.sh" 2>/dev/null
         if [[ $? -eq 0 ]]; then
             use_sudo="sudo"
         else
@@ -289,12 +290,12 @@ fi
 
 # Maak executable
 if [[ -n "$use_sudo" ]]; then
-    if ! ssh "$SERVICE" "sudo chmod +x /etc/profile.d/00-motd.sh" 2>/dev/null; then
+    if ! ssh "$SERVICE" -- "sudo chmod +x /etc/profile.d/00-motd.sh" 2>/dev/null; then
         echo -e "${RED}✗ Cannot set permissions${RESET}"
         exit 1
     fi
 else
-    if ! ssh "$SERVICE" "chmod +x /etc/profile.d/00-motd.sh" 2>/dev/null; then
+    if ! ssh "$SERVICE" -- "chmod +x /etc/profile.d/00-motd.sh" 2>/dev/null; then
         echo -e "${RED}✗ Cannot set permissions${RESET}"
         exit 1
     fi

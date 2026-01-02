@@ -57,9 +57,14 @@ show_help() {
     echo ""
 }
 
-# Confirmation prompt
-# Args: $1 = prompt message
+#──────────────────────────────────────────────────────────────────────────────
+# Function: confirm_action
+# Description: Prompt user for yes/no confirmation
+# Arguments:
+#   $1 - Prompt message (default: "Are you sure?")
 # Returns: 0 if confirmed (y/Y), 1 otherwise
+# Globals: YELLOW, RESET
+#──────────────────────────────────────────────────────────────────────────────
 confirm_action() {
     local prompt="${1:-Are you sure?}"
     local response
@@ -73,7 +78,14 @@ confirm_action() {
     fi
 }
 
-# Initialize SSH config structure
+#──────────────────────────────────────────────────────────────────────────────
+# Function: init_ssh_config
+# Description: Initialize SSH config directory and file structure
+# Arguments: None
+# Returns: 0 on success
+# Globals: HOME, YELLOW, GREEN, RESET
+# Notes: Creates ~/.ssh and ~/.ssh/config if they don't exist
+#──────────────────────────────────────────────────────────────────────────────
 init_ssh_config() {
     if [[ ! -d "$HOME/.ssh" ]]; then
         echo -e "${YELLOW}→${RESET} Creating ~/.ssh directory..."

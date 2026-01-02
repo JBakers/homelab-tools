@@ -56,6 +56,15 @@ if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     exit 0
 fi
 
+#──────────────────────────────────────────────────────────────────────────────
+# Function: undeploy_single
+# Description: Remove MOTD from a single remote host
+# Arguments:
+#   $1 - Service name (SSH config host alias)
+# Returns: 0 on success, 1 on error
+# Globals: SSH_CONNECT_TIMEOUT, SSH_BATCH_MODE, CYAN, GREEN, RED, RESET
+# Notes: Only removes HLT MOTD files (with HLT-MOTD-START marker)
+#──────────────────────────────────────────────────────────────────────────────
 undeploy_single() {
     local service="$1"
     
@@ -112,6 +121,14 @@ undeploy_single() {
     return 0
 }
 
+#──────────────────────────────────────────────────────────────────────────────
+# Function: undeploy_all
+# Description: Remove MOTDs from all hosts in SSH config
+# Arguments: None
+# Returns: 0 on success, 1 if no SSH config found
+# Globals: HOME, RED, GREEN, RESET
+# Notes: Iterates through all Host entries in ~/.ssh/config
+#──────────────────────────────────────────────────────────────────────────────
 undeploy_all() {
     local ssh_config="$HOME/.ssh/config"
     

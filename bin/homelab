@@ -110,8 +110,14 @@ read_input() {
     return 0
 }
 
-# Wait for user to press Enter or q to continue
-# Returns: 0 if Enter, 1 if q pressed
+#──────────────────────────────────────────────────────────────────────────────
+# Function: wait_for_continue
+# Description: Wait for user to press Enter or q to continue
+# Arguments: None
+# Returns: 0 if Enter pressed, 1 if q pressed
+# Globals: YELLOW, RESET
+# Notes: Reads single character from /dev/tty without echo
+#──────────────────────────────────────────────────────────────────────────────
 wait_for_continue() {
     local key
     echo -e "${YELLOW}Press Enter to continue...${RESET}"
@@ -122,6 +128,13 @@ wait_for_continue() {
     return 0
 }
 
+#──────────────────────────────────────────────────────────────────────────────
+# Function: show_usage_short
+# Description: Display short usage message
+# Arguments: None
+# Returns: 0
+# Globals: HLT_VERSION_DISPLAY
+#──────────────────────────────────────────────────────────────────────────────
 show_usage_short() {
     echo -e "homelab ${HLT_VERSION_DISPLAY}\n"
     echo "Usage: homelab       Start interactive menu"

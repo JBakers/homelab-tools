@@ -258,26 +258,47 @@ git checkout develop
 - ✅ Test with `./test-runner.sh` before major changes
 - ✅ Use `./sync-dev.sh` for quick testing (no git operations)
 - ✅ Batch changes, commit only when user approves
-- ✅ When committing: first bump VERSION, then commit all + push (one push)
 - ✅ Update TODO.md and CHANGELOG.md when adding features/fixes
 - ❌ Never merge directly to `main` (use `merge-to-main.sh`)
 - ❌ Never commit dev-only files to `main`
 
-**Commit Workflow** (single push):
-```bash
-# 1. Bump version first (updates VERSION file only)
-current=$(cat VERSION)
-new_build=$((${current##*.} + 1))
-echo "${current%.*}.$(printf '%02d' $new_build)" > VERSION
+### 🚨 VERPLICHT: VERSION BUMP BIJ ELKE COMMIT
 
-# 2. Stage all changes including VERSION
+**CRITICAL RULE:** Elke commit MOET een version bump bevatten via `bump-dev.sh`.
+
+**Workflow (ALTIJD):**
+```bash
+# 1. Bump version EERST (dit update VERSION file)
+./bump-dev.sh
+
+# 2. Stage all changes INCLUDING the new VERSION
 git add -A
 
-# 3. Commit and push (single push)
+# 3. Commit with message
 git commit -m "your message"
+
+# 4. Push
 git push origin develop
 ```
-Or use `./bump-dev.sh "message"` which does commit+push automatically.
+
+**Of in één commando:**
+```bash
+./bump-dev.sh && git add -A && git commit -m "message" && git push
+```
+
+**VERBODEN:**
+- ❌ `git commit` zonder eerst `./bump-dev.sh` te runnen
+- ❌ Commits waarbij VERSION niet mee-gecommit wordt
+- ❌ Handmatig VERSION file editen (gebruik altijd bump-dev.sh)
+
+**Als je vergeten bent te bumpen:**
+```bash
+# Fix: tel gemiste commits, update VERSION, commit fix
+echo "3.6.X-dev.NN" > VERSION  # NN = aantal commits sinds laatste bump
+git add VERSION
+git commit -m "fix: version bump for missed commits"
+git push
+```
 
 ### Testing
 Run comprehensive test suite:

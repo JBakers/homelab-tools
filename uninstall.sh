@@ -3,9 +3,9 @@ set -euo pipefail
 
 # Homelab Tools Uninstaller
 # Author: J.Bakers
-# Version: 3.5.0-dev.31
+# Version: See VERSION file
 
-# Kleuren
+# Colors
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -18,21 +18,15 @@ echo -e "║         🗑️  HOMELAB TOOLS - UNINSTALL                ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
-# Safety check - don't uninstall from development directory
-if [[ -d ".git" ]] && [[ -f "uninstall.sh" ]]; then
-    echo -e "${RED}✗ ERROR: You're running uninstall from the development directory!${RESET}"
+# Safety check - block uninstall if .dev-workspace marker exists
+# This file is created locally by developers and is in .gitignore
+if [[ -f ".dev-workspace" ]]; then
+    echo -e "${RED}✗ ERROR: This is a development workspace!${RESET}"
     echo ""
-    echo -e "  This will delete your entire project, including:"
-    echo -e "  • All source code"
-    echo -e "  • Git history"
-    echo -e "  • Uncommitted changes"
+    echo -e "  Cannot uninstall from development directory."
+    echo -e "  Run uninstall from the installed location instead:"
     echo ""
-    echo -e "${YELLOW}To uninstall safely:${RESET}"
-    echo -e "  1. ${CYAN}cd ~${RESET}  (change to home directory)"
-    echo -e "  2. ${CYAN}./homelab-tools/uninstall.sh${RESET}"
-    echo ""
-    echo -e "Or if you want to keep development folder:"
-    echo -e "  • Just remove scripts: ${CYAN}rm ~/.local/bin/{homelab,generate-motd,deploy-motd,cleanup-keys,list-templates,edit-hosts,edit-config,copykey,bulk-generate-motd}${RESET}"
+    echo -e "  ${CYAN}/opt/homelab-tools/uninstall.sh${RESET}"
     echo ""
     exit 1
 fi

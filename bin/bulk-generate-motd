@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Bulk generate MOTD templates for all hosts
 # Author: J.Bakers
-# Version: 3.5.0-dev.31
+# Version: See VERSION file
 
 # Load shared menu helper library
 # Resolve symlinks to find the actual installation directory
@@ -17,14 +17,8 @@ done
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
 source "$LIB_DIR/menu-helpers.sh"
-
-# Colors (from menu-helpers.sh)
-CYAN="$MENU_CYAN"
-GREEN="$MENU_GREEN"
-YELLOW="$MENU_YELLOW"
-RED="$MENU_RED"
-BOLD="$MENU_BOLD"
-RESET="$MENU_RESET"
+source "$LIB_DIR/constants.sh"
+source "$LIB_DIR/colors.sh"
 
 # Read choice with q to cancel - returns to menu
 # Usage: read_choice "prompt" variable default [valid_pattern]
@@ -46,23 +40,13 @@ read_choice() {
         input="$default"
     fi
     
-    eval "$var_name=\"\$input\""
+    # Use printf -v for safe variable assignment (prevents eval injection)
+    printf -v "$var_name" '%s' "$input"
     return 0
 }
 
 SSH_CONFIG="$HOME/.ssh/config"
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
-
-# Systems that don't support MOTD (appliances, Docker, non-Linux)
-UNSUPPORTED_SYSTEMS=(
-    "homeassistant" "hass" "ha"           # Home Assistant (Docker)
-    "truenas"                              # TrueNAS (FreeBSD appliance)
-    "pfsense" "opnsense"                   # Firewall appliances
-    "windows" "win"                        # Windows systems
-    "unraid"                               # Unraid (different MOTD)
-    "synology" "nas"                       # Synology NAS
-    "qnap"                                 # QNAP NAS
-)
 
 show_help() {
     echo -e "${BOLD}${CYAN}bulk-generate-motd - Generate MOTDs for all hosts${RESET}"
@@ -123,13 +107,15 @@ while true; do
     # Step 1: Choose style type
     echo -e "${BOLD}${CYAN}Step 1: Choose MOTD Style${RESET}"
     echo ""
-    echo -e "  ${YELLOW}1${RESET}) ${BOLD}Default Clean MOTD${RESET}"
-    echo -e "     ${YELLOW}→${RESET} Functional & informative, no ASCII art"
-    echo ""
-    echo -e "  ${YELLOW}2${RESET}) ${BOLD}ASCII Art MOTD${RESET}"
-    echo -e "     ${YELLOW}→${RESET} Choose from 6 artistic styles"
-    echo ""
-    if ! read_choice "Choice (1/2)" style_type "1"; then
+    
+    choose_menu "Choose MOTD Style" \
+        "Default Clean MOTD|Functional & informative, no ASCII art" \
+        "ASCII Art MOTD|Choose from 6 artistic styles"
+    
+    style_type=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+    
+    # Check if cancelled
+    if [[ $MENU_RESULT -eq -1 ]]; then
         break  # Return to homelab menu
     fi
 
@@ -138,29 +124,28 @@ while true; do
     # shellcheck disable=SC2154
     if [[ "$style_type" == "2" ]]; then
         echo ""
-        echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
-        echo ""
-
+        
         if command -v toilet &> /dev/null; then
             while true; do
-                echo -e "  ${CYAN}1${RESET}) Clean & Functional ${YELLOW}(No ASCII - Default)${RESET}"
-                echo -e "  ${CYAN}2${RESET}) Rainbow Future    ${YELLOW}(Colorful, modern)${RESET}"
-                echo -e "  ${CYAN}3${RESET}) Rainbow Standard  ${YELLOW}(Colorful, classic)${RESET}"
-                echo -e "  ${CYAN}4${RESET}) Mono Future       ${YELLOW}(Black & white, modern)${RESET}"
-                echo -e "  ${CYAN}5${RESET}) Big Mono          ${YELLOW}(Large, bold)${RESET}"
-                echo -e "  ${CYAN}6${RESET}) Small/Smblock     ${YELLOW}(Compact)${RESET}"
-                echo ""
-                read -r -p "$(echo -e "${CYAN}Choose ASCII style \(1-6, p=preview, q=cancel\):${RESET} ")" ascii_choice
-                ascii_choice=${ascii_choice:-1}
+                choose_menu "Choose ASCII Art Style" \
+                    "Clean & Functional|No ASCII - Default" \
+                    "Rainbow Future|Colorful, modern" \
+                    "Rainbow Standard|Colorful, classic" \
+                    "Mono Future|Black & white, modern" \
+                    "Big Mono|Large, bold" \
+                    "Small/Smblock|Compact" \
+                    "PREVIEW|Show all styles"
                 
-                # Handle cancel
-                if [[ "$ascii_choice" == "q" ]] || [[ "$ascii_choice" == "Q" ]]; then
+                choice_idx=$MENU_RESULT
+                
+                # Check if cancelled
+                if [[ $choice_idx -eq -1 ]]; then
                     ascii_style=""
-                    break 2  # Break out of both loops, return to main menu
+                    break 2  # Break out of both loops
                 fi
-
-                # Handle preview
-                if [[ "$ascii_choice" == "p" ]] || [[ "$ascii_choice" == "P" ]]; then
+                
+                # Handle preview (last option)
+                if [[ $choice_idx -eq 6 ]]; then
                     clear
                     echo -e "${BOLD}${CYAN}ASCII Art Preview${RESET}"
                     echo ""
@@ -180,22 +165,12 @@ while true; do
                         break 2  # Return to main menu
                     fi
                     clear
-                    echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
-                    echo ""
                     continue
                 fi
-
-                # Validate choice
-                if [[ "$ascii_choice" =~ ^[1-6]$ ]]; then
-                    ascii_style="$ascii_choice"
-                    break
-                else
-                    echo -e "${RED}Invalid choice. Please enter 1-6 or 'p' for preview.${RESET}"
-                    sleep 1
-                    clear
-                    echo -e "${BOLD}${CYAN}ASCII Art Styles:${RESET}"
-                    echo ""
-                fi
+                
+                # Valid style selected (convert 0-based to 1-based for ASCII mapping)
+                ascii_style=$((choice_idx + 1))
+                break
             done
         else
             echo -e "${YELLOW}⚠ Toilet not installed - ASCII art not available${RESET}"
@@ -216,16 +191,15 @@ while true; do
     # Step 2: Choose generation mode
     echo -e "${BOLD}${CYAN}Step 2: Choose Generation Mode${RESET}"
     echo ""
-    echo -e "  ${YELLOW}1${RESET}) ${BOLD}Interactive Mode${RESET}"
-    echo -e "     ${YELLOW}→${RESET} Customize each host individually"
-    echo -e "     ${YELLOW}→${RESET} Choose service name, description, web UI per host"
-    echo ""
-    echo -e "  ${YELLOW}2${RESET}) ${BOLD}Smart-Detect Mode${RESET} ${GREEN}[Recommended]${RESET}"
-    echo -e "     ${YELLOW}→${RESET} Automatic generation for all hosts"
-    echo -e "     ${YELLOW}→${RESET} Uses chosen style with auto-detected settings"
-    echo -e "     ${YELLOW}→${RESET} No prompts per host"
-    echo ""
-    if ! read_choice "Choice (1/2)" gen_mode "2"; then
+    
+    choose_menu "Choose Generation Mode" \
+        "Interactive Mode|Customize each host individually" \
+        "Smart-Detect Mode|Automatic generation for all hosts"
+    
+    gen_mode=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+    
+    # Check if cancelled
+    if [[ $MENU_RESULT -eq -1 ]]; then
         break  # Return to homelab menu
     fi
 
@@ -258,7 +232,8 @@ while true; do
 
     # Initialize progress display for Smart-detect mode
     current=0
-    # Disable -e during bulk generation to tolerate non-critical failures and EOF on non-tty
+    
+    # Disable -e during bulk generation to tolerate non-critical failures
     set +e
     if [[ "$gen_mode" == "2" ]]; then
         # Smart-detect mode will show progress bar
@@ -334,13 +309,10 @@ while true; do
             # Smart-detect mode: auto-generate with chosen style
             show_progress "$current" "$host_count" "$hostname" "${CYAN}Generating MOTD...${RESET}"
 
-            # Prepare input for generate-motd; guard against non-zero exit so loop continues
-            set +e
-            set +o pipefail
+            # Smart-detect: auto-generate with chosen style
+            # Use proper error handling instead of set +e toggles
             echo -e "n\n${ascii_style}\nn\n" | generate-motd "$hostname" &>/dev/null
-            gen_status=${PIPESTATUS[1]:-0}
-            set -e
-            set -o pipefail
+            gen_status=$?
 
             if [[ $gen_status -eq 0 && -f "$template_file" ]]; then
                 show_progress "$current" "$host_count" "$hostname" "${GREEN}✓ Generated successfully${RESET}"
@@ -357,12 +329,8 @@ while true; do
             echo ""
 
             # Pre-fill with chosen ASCII style
-            set +e
-            set +o pipefail
             echo -e "y\n${ascii_style}\nn\n" | generate-motd "$hostname"
-            gen_status=${PIPESTATUS[1]:-0}
-            set -e
-            set -o pipefail
+            gen_status=$?
 
             if [[ $gen_status -eq 0 && -f "$template_file" ]]; then
                 echo -e "  ${GREEN}✓${RESET} Generated"
@@ -383,9 +351,11 @@ while true; do
     # Finish progress display for Smart-detect mode
     if [[ "$gen_mode" == "2" ]]; then
         finish_progress
+        sleep 0.3  # Brief pause before clearing
         clear
+        echo ""  # Spacing after clear
+        echo ""  # Extra spacing for readability
     fi
-
 
     # Summary
     echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
@@ -415,6 +385,9 @@ while true; do
         exit 0
     fi
 
+    # Initialize failed_hosts array (used by retry option)
+    failed_hosts=()
+
     # Bulk deploy option
     if [[ $generated -gt 0 ]]; then
         echo -e "${BOLD}${CYAN}Step 3: Deployment${RESET}"
@@ -423,17 +396,16 @@ while true; do
         echo ""
         echo -e "${BOLD}Deploy all generated MOTDs to hosts now?${RESET}"
         echo ""
-        echo -e "  ${YELLOW}1${RESET}) Yes, deploy now via SSH"
-        echo -e "  ${YELLOW}2${RESET}) No, I'll deploy manually later"
-        echo ""
-        if [[ ! -t 0 ]]; then
-            deploy_all="2"  # default to No when non-interactive
-        else
-            read -r -p "$(echo -e ${CYAN}Choice \(1/2, q=cancel\):${RESET} )" deploy_all
-            if [[ "$deploy_all" == "q" || "$deploy_all" == "Q" ]]; then
-                break  # Return to main menu
-            fi
-            deploy_all=${deploy_all:-1}
+        
+        choose_menu "Deployment Choice" \
+            "Yes, deploy now via SSH|Start deployment immediately" \
+            "No, deploy manually later|Save templates, deploy later"
+        
+        deploy_all=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+        
+        # Check if cancelled
+        if [[ $MENU_RESULT -eq -1 ]]; then
+            break  # Return to main menu
         fi
 
         if [[ "$deploy_all" == "1" ]]; then
@@ -445,6 +417,7 @@ while true; do
 
             deployed=0
             deploy_failed=0
+            failed_hosts=()
 
             for hostname in $hosts; do
                 template_file="$TEMPLATES_DIR/${hostname}.sh"
@@ -453,13 +426,16 @@ while true; do
                 if [[ -f "$template_file" ]]; then
                     echo -e "${BOLD}${CYAN}Deploying to: ${hostname}${RESET}"
 
-                    if deploy-motd "$hostname" &>/dev/null; then
+                    # Run deploy-motd with visible output (may need user input for non-HLT MOTDs)
+                    if deploy-motd "$hostname"; then
                         echo -e "  ${GREEN}✓${RESET} Deployed successfully"
                         deployed=$((deployed + 1))
                     else
                         echo -e "  ${RED}✗${RESET} Deployment failed"
                         deploy_failed=$((deploy_failed + 1))
+                        failed_hosts+=("$hostname")
                     fi
+                    echo ""
                 fi
             done
 
@@ -471,9 +447,17 @@ while true; do
             echo -e "${GREEN}✓ Deployed:${RESET} $deployed"
             if [[ $deploy_failed -gt 0 ]]; then
                 echo -e "${RED}✗ Failed:${RESET}   $deploy_failed"
+                echo ""
+                echo -e "${YELLOW}Failed hosts:${RESET}"
+                for failed_host in "${failed_hosts[@]}"; do
+                    echo -e "  ${RED}→${RESET} $failed_host"
+                done
             fi
             echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
             echo ""
+            
+            # Store failed hosts for retry option
+            export BULK_FAILED_HOSTS="${failed_hosts[*]}"
         else
             echo ""
             echo -e "${BOLD}${YELLOW}Manual Deployment Instructions:${RESET}"
@@ -483,7 +467,7 @@ while true; do
             echo ""
             echo -e "  ${BOLD}1. Deploy individual hosts:${RESET}"
             echo -e "     ${GREEN}deploy-motd <hostname>${RESET}"
-            echo -e "     Example: ${GREEN}deploy-motd jellyfin${RESET}"
+            echo -e "     Example: ${GREEN}deploy-motd pihole${RESET}"
             echo ""
             echo -e "  ${BOLD}2. View all templates:${RESET}"
             echo -e "     ${GREEN}list-templates${RESET}"
@@ -501,15 +485,26 @@ while true; do
     echo ""
     echo -e "${BOLD}What would you like to do next?${RESET}"
     echo ""
-    echo -e "  ${YELLOW}1${RESET}) Back to Homelab menu"
-    echo -e "  ${YELLOW}2${RESET}) Generate more (restart bulk-generate)"
-    echo -e "  ${YELLOW}3${RESET}) Quit"
-    echo ""
-    read -p "$(echo -e ${CYAN}Choice \(1/2/3, q=back\):${RESET} )" next_action
-    if [[ "$next_action" == "q" || "$next_action" == "Q" ]]; then
+    
+    if [[ ${#failed_hosts[@]} -gt 0 ]]; then
+        choose_menu "Next Action" \
+            "Back to Homelab menu|Return to main menu" \
+            "Generate more|Restart bulk-generate" \
+            "Retry failed deployments|Retry ${#failed_hosts[@]} hosts" \
+            "Quit|Exit program"
+    else
+        choose_menu "Next Action" \
+            "Back to Homelab menu|Return to main menu" \
+            "Generate more|Restart bulk-generate" \
+            "Quit|Exit program"
+    fi
+    
+    next_action=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+    
+    # Check if cancelled
+    if [[ $MENU_RESULT -eq -1 ]]; then
         break  # Return to homelab menu
     fi
-    next_action=${next_action:-1}
 
     case "$next_action" in
         1)
@@ -517,8 +512,64 @@ while true; do
             break
             ;;
         2)
-            # Restart bulk-generate loop
+            # Restart bulk-generate loop - clear screen first
+            clear
             continue
+            ;;
+        3)
+            if [[ ${#failed_hosts[@]} -gt 0 ]]; then
+                # Retry failed deployments
+                clear
+                echo ""
+                echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+                echo -e "${BOLD}${CYAN}           🔄 Retry Failed Deployments                      ${RESET}"
+                echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+                echo ""
+                
+                retry_deployed=0
+                retry_failed=0
+                
+                for hostname in "${failed_hosts[@]}"; do
+                    echo -e "${BOLD}${CYAN}Deploying to: ${hostname}${RESET}"
+                    if deploy-motd "$hostname"; then
+                        echo -e "  ${GREEN}✓${RESET} Deployed successfully"
+                        retry_deployed=$((retry_deployed + 1))
+                    else
+                        echo -e "  ${RED}✗${RESET} Deployment failed again"
+                        retry_failed=$((retry_failed + 1))
+                    fi
+                    echo ""
+                done
+                
+                echo ""
+                echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+                echo -e "${BOLD}${CYAN}                Retry Summary                              ${RESET}"
+                echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+                echo ""
+                echo -e "${GREEN}✓ Deployed:${RESET} $retry_deployed"
+                if [[ $retry_failed -gt 0 ]]; then
+                    echo -e "${RED}✗ Still failed:${RESET} $retry_failed"
+                fi
+                echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+                echo ""
+                
+                # Clear failed hosts after retry
+                failed_hosts=()
+                continue
+            else
+                # Quit
+                echo ""
+                echo -e "${GREEN}✓${RESET} Done! Have a great day!"
+                echo ""
+                exit 0
+            fi
+            ;;
+        4)
+            # Quit (only available when there are failed hosts)
+            echo ""
+            echo -e "${GREEN}✓${RESET} Done! Have a great day!"
+            echo ""
+            exit 0
             ;;
         *)
             # Quit

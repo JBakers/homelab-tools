@@ -2,16 +2,28 @@
 # Shared menu helper functions for Homelab Tools
 # Provides arrow key navigation, consistent colors, and menu rendering
 # Author: J.Bakers
-# Version: 3.5.0-dev.16
+# Version: See VERSION file
 
 # Standard menu colors
-readonly MENU_CYAN='\033[0;36m'
-readonly MENU_GREEN='\033[0;32m'
-readonly MENU_YELLOW='\033[1;33m'
-readonly MENU_RED='\033[0;31m'
+# Note: Using bright/bold variants for better readability on dark terminals
+readonly MENU_CYAN='\033[0;96m'      # Bright cyan
+readonly MENU_GREEN='\033[0;92m'     # Bright green
+readonly MENU_YELLOW='\033[0;93m'    # Bright yellow
+readonly MENU_RED='\033[0;95m'       # Magenta (more readable than red)
 readonly MENU_BOLD='\033[1m'
+readonly MENU_DIM='\033[2m'
 readonly MENU_RESET='\033[0m'
 readonly MENU_INVERSE='\033[7m'
+
+#──────────────────────────────────────────────────────────────────────────────
+# Function: read_key
+# Description: Read a single keypress from terminal (arrow keys, vim keys, etc.)
+# Globals Modified: MENU_KEY (KEY_UP, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_Q, etc.)
+# Arguments: None
+# Returns: 0 on success
+# Notes: Works with /dev/tty or stdin fallback for Docker environments
+#──────────────────────────────────────────────────────────────────────────────
+ 
 
 # Read a single key including arrow keys and ESC
 # Sets global variable MENU_KEY instead of echoing (to avoid subshell issues)
@@ -24,8 +36,14 @@ read_key() {
     # Temporarily disable set -e to handle read timeout properly
     set +e
     
-    # Read from the real terminal with timeout
-    IFS= read -rsn1 -t 1 key < /dev/tty 2>/dev/null
+    # Try /dev/tty first, fallback to stdin
+    local input_source="/dev/tty"
+    if [[ ! -e /dev/tty ]]; then
+        input_source="/dev/stdin"
+    fi
+    
+    # Read from the terminal with timeout
+    IFS= read -rsn1 -t 1 key < "$input_source" 2>/dev/null
     read_status=$?
     
     # Re-enable set -e
@@ -41,12 +59,12 @@ read_key() {
     if [[ $key == $'\x1b' ]]; then
         # Read the bracket (with set +e for timeout safety)
         set +e
-        IFS= read -rsn1 -t 0.1 key2 < /dev/tty 2>/dev/null
+        IFS= read -rsn1 -t 0.1 key2 < "$input_source" 2>/dev/null
         set -e
         if [[ $key2 == "[" ]]; then
             # Read the letter (A/B/C/D)
             set +e
-            IFS= read -rsn1 -t 0.1 key3 < /dev/tty 2>/dev/null
+            IFS= read -rsn1 -t 0.1 key3 < "$input_source" 2>/dev/null
             set -e
             case "$key3" in
                 'A') MENU_KEY="KEY_UP" ;;
@@ -74,6 +92,17 @@ read_key() {
     return 0
 }
 
+#──────────────────────────────────────────────────────────────────────────────
+# Function: show_arrow_menu
+# Description: Display interactive menu with arrow key navigation
+# Globals Modified: MENU_RESULT (selected index 0-based, -1 for quit/ESC)
+# Arguments:
+#   $1 - Menu title
+#   $@ - Menu options (format: "Label|Description" or "HELP"/"BACK"/"QUIT")
+# Returns: 0 on selection, sets MENU_RESULT to chosen index
+# Usage: show_arrow_menu "Title" "Option 1|desc" "Option 2|desc" "BACK"
+# Navigation: ↑↓ arrows, j/k (vim), → (select), ← or q (quit)
+#──────────────────────────────────────────────────────────────────────────────
 # Render a menu with arrow key navigation
 # Usage: show_arrow_menu "Title" "Option 1|desc" "Option 2|desc" ...
 # Last options can be: "HELP" "BACK" "QUIT"
@@ -127,16 +156,16 @@ show_arrow_menu() {
             # Determine color based on option type
             if [[ "$label" == "HELP" ]]; then
                 color="$MENU_CYAN"
-                label="Help"
+                label="❓ Help"
                 desc="Show detailed help"
             elif [[ "$label" == "BACK" ]]; then
                 color="$MENU_YELLOW"
-                label="Back"
-                desc="Return to previous menu"
+                label="← Back"
+                desc=""
             elif [[ "$label" == "QUIT" ]]; then
                 color="$MENU_RED"
-                label="Quit"
-                desc="Exit homelab tools"
+                label="✕ Quit"
+                desc=""
             else
                 color="$MENU_GREEN"
             fi
@@ -153,7 +182,7 @@ show_arrow_menu() {
 
         echo ""
         echo -e "${MENU_CYAN}════════════════════════════════════════════════════════════${MENU_RESET}"
-        echo -e "${MENU_BOLD}Use ↑/↓ to navigate, Enter to select, q to quit${MENU_RESET}"
+        echo -e "${MENU_DIM}Navigate: ↑/↓ or j/k  │  Select: Enter or →  │  Back: ← or q${MENU_RESET}"
         
         needs_redraw=0
         fi  # end of needs_redraw check
@@ -181,8 +210,14 @@ show_arrow_menu() {
                     selected=0
                 fi
                 ;;
-            KEY_ENTER)
+            KEY_ENTER|KEY_RIGHT)
+                # Enter or Right Arrow = Select
                 MENU_RESULT="$selected"
+                return 0
+                ;;
+            KEY_LEFT)
+                # Left Arrow = Back/Cancel
+                MENU_RESULT="-1"
                 return 0
                 ;;
             KEY_Q)
@@ -286,4 +321,13 @@ finish_progress() {
         return 0
     fi
     tput cnorm  # Show cursor
+}
+
+# Wrapper function for show_arrow_menu for backwards compatibility
+# Usage: choose_menu "Title" "option1|description" "option2|description" ...
+choose_menu() {
+    local title="$1"
+    shift
+    show_arrow_menu "$title" "$@"
+    # show_arrow_menu sets MENU_RESULT globally
 }

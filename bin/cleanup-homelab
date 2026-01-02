@@ -3,16 +3,16 @@ set -euo pipefail
 
 # Cleanup orphaned MOTD templates
 # Author: J.Bakers
-# Version: 3.5.0-dev.31
+# Version: See VERSION file
 
 CONFIG_FILE="$HOME/.ssh/config"
 MOTD_DIR="$HOME/.local/share/homelab-tools/templates"
 
-# Kleuren
+# Colors
+CYAN='\033[0;36m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
-# BLUE removed - using CYAN instead
 NC='\033[0m' # No Color
 
 # Function to find orphaned templates
@@ -28,7 +28,7 @@ find_orphaned_templates() {
     local active_hosts
     active_hosts=$(grep "^Host " "$CONFIG_FILE" | awk '{print $2}' | grep -v '\*' | sort -u)
     
-    # Loop door alle MOTD templates
+    # Loop through all MOTD templates
     for template in "$MOTD_DIR"/*.sh; do
         if [[ ! -f "$template" ]]; then
             continue
@@ -37,7 +37,7 @@ find_orphaned_templates() {
         local hostname
         hostname=$(basename "$template" .sh)
         
-        # Check of deze host nog in SSH config staat
+        # Check if this host still exists in SSH config
         if ! echo "$active_hosts" | grep -q "^${hostname}$"; then
             orphaned+=("$hostname")
         fi

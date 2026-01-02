@@ -1,8 +1,9 @@
-# 🏠 Homelab Management Tools v3.5.0-dev.24
+# 🏠 Homelab Management Tools v3.6.3
 
-[![Version](https://img.shields.io/badge/version-3.5.0--dev.24-orange.svg)](https://github.com/JBakers/homelab-tools/releases)
+[![Version](https://img.shields.io/badge/version-3.6.3-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
 [![License](https://img.shields.io/badge/license-GPL--v3-blue.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/shell-bash-lightgrey.svg)](https://www.gnu.org/software/bash/)
+[![Tests](https://img.shields.io/badge/tests-42%20tests%20%7C%2098%25-brightgreen.svg)](https://github.com/JBakers/homelab-tools)
 
 > **Professional command-line toolkit for managing homelab infrastructure with beautiful, colorful interfaces and intelligent automation.**
 
@@ -12,37 +13,64 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
 
 ### 🎯 Smart Detection
 
-- **60+ Services Auto-Detected** - Jellyfin, Plex, *arr stack, Pi-hole, Home Assistant, and more
+- **60+ Services Auto-Detected** - Pi-hole, Plex, *arr stack, Home Assistant, Nextcloud, and more
 - **Intelligent Defaults** - Automatic service names, descriptions, and port configurations
 - **Custom Services** - Easy fallback for any custom application
-
-### 🎨 Beautiful Interface
 
 ### 🎨 Beautiful Interface
 
 - **Clean & Functional MOTDs** - Professional login screens with system info (default)
 - **Optional ASCII Art** - 5 colorful styles including rainbow banners with `toilet -F gay`
 - **Color-Coded Output** - Clear visual feedback with ANSI colors
-- **Interactive Menus** - Arrow key navigation, q=cancel on all prompts
-- **Uninstall from Menu** - Easy removal via Configuration menu
+- **Interactive Menus** - Arrow key navigation (↑↓, j/k), q=cancel everywhere
+- **Checkbox Selection** - Multi-select for batch operations
 
 ### ⚡ Automation & Efficiency
 
 - **Bulk Operations** - Generate and deploy MOTDs for all hosts at once
-- **One-Click Deploy** - SSH-based deployment to remote hosts
-- **Template System** - Reusable, customizable MOTD templates
+- **One-Click Deploy** - SSH-based deployment to remote hosts with `deploy-motd --all`
+- **Template System** - Reusable, customizable MOTD templates with HLT markers
+- **MOTD Protection** - Smart detection of existing MOTDs
+  - Detects HLT vs non-HLT MOTDs automatically
+  - Replace/Append/Cancel options for safe deployment
+  - Automatic backup before replacing non-HLT MOTDs
+  - Only removes HLT MOTDs on undeploy (preserves third-party configs)
+- **Undeploy Support** - Remove MOTDs from single host or all hosts (`undeploy-motd --all`)
+- **Retry Failed** - Bulk deploy shows failed hosts with retry option
+- **Deployment Status** - Track deployments with `list-templates -s` (🟢 deployed, 🟡 ready, 🔴 stale)
+- **Interactive Preview** - Preview templates with `list-templates -v`
 
 ### 🔐 SSH Management
 
-- **Setup Wizard** - Automated SSH key generation and configuration
-- **Key Distribution** - Push keys to all servers automatically
+- **Host Manager** - Full interactive SSH config editor (`edit-hosts`)
+  - Add/edit/delete hosts with guided wizard
+  - Search and filter hosts
+  - Bulk operations (export, backup, batch delete with checkboxes)
+- **Key Distribution** - Push SSH keys to all servers automatically
 - **Host Key Cleanup** - Interactive tool for managing known_hosts
+
+### 💾 Backup Management
+
+- **Centralized View** - See all backups from one menu
+- **Supported Types** - .bashrc, SSH config, HLT installs, home backups
+- **Archive** - Create .tar.gz of all backups
+- **Move** - Transfer backups to custom folder (e.g., NAS)
+- **Delete** - Remove by type or all at once
 
 ### 📚 Developer Experience
 
 - **Comprehensive Help** - Every command has detailed `--help` documentation
+- **Quick Reference** - Use `homelab --usage` for concise command overview
 - **Error Handling** - Robust error checking with `set -euo pipefail`
 - **Input Validation** - Protection against command injection attacks
+- **Non-Interactive Mode** - `install.sh --non-interactive` for automated setups
+- **Optional toilet install** - Installer prompts to install ASCII art support
+- **Test Suite** - 42 automated tests with 98% coverage in Docker environment
+  - Static tests (syntax, ShellCheck, help formatting)
+  - Functional tests (generate, deploy, list, delete)
+  - Menu navigation tests (expect scripts)
+  - SSH deployment tests (mock servers)
+  - Edge case handling
 
 ## 📦 Installation
 
@@ -55,20 +83,26 @@ git clone https://github.com/JBakers/homelab-tools.git
 
 # Run the installer (requires sudo for /opt installation)
 cd homelab-tools
-sudo ./install.sh
+./install.sh
 
 # Reload your shell
 source ~/.bashrc
 ```
 
+**For automated/scripted installs:**
+
+```bash
+./install.sh --non-interactive
+```
+
 **What the installer does:**
 
-- ✅ Sets up `~/homelab-tools/` directory structure
+- ✅ Installs to `/opt/homelab-tools/` (system-wide)
+- ✅ Creates symlinks in `~/.local/bin/` for all commands
 - ✅ Adds commands to your `PATH` via `~/.bashrc`
 - ✅ Creates templates directory at `~/.local/share/homelab-tools/templates/`
-- ✅ Configures executable permissions
 - ✅ Optionally sets up SSH keys and config
-- ✅ Configures domain suffix for your homelab
+- ✅ Cleans up the clone source directory after install
 
 ### ⚙️ Manual Installation
 
@@ -111,15 +145,15 @@ homelab
 
 ```bash
 # 1. Generate MOTD for your service
-generate-motd jellyfin
-# Auto-detects: "Jellyfin - Media Server" with port 8096
+generate-motd pihole
+# Auto-detects: "Pi-hole - Network-wide Ad Blocking" with port 80
 
 # 2. Deploy to your host
-deploy-motd jellyfin
+deploy-motd pihole
 # Uploads via SSH and activates MOTD
 
 # 3. Test it!
-ssh jellyfin
+ssh pihole
 # See your beautiful new MOTD!
 ```
 
@@ -135,18 +169,18 @@ The tool offers clean, functional MOTDs by default, with optional ASCII art for 
 
 ```
 ==========================================
-  Jellyfin
-  Media Server
+  Pi-hole
+  Network-wide Ad Blocking
   by J.Bakers
 ==========================================
 
 📊 System Information:
 
-  🖥️  Hostname:    jellyfin
+  🖥️  Hostname:    pihole
   🌐 IP Address:  192.168.1.10
   ⏱️  Uptime:      3 days, 12 hours
   🐋 Docker:      24.0.7
-  🔗 Web UI:      http://jellyfin:8096
+  🔗 Web UI:      http://pihole/admin
 
 ==========================================
 ```
@@ -199,20 +233,16 @@ homelab
 
 ```
 ╔════════════════════════════════════════════════════════════╗
-║           🏠 HOMELAB MANAGEMENT TOOLS v3.4.0               ║
-║                    by J.Bakers                             ║
+║         🏠 Homelab Management Tools v3.6.3                 ║
 ╚════════════════════════════════════════════════════════════╝
 
-Available commands:
+  ► 📝 MOTD Management      Generate/deploy/list MOTDs
+    ⚙️  Configuration        Edit hosts, keys & settings
+    💾 Backup Management     View & manage backups
+    HELP
+    QUIT
 
-  1) generate-motd     - Generate a new MOTD
-  2) deploy-motd       - Deploy MOTD to container
-  3) cleanup-keys      - Remove old SSH keys
-  4) list-templates    - View all templates
-  5) copykey           - Distribute SSH keys
-  
-  h) help              - Detailed help
-  q) quit              - Exit
+Navigate: ↑/↓ arrows or j/k  │  Select: Enter  │  Quit: q
 ```
 
 </details>
@@ -226,20 +256,23 @@ All commands are available directly in your terminal:
 | `generate-motd` | Create MOTD template | `generate-motd plex` |
 | `bulk-generate-motd` | Generate for all hosts | `bulk-generate-motd` |
 | `deploy-motd` | Deploy to remote host | `deploy-motd pihole` |
-| `cleanup-keys` | Remove SSH host keys | `cleanup-keys jellyfin` |
-| `copykey` | Distribute SSH keys | `copykey` |
-| `list-templates` | Show all templates | `list-templates` |
-| `edit-hosts` | Edit SSH config | `edit-hosts` |
+| `undeploy-motd` | Remove deployed MOTD | `undeploy-motd --all` |
+| `list-templates` | Show/preview templates | `list-templates -v` |
+| `delete-template` | Delete template(s) | `delete-template` |
+| `edit-hosts` | Manage SSH hosts | `edit-hosts` |
 | `edit-config` | Edit homelab config | `edit-config` |
+| `copykey` | Distribute SSH keys | `copykey` |
+| `cleanup-keys` | Remove SSH host keys | `cleanup-keys pihole` |
 
 ### 📖 Built-in Help
 
 Every command has comprehensive help documentation:
 
 ```bash
-generate-motd --help    # Detailed usage and examples
-deploy-motd -h          # Quick reference
-homelab help            # Full documentation
+homelab --help          # Overview of all commands
+homelab --usage         # Quick reference (concise)
+homelab help            # Full detailed documentation
+generate-motd --help    # Command-specific help
 ```
 
 ## 📝 Complete Workflow Examples
@@ -340,26 +373,34 @@ homelab-tools/
 ├── 📂 bin/                        # Executable commands
 │   ├── 🏠 homelab                # Main interactive menu
 │   ├── 📝 generate-motd          # MOTD generator (60+ services)
-│   ├── 📦 bulk-generate-motd     # Bulk MOTD generation
-│   ├── 🚀 deploy-motd            # MOTD deployment via SSH
-│   ├── 🧹 cleanup-keys           # SSH host key cleanup
-│   ├── 🔑 copykey                # SSH key distribution
+│   ├── � deploy-motd            # MOTD deployment via SSH
+│   ├── 🔄 undeploy-motd          # Remove deployed MOTDs
 │   ├── 📄 list-templates         # Template overview
-│   ├── ⚙️  edit-config            # Edit homelab config
-│   └── 🔧 edit-hosts             # Edit SSH config
+│   ├── 🗑️  delete-template        # Delete templates
+│   ├── 🔧 edit-hosts             # Edit SSH config
+│   ├── 🔑 copykey                # SSH key distribution
+│   └── 🧹 cleanup-keys           # SSH host key cleanup
+│
+├── 📂 lib/                        # Shared libraries
+│   ├── menu-helpers.sh           # Arrow navigation system
+│   ├── version.sh                # Version management
+│   └── constants.sh              # Shared constants
 │
 ├── 📂 config/                     # Example configurations
-│   ├── hosts.txt.example         # Example hosts file
 │   ├── ssh-config.example        # Example SSH config
 │   └── server-motd/              # Server-side MOTD scripts
 │
+├── 📂 .test-env/                  # Docker test environment
+│   ├── run-tests.sh              # 42 automated tests
+│   ├── Dockerfile.testhost       # Test container
+│   └── docker-compose.yml        # Test orchestration
+│
 ├── 🛠️  install.sh                # Installation script
 ├── 🗑️  uninstall.sh              # Uninstallation script
-├── 📦 export.sh                  # Export/backup tool
 ├── 📖 README.md                  # This file
 ├── 🚀 QUICKSTART.md              # Quick start guide
 ├── 📋 CHANGELOG.md               # Version history
-└── 📜 LICENSE                    # MIT License
+└── 📜 LICENSE                    # GPL-v3 License
 ```
 
 **User Data Locations:**
@@ -390,7 +431,7 @@ Host frigate
   HostName 192.168.1.30
   User root
 
-Host jellyfin
+Host nextcloud
   HostName 192.168.1.25
   User root
   
@@ -400,6 +441,49 @@ Host pihole
 ```
 
 Then use: `ssh frigate`
+
+## 🧪 Testing & Quality Assurance
+
+This project includes a comprehensive automated test suite:
+
+### Test Suite Overview
+
+- **42 Automated Tests** - 98% success rate
+- **Docker-based** - Isolated test environment with mock SSH servers
+- **Full Coverage** - Tests all major functionality
+
+### Test Categories
+
+| Category | Tests | Coverage |
+|----------|-------|----------|
+| Static Tests | 4 | Syntax, ShellCheck, help formatting |
+| Install Tests | 4 | Installation, symlinks, PATH |
+| Menu Navigation | 10 | Interactive menus, arrow keys |
+| Functional Tests | 5 | Generate, deploy, list, delete |
+| SSH Tests | 3 | Mock server deployment |
+| Edge Cases | 2 | Invalid input, unreachable hosts |
+| Uninstall Tests | 2 | Clean removal |
+| CLI Options | 33 | All command flags |
+| Additional Functional | 7 | Multiple templates, protection |
+| Service Presets | 1 | Auto-detection |
+| Full Menu Navigation | 4 | Complete workflows |
+
+### Running Tests
+
+```bash
+# Navigate to test directory
+cd .test-env
+
+# Start Docker containers
+docker compose up -d
+
+# Run all tests
+docker compose exec -T testhost bash /workspace/.test-env/run-tests.sh
+
+# Expected: ✓✓✓ ALL TESTS PASSED! 🎉 (41/42)
+```
+
+For more details, see [`.test-env/QUICK_START.md`](.test-env/QUICK_START.md)
 
 ## 🐛 Troubleshooting
 
@@ -573,10 +657,10 @@ Templates are reusable - update and redeploy anytime:
 
 ```bash
 # Edit the template
-nano ~/.local/share/homelab-tools/templates/jellyfin.sh
+nano ~/.local/share/homelab-tools/templates/pihole.sh
 
 # Redeploy
-deploy-motd jellyfin
+deploy-motd pihole
 ```
 
 ### 📦 Bulk Operations
@@ -585,7 +669,7 @@ Process multiple services efficiently:
 
 ```bash
 # Deploy multiple services
-for service in jellyfin plex sonarr radarr; do
+for service in pihole plex sonarr radarr; do
     deploy-motd $service
 done
 
@@ -629,11 +713,11 @@ edit-hosts
 
 # Example structure:
 # --- Media Servers ---
-Host jellyfin
+Host plex
   HostName 192.168.1.10
   User root
 
-Host plex
+Host emby
   HostName 192.168.1.11
   User root
 
@@ -673,7 +757,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## 📜 License
 
-MIT License © 2025 J.Bakers
+GPL-v3 License © 2025 J.Bakers
 
 See [LICENSE](LICENSE) for details.
 

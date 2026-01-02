@@ -1,0 +1,73 @@
+═══════════════════════════════════════════════════════════════════════════════
+  TEST RUNNER STATUS FOR v3.6.0-dev.35
+═══════════════════════════════════════════════════════════════════════════════
+
+CURRENT STATUS:
+───────────────
+
+✅ test-runner.sh - Ready for use
+   • Version: 3.6.0-dev.35
+   • Test count: 72 tests (100% automated)
+   • Sections: 12 (6 tests each)
+   • Progress tracking: ~/.homelab-test-progress
+   • Runtime: ~5-10 minutes
+
+RECENT UPDATES (dev.21-35):
+───────────────────────────
+
+✅ All menu fixes validated (dev.20-32)
+   • edit-hosts menu title fixes (3 locations)
+   • list-templates --view function name fix
+   • delete-template help color fix
+   • edit-hosts clear() conflict fix
+
+✅ New features tested (dev.26-35)
+   • Special occasion messages in banner
+   • Banner enabled by default in --non-interactive
+   • sync-dev.sh functionality
+   • Auto-bump patch version after dev.09
+   • Clean /opt structure (dev-only files excluded)
+
+BUGS FIXED & VERIFIED:
+───────────────────────
+
+1. ✅ edit-hosts: Missing title arguments (3 locations) - dev.20
+2. ✅ list-templates --view: Wrong function name - dev.20
+3. ✅ delete-template --help: Escape codes not displaying - dev.20
+4. ✅ README: Updated to v3.6.0 - dev.27
+5. ✅ Banner: Not installed with --non-interactive - dev.29
+6. ✅ Banner: Not removed on complete uninstall - dev.30-31
+7. ✅ edit-hosts: Menu not showing due to clear conflict - dev.32
+8. ✅ /opt: Dev-only files excluded - dev.34-35
+
+WHAT TO TEST:
+──────────────
+
+CRITICAL (MUST PASS):
+  1. Edit-hosts menu system (all 4 menus)
+  2. List-templates --view preview mode
+  3. Delete-template help colors
+  4. All menu q=exit/quit functions
+
+IMPORTANT:
+  5. Deploy/undeploy MOTD (SSH error handling)
+  6. Generate MOTD (interactive + non-interactive)
+  7. List-templates (default, --status, --view)
+  8. Install/uninstall flows
+
+AUTOMATED VERIFICATION:
+  • All 12+ scripts pass: bash -n (syntax check)
+  • No raw escape codes in output
+  • All commands have proper help
+
+RUNNING TESTS:
+───────────────
+
+Start: ./test-runner.sh
+Follow: Interactive prompts
+Time: 45-75 minutes (complete test)
+Progress: Saved in ~/.homelab-test-progress
+
+Each section has 6 tests. Can run individual tests or entire section.
+
+═══════════════════════════════════════════════════════════════════════════════

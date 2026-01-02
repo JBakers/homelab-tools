@@ -3,15 +3,26 @@ set -euo pipefail
 
 # Copy SSH key to remote hosts
 # Author: J.Bakers
-# Version: 3.5.0-dev.31
+# Version: See VERSION file
 
-# Kleuren
-CYAN='\033[0;36m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BOLD='\033[1m'
-RESET='\033[0m'
+# Load paths and libraries
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
+# Source validators and colors
+if [[ -f "$LIB_DIR/validators.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/validators.sh"
+fi
+if [[ -f "$LIB_DIR/colors.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/colors.sh"
+fi
 
 CONFIG_FILE="$HOME/.ssh/config"
 PUBLIC_KEY_FILE="$HOME/.ssh/id_ed25519.pub"
@@ -41,7 +52,7 @@ echo -e "${BOLD}${CYAN}║         🔑 SSH Key Distribution                    
 echo -e "${BOLD}${CYAN}╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
-# Controleer of bestanden bestaan
+# Check if files exist
 if [[ ! -f "$CONFIG_FILE" ]]; then
     echo -e "${RED}✗ SSH config not found: $CONFIG_FILE${RESET}"
     exit 1
@@ -50,7 +61,7 @@ fi
 if [[ ! -f "$PUBLIC_KEY_FILE" ]]; then
     echo -e "${RED}✗ Public key not found: $PUBLIC_KEY_FILE${RESET}"
     echo ""
-    echo -e "  Genereer eerst een sleutel:"
+    echo -e "  Generate a key first:"
     echo -e "  ${GREEN}ssh-keygen -t ed25519${RESET}"
     exit 1
 fi
@@ -59,21 +70,21 @@ echo -e "${BOLD}SSH Key:${RESET} ${CYAN}$PUBLIC_KEY_FILE${RESET}"
 echo -e "${BOLD}Config:${RESET}  ${CYAN}$CONFIG_FILE${RESET}"
 echo ""
 
-# Lees hosts uit config
+# Read hosts from config
 hosts=$(grep "^Host " "$CONFIG_FILE" | awk '{print $2}' | grep -v '\*' | sort -u)
 host_count=$(echo "$hosts" | wc -l)
 
-echo -e "${BOLD}Gevonden hosts:${RESET} ${GREEN}$host_count${RESET}"
+echo -e "${BOLD}Hosts found:${RESET} ${GREEN}$host_count${RESET}"
 echo ""
 
 # Counters
 success=0
 failed=0
 
-# Loop door hosts
+# Loop through hosts
 for hostname in $hosts; do
-    # Validate hostname
-    if [[ ! "$hostname" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+    # Validate hostname using RFC-compliant validation
+    if ! validate_hostname "$hostname"; then
         echo -e "${YELLOW}→${RESET} ${BOLD}$hostname${RESET} ... ${RED}✗ (invalid)${RESET}"
         failed=$((failed + 1))
         continue
@@ -81,8 +92,8 @@ for hostname in $hosts; do
 
     echo -ne "${YELLOW}→${RESET} ${BOLD}$hostname${RESET} ... "
     
-    # Kopieer de sleutel
-    if ssh -F "$CONFIG_FILE" -o ConnectTimeout=5 "$hostname" \
+    # Copy the key (-- separator prevents hostname injection)
+    if ssh -F "$CONFIG_FILE" -o ConnectTimeout=5 "$hostname" -- \
         "mkdir -p ~/.ssh; chmod 700 ~/.ssh; cat >> ~/.ssh/authorized_keys; chmod 600 ~/.ssh/authorized_keys" < "$PUBLIC_KEY_FILE" 2>/dev/null; then
         echo -e "${GREEN}✓${RESET}"
         success=$((success + 1))
@@ -94,7 +105,7 @@ done
 
 echo ""
 echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
-echo -e "${GREEN}✓ Succesvol:${RESET} $success"
-echo -e "${RED}✗ Mislukt:${RESET}   $failed"
+echo -e "${GREEN}✓ Success:${RESET}  $success"
+echo -e "${RED}✗ Failed:${RESET}   $failed"
 echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 echo ""

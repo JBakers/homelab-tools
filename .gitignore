@@ -1,36 +1,74 @@
-# User-specific configuration and data
+# ═══════════════════════════════════════════════════════════════════════════════
+# HOMELAB-TOOLS .GITIGNORE
+# ═══════════════════════════════════════════════════════════════════════════════
+# 
+# BRANCH STRUCTURE:
+#   main     = Pure production code (what users install)
+#   develop  = Production + development tools
+#   local    = Never committed (testing, notes, personal)
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ───────────────────────────────────────────────────────────────────────────────
+# USER DATA (never commit - personal configuration)
+# ───────────────────────────────────────────────────────────────────────────────
 config.sh
 templates/
 !templates/.gitkeep
 
-# Development and documentation artifacts
+# ───────────────────────────────────────────────────────────────────────────────
+# LOCAL DEVELOPMENT (never commit - personal dev environment)
+# ───────────────────────────────────────────────────────────────────────────────
+
+# Test environment (Docker-based testing)
+.test-env/
+
+# Development notes and tracking
 claude.md
 conversation*.md
 notes*.md
 todo*.md
 .todos.md
+TODO.md
 GESPREK.md
-.markdownlint.json
-TESTING_GUIDE.md
-test-checklist.sh
-.homelab-test-progress
-TESTING_COMMANDS.md
-
-# Development tracking (private)
 .notes.md
 .dev-*.md
 
-# Test files
+# Test files and runners
+test-runner.sh
+TEST*
 test.sh
 test-*.sh
 test-motd.sh
+test-checklist.sh
+TESTING_COMMANDS.md
+.homelab-test-progress
 
-# Backup files
-*.backup
-*.backup.*
-*.bak
-*~
-*.tar.gz
+# Dev sync tool
+sync-dev.sh
+
+# Archive folder
+.archive/
+
+# ───────────────────────────────────────────────────────────────────────────────
+# DEVELOP BRANCH ONLY (excluded from main via merge-to-main.sh)
+# These ARE committed to develop, but removed when merging to main
+# ───────────────────────────────────────────────────────────────────────────────
+# bump-dev.sh          → committed to develop
+# release.sh           → committed to develop  
+# merge-to-main.sh     → committed to develop
+# TESTING_CHECKLIST.md → committed to develop
+# TESTING_GUIDE.md     → committed to develop
+
+# ───────────────────────────────────────────────────────────────────────────────
+# EDITOR & OS FILES
+# ───────────────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.viminfo
+.markdownlint.json
 
 # macOS
 .DS_Store
@@ -41,20 +79,23 @@ test-motd.sh
 .Trash-*
 .directory
 
-# Editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-.viminfo
+# ───────────────────────────────────────────────────────────────────────────────
+# BUILD ARTIFACTS
+# ───────────────────────────────────────────────────────────────────────────────
+*.backup
+*.backup.*
+*.bak
+*~
+*.tar.gz
+*.log
 
-# Python (if any Python tools are added later)
+# Python (future)
 __pycache__/
 *.py[cod]
 *.pyo
 
-# Logs
-*.log
-
-# Commit change logs
+# Misc
 commit-changes.md
+# Dev workspace marker (blocks uninstall from dev directory)
+.dev-workspace
+CLAUDE-AUDIT.md

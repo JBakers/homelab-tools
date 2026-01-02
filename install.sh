@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-# Installatie script voor Homelab Management Tools
+# Installation script for homelab tools
 # Author: J.Bakers
-# Version: 3.5.0-dev.31
+# Version: See VERSION file
 
 # Detect actual user (not root when using sudo)
 ACTUAL_USER="${SUDO_USER:-$USER}"
@@ -21,18 +21,27 @@ run_sudo() {
 
 # Helper function for interactive read (works with curl|bash)
 # When stdin is piped, read from /dev/tty instead
-# Usage: value=$(read_input "prompt: ")
+# In non-interactive mode, returns default value
+# Usage: value=$(read_input "prompt: " "default_value")
 read_input() {
     local prompt="$1"
+    local default="${2:-}"
     local input
+    
+    # In non-interactive mode, use default
+    if [[ $NON_INTERACTIVE -eq 1 ]]; then
+        echo "$default"
+        return 0
+    fi
+    
     if [[ -t 0 ]]; then
         # stdin is a terminal, read normally
         read -r -p "$prompt" input
     else
         # stdin is piped (curl|bash), read from /dev/tty
-        read -r -p "$prompt" input </dev/tty
+        read -r -p "$prompt" input </dev/tty || input="$default"
     fi
-    echo "$input"
+    echo "${input:-$default}"
 }
 
 # Kleuren
@@ -46,11 +55,17 @@ RESET='\033[0m'
 # GitHub repo info
 GITHUB_REPO="https://github.com/JBakers/homelab-tools.git"
 DEFAULT_BRANCH="main"
+NON_INTERACTIVE=0
 
 # Parse command line arguments
 INSTALL_BRANCH="${1:-$DEFAULT_BRANCH}"
 if [[ "$INSTALL_BRANCH" == "--branch" ]] && [[ -n "${2:-}" ]]; then
     INSTALL_BRANCH="$2"
+fi
+
+# Check for non-interactive flag
+if [[ "${1:-}" == "--non-interactive" ]] || [[ "${2:-}" == "--non-interactive" ]]; then
+    NON_INTERACTIVE=1
 fi
 
 # Check if we're in a homelab-tools directory or need to clone
@@ -97,55 +112,6 @@ INSTALL_DIR="/opt/homelab-tools"
 echo -e "${BOLD}Installation directory: ${CYAN}$INSTALL_DIR${RESET}"
 echo ""
 
-# Check for legacy installation in ~/homelab-tools
-LEGACY_DIR="$ACTUAL_HOME/homelab-tools"
-if [[ -d "$LEGACY_DIR" ]] && [[ "$LEGACY_DIR" != "$(pwd)" ]]; then
-    echo -e "${YELLOW}⚠ Old installation found in ~/homelab-tools${RESET}"
-    echo ""
-    echo -e "${BOLD}What do you want to do with the old installation?${RESET}"
-    echo -e "  ${CYAN}1${RESET}) Backup and remove ${YELLOW}(recommended)${RESET}"
-    echo -e "  ${CYAN}2${RESET}) Backup only"
-echo -e "  ${CYAN}3${RESET}) Keep it"
-echo ""
-legacy_choice="$(read_input "Choice (1/2/3): ")"
-legacy_choice=${legacy_choice:-1}
-    
-    case "$legacy_choice" in
-        1)
-            # Backup and remove
-            BACKUP_DIR="$ACTUAL_HOME/homelab-tools.backup.$(date +%Y%m%d_%H%M%S)"
-            echo -e "${YELLOW}→${RESET} Creating backup to $BACKUP_DIR..."
-            cp -r "$LEGACY_DIR" "$BACKUP_DIR"
-            chown -R "$ACTUAL_USER:$ACTUAL_USER" "$BACKUP_DIR"
-            echo -e "${GREEN}✓${RESET} Backup created"
-            
-            echo -e "${YELLOW}→${RESET} Removing old installation..."
-            rm -rf "$LEGACY_DIR"
-            echo -e "${GREEN}✓${RESET} Old installation removed"
-            echo ""
-            ;;
-        2)
-            # Backup only
-            BACKUP_DIR="$ACTUAL_HOME/homelab-tools.backup.$(date +%Y%m%d_%H%M%S)"
-            echo -e "${YELLOW}→${RESET} Creating backup to $BACKUP_DIR..."
-            cp -r "$LEGACY_DIR" "$BACKUP_DIR"
-            chown -R "$ACTUAL_USER:$ACTUAL_USER" "$BACKUP_DIR"
-            echo -e "${GREEN}✓${RESET} Backup created"
-            echo -e "${YELLOW}⚠${RESET} Old installation kept in ~/homelab-tools"
-            echo ""
-            ;;
-        3)
-            # Keep
-            echo -e "${YELLOW}⚠${RESET} Old installation kept"
-            echo ""
-            ;;
-        *)
-            echo -e "${RED}✗${RESET} Invalid choice, old installation kept"
-            echo ""
-            ;;
-    esac
-fi
-
 # 1. Install files to /opt
 echo -e "${YELLOW}[1/5]${RESET} Installing to /opt (requires sudo)..."
 
@@ -159,10 +125,78 @@ remove_symlinks() {
 # Helper: clean user configs/templates and bashrc entries
 clean_user_data() {
     rm -rf "$ACTUAL_HOME/.local/share/homelab-tools" 2>/dev/null || true
-    if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
-        sed -i '/homelab-tools/d' "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
-        sed -i '/HLT_BANNER/d' "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
-        sed -i '/Tip:.*homelab/d' "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
+    
+    # Clean .bashrc using safe awk-based removal (same as uninstall.sh)
+    if [[ -f "$ACTUAL_HOME/.bashrc" ]] && grep -qi "homelab" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
+        local temp_file
+        temp_file="$(mktemp)"
+        
+        awk '
+        BEGIN { 
+            in_banner = 0
+            banner_depth = 0
+        }
+        
+        # Never touch VS Code shell integration
+        /locate-shell-integration-path/ { print; next }
+        
+        # Skip standalone tip lines (with or without header)
+        /^# Homelab Tools tip$/ { 
+            getline
+            next 
+        }
+        
+        # Skip tip echo line without header
+        /^echo -e.*Tip:.*homelab.*commands/ { next }
+        /^echo.*Tip:.*homelab/ { next }
+        
+        # Match banner section start
+        /^# ===============================================$/ {
+            line1 = $0
+            getline
+            line2 = $0
+            if (line2 ~ /^# Homelab Tools Welcome Banner$/) {
+                getline
+                line3 = $0
+                if (line3 ~ /^# Set HLT_BANNER=0 to disable$/) {
+                    getline
+                    in_banner = 1
+                    banner_depth = 0
+                    next
+                } else {
+                    print line1; print line2; print line3
+                    next
+                }
+            } else {
+                print line1; print line2
+                next
+            }
+        }
+        
+        # Track nested if/fi in banner
+        in_banner == 1 {
+            if ($0 ~ /^[[:space:]]*if /) banner_depth++
+            if ($0 ~ /^[[:space:]]*fi$/) {
+                if (banner_depth == 0) {
+                    in_banner = 0
+                    next
+                } else {
+                    banner_depth--
+                }
+            }
+            next
+        }
+        
+        { print }
+        ' "$ACTUAL_HOME/.bashrc" > "$temp_file"
+        
+        if bash -n "$temp_file" 2>/dev/null; then
+            mv "$temp_file" "$ACTUAL_HOME/.bashrc"
+            # Restore ownership to actual user (not root)
+            chown "$ACTUAL_USER:$ACTUAL_USER" "$ACTUAL_HOME/.bashrc" 2>/dev/null || true
+        else
+            rm -f "$temp_file"
+        fi
     fi
 }
 
@@ -221,8 +255,31 @@ fi
 # Copy files to /opt (requires sudo)
 echo -e "${YELLOW}  →${RESET} Copying files to $INSTALL_DIR..."
 run_sudo mkdir -p "$INSTALL_DIR"
-run_sudo cp -r "$(pwd)"/* "$INSTALL_DIR/"
-run_sudo cp -r "$(pwd)"/.gitignore "$INSTALL_DIR/" 2>/dev/null || true
+
+# Copy all files except dev-only and GitHub-only files
+run_sudo rsync -a --exclude='.git' \
+    --exclude='sync-dev.sh' \
+    --exclude='bump-dev.sh' \
+    --exclude='merge-to-main.sh' \
+    --exclude='release.sh' \
+    --exclude='export.sh' \
+    --exclude='TESTING_CHECKLIST.md' \
+    --exclude='TEST_SUMMARY.txt' \
+    --exclude='TODO.md' \
+    --exclude='test-runner.sh' \
+    --exclude='.test-env' \
+    --exclude='.archive' \
+    --exclude='*.backup.*' \
+    --exclude='.dev-workspace' \
+    --exclude='claude.md' \
+    --exclude='notes*.md' \
+    --exclude='conversation*.md' \
+    --exclude='CHANGELOG.md' \
+    --exclude='CONTRIBUTING.md' \
+    --exclude='SECURITY.md' \
+    --exclude='QUICKSTART.md' \
+    "$(pwd)/" "$INSTALL_DIR/"
+
 echo -e "${GREEN}  ✓${RESET} Files installed in /opt"
 # Remove old config.sh so it will be recreated
 run_sudo rm -f "$INSTALL_DIR/config.sh" 2>/dev/null || true
@@ -325,22 +382,12 @@ else
     echo -e "${GREEN}  ✓${RESET} .bashrc created with PATH"
 fi
 
-# Add MOTD tip to bashrc (only if not already present)
-if grep -q "Tip: Type.*homelab" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
-    echo -e "${GREEN}  ✓${RESET} MOTD tip already present"
-else
-    echo "" >> "$ACTUAL_HOME/.bashrc"
-    echo "# Homelab Tools tip" >> "$ACTUAL_HOME/.bashrc"
-    echo 'echo -e "\033[0;36mTip:\033[0m Type \033[1mhomelab\033[0m for available commands"' >> "$ACTUAL_HOME/.bashrc"
-    echo -e "${GREEN}  ✓${RESET} MOTD tip added to ~/.bashrc"
-fi
-
 # Add optional welcome banner (only if not already present)
 if grep -q "HLT_BANNER" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
     echo -e "${GREEN}  ✓${RESET} Welcome banner already configured"
 else
     echo ""
-    add_banner=$(read_input "Add a welcome banner to your shell? (Y/n): ")
+    add_banner=$(read_input "Add a welcome banner to your shell? (Y/n): " "y")
     add_banner=${add_banner:-y}
     
     if [[ "$add_banner" =~ ^[Yy]$ ]]; then
@@ -367,6 +414,23 @@ ASCIIART
         echo "Hostname: $HOSTNAME"
         echo "$(date +'%A %d %B %Y, %H:%M')"
         
+        # Special occasion messages
+        TODAY_MD=$(date +%m-%d)
+        case "$TODAY_MD" in
+            01-01) echo -e "\033[1;33m🎆 Happy New Year! 🎆\033[0m" ;;
+            12-25) echo -e "\033[1;31m🎄 Merry Christmas! 🎄\033[0m" ;;
+            12-26) echo -e "\033[0;36m✡️  Happy Hanukkah! ✡️\033[0m" ;;
+            10-31) echo -e "\033[1;35m🎃 Happy Halloween! 🎃\033[0m" ;;
+            07-04) echo -e "\033[1;34m🎆 Happy Independence Day! 🎆\033[0m" ;;
+        esac
+        
+        # Easter is complex (varies by year), checking approximate range
+        MONTH=$(date +%m)
+        DAY=$(date +%d)
+        if [[ "$MONTH" == "03" || "$MONTH" == "04" ]] && [[ "$DAY" -ge 20 ]] && [[ "$DAY" -le 25 ]]; then
+            echo -e "\033[1;33m🐰 Happy Easter! 🐰\033[0m"
+        fi
+        
         # Show version if available
         if [[ -f /opt/homelab-tools/VERSION ]]; then
             HLT_VERSION=$(cat /opt/homelab-tools/VERSION)
@@ -376,12 +440,18 @@ ASCIIART
         echo -e "Homelab Tools: \033[0;36mv${HLT_VERSION}\033[0m"
 
         echo -e "\033[0;36m------------------------------------------------------------\033[0m"
+        echo -e "\033[0;36mTip:\033[0m Type \033[1mhomelab\033[0m for available commands"
         echo ""
     fi
 fi
 BANNER_EOF
         echo -e "${GREEN}  ✓${RESET} Welcome banner added to ~/.bashrc"
         echo -e "${YELLOW}  →${RESET} Set HLT_BANNER=0 in ~/.bashrc to disable"
+    else
+        # No banner, but add tip standalone
+        echo "" >> "$ACTUAL_HOME/.bashrc"
+        echo "# Homelab Tools tip" >> "$ACTUAL_HOME/.bashrc"
+        echo -e 'echo -e "\033[0;36mTip:\033[0m Type \033[1mhomelab\033[0m for available commands"' >> "$ACTUAL_HOME/.bashrc"
     fi
 fi
 echo ""
@@ -407,9 +477,9 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
     echo ""
     echo -e "  What is your homelab domain suffix?"
     echo -e "  ${CYAN}Examples:${RESET}"
-    echo -e "    .home  → http://jellyfin.home:8096"
-    echo -e "    .local → http://jellyfin.local:8096"
-    echo -e "    (empty) → http://jellyfin:8096"
+    echo -e "    .home  → http://pihole.home/admin"
+    echo -e "    .local → http://pihole.local/admin"
+    echo -e "    (empty) → http://pihole/admin"
     echo ""
     
     while true; do
@@ -432,7 +502,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Homelab Tools Installer
 # Installs to /opt/homelab-tools with system-wide access
 # Author: J.Bakers
-# Version: 3.5.0-dev.31
+# Version: See VERSION file
 
 # Domain suffix for your homelab
 # Used for Web UI URLs
@@ -525,7 +595,7 @@ if [[ -d "$SSH_DIR" ]] && [[ ! -f "$SSH_CONFIG" ]]; then
 # Manage with: edit-hosts
 
 # Example host configuration:
-# Host jellyfin
+# Host pihole
 #     HostName 192.168.1.100
 #     User youruser
 #     Port 22
@@ -551,9 +621,29 @@ echo ""
 # Check if toilet is installed
 if ! command -v toilet &> /dev/null; then
     echo -e "${YELLOW}⚠ Optional: 'toilet' not found${RESET}"
-    echo -e "  For ASCII art, install with:"
-    echo -e "  ${CYAN}sudo apt install toilet toilet-fonts${RESET}"
+    echo -e "  For ASCII art MOTDs, toilet is recommended"
     echo ""
+    
+    if [[ $NON_INTERACTIVE -eq 1 ]]; then
+        # Non-interactive: skip prompt
+        echo -e "  Install manually: ${CYAN}sudo apt install toilet toilet-fonts${RESET}"
+        echo ""
+    else
+        install_toilet="$(read_input "Install toilet now? (Y/n): " "y")"
+        if [[ "$install_toilet" =~ ^[Yy]$ ]] || [[ -z "$install_toilet" ]]; then
+            echo -e "${YELLOW}→${RESET} Installing toilet..."
+            if run_sudo apt-get update -qq && run_sudo apt-get install -y toilet toilet-fonts; then
+                echo -e "${GREEN}✓${RESET} Toilet installed successfully"
+            else
+                echo -e "${YELLOW}⚠${RESET} Failed to install toilet"
+                echo -e "  Install manually: ${CYAN}sudo apt install toilet toilet-fonts${RESET}"
+            fi
+        else
+            echo -e "${YELLOW}→${RESET} Skipped toilet installation"
+            echo -e "  Install later: ${CYAN}sudo apt install toilet toilet-fonts${RESET}"
+        fi
+        echo ""
+    fi
 fi
 
 # Completion
@@ -576,7 +666,7 @@ echo -e "  • Config:    ${CYAN}/opt/homelab-tools/config.sh${RESET}"
 echo ""
 echo -e "${BOLD}${YELLOW}Next Steps:${RESET}"
 echo ""
-echo -e "1. ${CYAN}Start a new terminal or reload shell:${RESET}"
+echo -e "1. ${CYAN}Reload shell configuration:${RESET}"
 echo -e "   ${GREEN}source ~/.bashrc${RESET}"
 echo ""
 echo -e "2. ${CYAN}Start the menu:${RESET}"
@@ -593,6 +683,17 @@ echo -e "   ${GREEN}generate-motd --help${RESET}"
 echo ""
 echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
 echo ""
+
+# Auto-reload bashrc if possible (only works if install was not run with sudo)
+if [[ -n "$ACTUAL_USER" ]] && [[ "$ACTUAL_USER" != "root" ]] && [[ $EUID -ne 0 ]]; then
+    echo -e "${CYAN}→ Reloading shell configuration...${RESET}"
+    # Export function to source .bashrc in current shell
+    if [[ -f "$ACTUAL_HOME/.bashrc" ]]; then
+        # This only works if the script is sourced, not executed
+        # So we'll just remind the user instead
+        echo -e "${YELLOW}  Please run: ${GREEN}source ~/.bashrc${RESET}"
+    fi
+fi
 
 # Cleanup temp directory if we cloned from GitHub
 if [[ "${1:-}" == "--from-clone" ]] && [[ "$(pwd)" == /tmp/* ]]; then

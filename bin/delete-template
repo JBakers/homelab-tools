@@ -3,7 +3,22 @@ set -euo pipefail
 
 # Delete MOTD Template
 # Author: J.Bakers
-# Version: 3.5.0-dev.31
+# Version: See VERSION file
+
+# Load paths and libraries
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
+# Source menu helpers for choose_menu function
+if [[ -f "$LIB_DIR/menu-helpers.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/menu-helpers.sh"
+fi
 
 # Colors
 CYAN='\033[0;36m'
@@ -17,24 +32,22 @@ TEMPLATE_DIR="$HOME/.local/share/homelab-tools/templates"
 
 # Show help
 show_help() {
-    cat << EOF
-
-${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗
-║         🗑️  Delete MOTD Template                          ║
-╚══════════════════════════════════════════════════════════╝${RESET}
-
-${BOLD}Usage:${RESET}
-  delete-template [template-name]
-  delete-template -i                  # Interactive mode
-
-${BOLD}Examples:${RESET}
-  delete-template jellyfin            # Delete jellyfin.sh
-  delete-template -i                  # Choose from list
-
-${BOLD}Template Location:${RESET}
-  $TEMPLATE_DIR
-
-EOF
+    echo ""
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         🗑️  Delete MOTD Template                          ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "${BOLD}Usage:${RESET}"
+    echo "  delete-template [template-name]"
+    echo "  delete-template -i                  # Interactive mode"
+    echo ""
+    echo -e "${BOLD}Examples:${RESET}"
+    echo "  delete-template pihole              # Delete pihole.sh"
+    echo "  delete-template -i                  # Choose from list"
+    echo ""
+    echo -e "${BOLD}Template Location:${RESET}"
+    echo "  $TEMPLATE_DIR"
+    echo ""
 }
 
 # Interactive selection
@@ -53,32 +66,47 @@ interactive_delete() {
     echo ""
 
     local templates=()
-    local idx=1
+    declare -a menu_opts
     while IFS= read -r template; do
         local name="${template%.sh}"
         local size
         local date
         size=$(du -h "$TEMPLATE_DIR/$template" | cut -f1)
         date=$(stat -c %y "$TEMPLATE_DIR/$template" | cut -d' ' -f1)
-        printf "  ${CYAN}%2d${RESET}) %-20s  ${YELLOW}%s${RESET}  %s\n" "$idx" "$name" "$size" "$date"
         templates+=("$name")
-        ((idx++))
+        menu_opts+=("$name|$size, $date")
     done < <(find "$TEMPLATE_DIR" -name "*.sh" -type f -exec basename {} \; | sort)
 
-    echo ""
-    read -r -p "Select template number (or q to cancel): " choice
+    menu_opts+=("Delete ALL|Remove all templates")
+    
+    choose_menu "Select Template" "${menu_opts[@]}"
+    choice=$MENU_RESULT
 
-    if [[ "$choice" == "q" || "$choice" == "Q" ]]; then
-        echo -e "${YELLOW}Cancelled${RESET}"
+    # Check if cancelled
+    if [[ $choice -eq -1 ]]; then
         return 0
     fi
 
-    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [[ "$choice" -lt 1 ]] || [[ "$choice" -gt "${#templates[@]}" ]]; then
-        echo -e "${RED}✗ Invalid selection${RESET}"
-        return 1
+    # Handle delete all (last option)
+    if [[ $choice -eq $((${#menu_opts[@]} - 1)) ]]; then
+        echo ""
+        echo -e "${RED}${BOLD}⚠ WARNING: This will delete ALL ${#templates[@]} templates!${RESET}"
+        read -r -p "Are you sure? Type 'yes' to confirm: " confirm_all
+        if [[ "$confirm_all" == "yes" ]]; then
+            for tmpl in "${templates[@]}"; do
+                rm -f "$TEMPLATE_DIR/${tmpl}.sh"
+                echo -e "${GREEN}✓${RESET} Deleted: $tmpl"
+            done
+            echo ""
+            echo -e "${GREEN}✓ All templates deleted${RESET}"
+        else
+            echo -e "${YELLOW}Cancelled${RESET}"
+        fi
+        return 0
     fi
 
-    local selected="${templates[$((choice-1))]}"
+    # Valid template selected (MENU_RESULT is 0-based)
+    local selected="${templates[$choice]}"
     delete_template "$selected"
 }
 

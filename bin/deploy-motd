@@ -3,15 +3,32 @@ set -euo pipefail
 
 # Deploy MOTD to remote host
 # Author: J.Bakers
-# Version: 3.5.0-dev.31
+# Version: See VERSION file
 
-# Kleuren
-CYAN='\033[0;36m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BOLD='\033[1m'
-RESET='\033[0m'
+# Load paths and libraries
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
+# Source menu helpers for choose_menu function
+if [[ -f "$LIB_DIR/menu-helpers.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/menu-helpers.sh"
+fi
+# Source validators
+if [[ -f "$LIB_DIR/validators.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/validators.sh"
+fi
+# Source colors
+if [[ -f "$LIB_DIR/colors.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/colors.sh"
+fi
 
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 
@@ -20,6 +37,7 @@ show_help() {
     echo ""
     echo -e "${BOLD}USAGE:${RESET}"
     echo "  deploy-motd <service-name>"
+    echo "  deploy-motd --all"
     echo ""
     echo -e "${BOLD}DESCRIPTION:${RESET}"
     echo "  Deploys an MOTD template to the corresponding container."
@@ -29,27 +47,20 @@ show_help() {
     echo "  3. Tests the connection"
     echo "  4. Makes the template executable"
     echo ""
-    echo -e "${BOLD}REQUIREMENTS:${RESET}"
-    echo "  - SSH access to the container"
-    echo "  - Same hostname as service name OR"
-    echo "  - SSH config entry for the service name"
+    echo -e "${BOLD}OPTIONS:${RESET}"
+    echo "  <service-name>  Deploy to specific host"
+    echo "  --all           Deploy all templates to their hosts"
     echo ""
     echo -e "${BOLD}EXAMPLE:${RESET}"
-    echo -e "  ${GREEN}deploy-motd jellyfin${RESET}"
-    echo ""
-    echo "  This deploys to:"
-    echo "    ssh jellyfin"
+    echo -e "  ${GREEN}deploy-motd pihole${RESET}"
+    echo -e "  ${GREEN}deploy-motd --all${RESET}"
     echo ""
     echo -e "${BOLD}SSH CONFIG:${RESET}"
     echo "  Make sure you have an entry in ~/.ssh/config:"
     echo ""
-    echo "  Host jellyfin"
+    echo "  Host pihole"
     echo "    HostName 192.168.1.25"
     echo "    User root"
-    echo ""
-    echo -e "${BOLD}NOTE:${RESET}"
-    echo "  After deployment, the MOTD is automatically shown on"
-    echo "  every new SSH session with current information."
     echo ""
 }
 
@@ -58,21 +69,82 @@ if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
     exit 0
 fi
 
+# Deploy all templates function
+deploy_all() {
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════════╗"
+    echo -e "║         🚀 Deploy All MOTDs                              ║"
+    echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    
+    # Find all templates
+    if [[ ! -d "$TEMPLATES_DIR" ]] || [[ -z "$(ls -A "$TEMPLATES_DIR" 2>/dev/null)" ]]; then
+        echo -e "${YELLOW}No templates found in $TEMPLATES_DIR${RESET}"
+        echo -e "Generate templates first with: ${GREEN}generate-motd <service>${RESET}"
+        exit 0
+    fi
+    
+    local deployed=0
+    local failed=0
+    local failed_hosts=()
+    
+    for template in "$TEMPLATES_DIR"/*.sh; do
+        [[ -f "$template" ]] || continue
+        local hostname
+        hostname=$(basename "$template" .sh)
+        
+        echo -e "${BOLD}${CYAN}Deploying to: ${hostname}${RESET}"
+        
+        # Run deploy for this host (call ourselves recursively)
+        if "$0" "$hostname"; then
+            deployed=$((deployed + 1))
+        else
+            failed=$((failed + 1))
+            failed_hosts+=("$hostname")
+        fi
+        echo ""
+    done
+    
+    # Summary
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo -e "${BOLD}${CYAN}                Deployment Summary                         ${RESET}"
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo ""
+    echo -e "${GREEN}✓ Deployed:${RESET} $deployed"
+    if [[ $failed -gt 0 ]]; then
+        echo -e "${RED}✗ Failed:${RESET}   $failed"
+        echo ""
+        echo -e "${YELLOW}Failed hosts:${RESET}"
+        for host in "${failed_hosts[@]}"; do
+            echo -e "  ${RED}→${RESET} $host"
+        done
+    fi
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════════════════════════${RESET}"
+    echo ""
+    
+    exit 0
+}
+
 SERVICE=${1:-}
 
 if [[ -z "$SERVICE" ]]; then
     echo -e "${RED}✗ Error: No service name provided${RESET}"
-    echo -e "  Gebruik: ${GREEN}deploy-motd <service-naam>${RESET}"
-    echo -e "  Voorbeeld: ${GREEN}deploy-motd jellyfin${RESET}"
-    echo -e "  Of: ${CYAN}deploy-motd --help${RESET} voor meer informatie"
+    echo -e "  Usage: ${GREEN}deploy-motd <service-name>${RESET}"
+    echo -e "         ${GREEN}deploy-motd --all${RESET}"
+    echo -e "  Example: ${GREEN}deploy-motd pihole${RESET}"
+    echo -e "  Or: ${CYAN}deploy-motd --help${RESET} for more information"
     exit 1
 fi
 
+# Handle --all option
+if [[ "$SERVICE" == "--all" ]] || [[ "$SERVICE" == "-a" ]]; then
+    deploy_all
+fi
+
 # Validate service name to prevent command injection
-if [[ ! "$SERVICE" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+if ! validate_service "$SERVICE"; then
     echo -e "${RED}✗ Error: Invalid service name${RESET}"
-    echo -e "  Alleen letters, cijfers, punten, underscores en streepjes zijn toegestaan"
-    echo -e "  Voorbeeld: ${GREEN}deploy-motd jellyfin${RESET}"
+    echo -e "  Only letters, digits, dots, underscores and hyphens are allowed"
+    echo -e "  Example: ${GREEN}deploy-motd pihole${RESET}"
     exit 1
 fi
 
@@ -95,110 +167,146 @@ echo -e "${BOLD}Service: ${GREEN}$SERVICE${RESET}"
 echo -e "Template: ${CYAN}$TEMPLATE_FILE${RESET}"
 echo ""
 
-# Test SSH connectie
-echo -e "${YELLOW}→${RESET} Test SSH connectie..."
+# Test SSH connection
+echo -e "${YELLOW}→${RESET} Test SSH connection..."
 if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$SERVICE" "echo 2>&1" &>/dev/null; then
-    echo -e "${RED}✗ Kan niet verbinden met $SERVICE${RESET}"
+    echo -e "${RED}✗ Cannot connect to $SERVICE${RESET}"
     echo -e ""
-    echo -e "  Controleer:"
+    echo -e "  Check:"
     echo -e "  1. SSH config: ${CYAN}~/.ssh/config${RESET}"
-    echo -e "  2. SSH keys zijn geconfigureerd"
+    echo -e "  2. SSH keys are configured"
     echo -e "  3. Container is online"
     echo -e ""
-    echo -e "  Voorbeeld SSH config entry:"
+    echo -e "  Example SSH config entry:"
     echo -e "  ${CYAN}Host $SERVICE${RESET}"
     echo -e "  ${CYAN}  HostName 192.168.1.xx${RESET}"
     echo -e "  ${CYAN}  User root${RESET}"
     exit 1
 fi
-echo -e "${GREEN}✓${RESET} SSH connectie OK"
+echo -e "${GREEN}✓${RESET} SSH connection OK"
 
-# Cleanup old MOTD files
-echo -e "${YELLOW}→${RESET} Cleaning up old MOTD..."
-ssh "$SERVICE" "rm -f /etc/motd /etc/update-motd.d/* 2>/dev/null || sudo rm -f /etc/motd /etc/update-motd.d/* 2>/dev/null"
-echo -e "${GREEN}✓${RESET} Old MOTD removed"
+# Check for existing MOTD
+echo -e "${YELLOW}→${RESET} Checking for existing MOTD..."
+existing_motd=""
+is_hlt_motd=false
+
+if ssh "$SERVICE" -- "[[ -f /etc/profile.d/00-motd.sh ]]" 2>/dev/null; then
+    existing_motd=$(ssh "$SERVICE" -- "cat /etc/profile.d/00-motd.sh 2>/dev/null" || true)
+    
+    # Check for HLT marker
+    if [[ "$existing_motd" == *"HLT-MOTD-START"* ]]; then
+        is_hlt_motd=true
+        echo -e "${GREEN}✓${RESET} HLT MOTD found (will be replaced)"
+    else
+        echo -e "${YELLOW}⚠${RESET} Found non-HLT MOTD"
+        echo ""
+        echo -e "${DIM}Preview (first 15 lines):${RESET}"
+        echo "$existing_motd" | head -15 | sed 's/^/  /'
+        echo -e "${DIM}  ...${RESET}"
+        echo ""
+        echo -e "${YELLOW}What would you like to do?${RESET}"
+        echo ""
+        
+        choose_menu "MOTD Protection" \
+            "Replace|Overwrite existing MOTD" \
+            "Append|Add HLT MOTD after existing" \
+            "Cancel|Abort deployment"
+        
+        motd_choice=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+        
+        case "$motd_choice" in
+            1)
+                echo -e "${YELLOW}→${RESET} Will replace"
+                # Backup existing MOTD
+                ssh "$SERVICE" -- "cp /etc/profile.d/00-motd.sh /etc/profile.d/00-motd.sh.backup 2>/dev/null || sudo cp /etc/profile.d/00-motd.sh /etc/profile.d/00-motd.sh.backup 2>/dev/null" || true
+                ;;
+            2)
+                echo -e "${YELLOW}→${RESET} Will append"
+                # We'll handle this later in the deployment
+                ;;
+            -1|3|*)
+                echo -e "${YELLOW}Cancelled${RESET}"
+                exit 0
+                ;;
+        esac
+    fi
+else
+    echo -e "${GREEN}✓${RESET} No existing MOTD found"
+fi
+
+# Cleanup old MOTD files (only if replacing or no existing)
+if [[ "$is_hlt_motd" == "true" ]] || [[ -z "$existing_motd" ]] || [[ "${motd_choice:-1}" == "1" ]]; then
+    ssh "$SERVICE" -- "rm -f /etc/motd /etc/update-motd.d/* 2>/dev/null || sudo rm -f /etc/motd /etc/update-motd.d/* 2>/dev/null" || true
+fi
 
 # Create profile.d directory if it doesn't exist
-echo -e "${YELLOW}→${RESET} Checking /etc/profile.d/..."
-ssh "$SERVICE" "mkdir -p /etc/profile.d 2>/dev/null || sudo mkdir -p /etc/profile.d 2>/dev/null"
+ssh "$SERVICE" -- "mkdir -p /etc/profile.d 2>/dev/null || sudo mkdir -p /etc/profile.d 2>/dev/null"
+
+# Create/initialize deployment log EARLY (before any SSH operations)
+# This ensures status tracking even if deployment fails
+DEPLOY_LOG="$HOME/.local/share/homelab-tools/deploy-log"
+mkdir -p "$(dirname "$DEPLOY_LOG")"
 
 # Deploy new MOTD
-echo -e "${YELLOW}→${RESET} Deploy nieuwe MOTD..."
+echo -e "${YELLOW}→${RESET} Deploying..."
+
+# If appending, prepare combined file
+if [[ "${motd_choice:-}" == "2" ]]; then
+    # Create temp file with existing + new MOTD
+    temp_combined=$(mktemp)
+    trap 'rm -f "$temp_combined"' EXIT
+    echo "$existing_motd" > "$temp_combined"
+    echo "" >> "$temp_combined"
+    echo "# === Appended by HLT ===" >> "$temp_combined"
+    cat "$TEMPLATE_FILE" >> "$temp_combined"
+    TEMPLATE_FILE="$temp_combined"
+fi
 
 # Probeer eerst zonder sudo
 if scp "$TEMPLATE_FILE" "$SERVICE:/etc/profile.d/00-motd.sh" 2>/dev/null; then
-    echo -e "${GREEN}✓${RESET} Template gekopieerd"
     use_sudo=""
 else
     # Als dat faalt, kopieer naar /tmp en verplaats met sudo
-    echo -e "${YELLOW}  →${RESET} No direct access, using sudo..."
     if scp "$TEMPLATE_FILE" "$SERVICE:/tmp/00-motd.sh" 2>/dev/null; then
-        ssh "$SERVICE" "sudo mv /tmp/00-motd.sh /etc/profile.d/00-motd.sh" 2>/dev/null
+        ssh "$SERVICE" -- "sudo mv /tmp/00-motd.sh /etc/profile.d/00-motd.sh" 2>/dev/null
         if [[ $? -eq 0 ]]; then
-            echo -e "${GREEN}✓${RESET} Template gekopieerd (via sudo)"
             use_sudo="sudo"
         else
             echo -e "${RED}✗ Error copying template${RESET}"
             echo -e ""
-            echo -e "  ${YELLOW}Mogelijke oorzaken:${RESET}"
+            echo -e "  ${YELLOW}Possible causes:${RESET}"
             echo -e "  - User heeft geen sudo rechten"
             echo -e "  - /etc/profile.d/ bestaat niet en kan niet aangemaakt worden"
             echo -e ""
-            echo -e "  ${YELLOW}Handmatige fix:${RESET}"
+            echo -e "  ${YELLOW}Manual fix:${RESET}"
             echo -e "  ${CYAN}ssh $SERVICE${RESET}"
             echo -e "  ${CYAN}sudo mkdir -p /etc/profile.d${RESET}"
             exit 1
         fi
     else
         echo -e "${RED}✗ Cannot copy to remote host${RESET}"
-        echo ""
-        read -p "$(echo -e ${YELLOW}Debug connection? \(y/N\):${RESET} )" debug
-        if [[ "$debug" =~ ^[Yy]$ ]]; then
-            echo ""
-            echo -e "${CYAN}=== SSH Connection Debug ===${RESET}"
-            echo -e "${YELLOW}Testing connection...${RESET}"
-            ssh -v "$SERVICE" "echo 2>&1" 2>&1 | tail -20
-        fi
         exit 1
     fi
 fi
 
 # Maak executable
-echo -e "${YELLOW}→${RESET} Configureer permissions..."
 if [[ -n "$use_sudo" ]]; then
-    if ! ssh "$SERVICE" "sudo chmod +x /etc/profile.d/00-motd.sh" 2>/dev/null; then
-        echo -e "${RED}✗ Kan permissions niet instellen${RESET}"
-        echo ""
-        read -p "$(echo -e ${YELLOW}Debug? \(y/N\):${RESET} )" debug
-        if [[ "$debug" =~ ^[Yy]$ ]]; then
-            echo ""
-            echo -e "${CYAN}=== Permission Debug ===${RESET}"
-            ssh "$SERVICE" "ls -la /etc/profile.d/00-motd.sh 2>&1"
-            echo ""
-            echo -e "${YELLOW}Try manual fix:${RESET}"
-            echo -e "  ${CYAN}ssh $SERVICE${RESET}"
-            echo -e "  ${CYAN}sudo chmod +x /etc/profile.d/00-motd.sh${RESET}"
-        fi
+    if ! ssh "$SERVICE" -- "sudo chmod +x /etc/profile.d/00-motd.sh" 2>/dev/null; then
+        echo -e "${RED}✗ Cannot set permissions${RESET}"
         exit 1
     fi
 else
-    if ! ssh "$SERVICE" "chmod +x /etc/profile.d/00-motd.sh" 2>/dev/null; then
-        echo -e "${RED}✗ Kan permissions niet instellen${RESET}"
-        echo ""
-        read -p "$(echo -e ${YELLOW}Debug? \(y/N\):${RESET} )" debug
-        if [[ "$debug" =~ ^[Yy]$ ]]; then
-            echo ""
-            echo -e "${CYAN}=== Permission Debug ===${RESET}"
-            ssh "$SERVICE" "ls -la /etc/profile.d/00-motd.sh 2>&1"
-            echo ""
-            echo -e "${YELLOW}Try manual fix:${RESET}"
-            echo -e "  ${CYAN}ssh $SERVICE${RESET}"
-            echo -e "  ${CYAN}chmod +x /etc/profile.d/00-motd.sh${RESET}"
-        fi
+    if ! ssh "$SERVICE" -- "chmod +x /etc/profile.d/00-motd.sh" 2>/dev/null; then
+        echo -e "${RED}✗ Cannot set permissions${RESET}"
         exit 1
     fi
 fi
-echo -e "${GREEN}✓${RESET} Permissions ingesteld"
+echo -e "${GREEN}✓${RESET} Deployed"
+
+# Update deployment log with success status
+# (Log file initialized earlier to ensure status tracking)
+template_hash=$(md5sum "$TEMPLATE_FILE" 2>/dev/null | awk '{print $1}')
+echo "$SERVICE|$SERVICE|$(date +%s)|$template_hash" >> "$DEPLOY_LOG"
 
 echo ""
 echo -e "${GREEN}✓ Deployment succesvol!${RESET}"

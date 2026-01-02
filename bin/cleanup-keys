@@ -1,15 +1,26 @@
 #!/bin/bash
 set -euo pipefail
 
-# Cleanup host keys for homelab hosts
-#!/bin/bash
-set -euo pipefail
-
 # Cleanup old SSH host keys
 # Author: J.Bakers
-# Version: 3.5.0-dev.31
+# Version: See VERSION file
 
-# Kleuren
+# Load paths and libraries
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
+# Source menu helpers for choose_menu function
+if [[ -f "$LIB_DIR/menu-helpers.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/menu-helpers.sh"
+fi
+
+# Colors
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -29,8 +40,8 @@ show_help() {
     echo "  complains about \"WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED\"."
     echo ""
     echo -e "${BOLD}EXAMPLES:${RESET}"
-    echo -e "  ${GREEN}cleanup-keys jellyfin${RESET}"
-    echo "      Remove keys for hostname 'jellyfin'"
+    echo -e "  ${GREEN}cleanup-keys pihole${RESET}"
+    echo "      Remove keys for hostname 'pihole'"
     echo ""
     echo -e "  ${GREEN}cleanup-keys 192.168.1.30${RESET}"
     echo "      Remove keys for IP address"
@@ -56,16 +67,9 @@ fi
 HOST=${1:-}
 
 # Validate hostname/IP if provided
-if [[ -n "$HOST" ]] && [[ ! "$HOST" =~ ^[a-zA-Z0-9._-]+$ ]]; then
-    echo -e "${RED}✗ Error: Invalid hostname${RESET}"
-    echo -e "  Alleen letters, cijfers, punten, underscores en streepjes zijn toegestaan"
-    exit 1
-fi
-
-# Validate hostname/IP if provided
 if [[ -n "$HOST" ]] && [[ ! "$HOST" =~ ^[a-zA-Z0-9._-]+$ ]] && [[ ! "$HOST" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
     echo -e "${RED}✗ Error: Invalid hostname or IP${RESET}"
-    echo -e "  Gebruik een geldige hostname of IP address"
+    echo -e "  Use a valid hostname or IP address"
     exit 1
 fi
 
@@ -74,10 +78,10 @@ echo -e "║         🧹 Cleanup Host Keys                          ║"
 echo -e "╚══════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
-# Check of known_hosts bestaat
+# Check if known_hosts exists
 if [[ ! -f ~/.ssh/known_hosts ]]; then
     echo -e "${YELLOW}⚠ No known_hosts file found${RESET}"
-    echo -e "  (Dit is normaal als je nog nooit SSH hebt gebruikt)"
+    echo -e "  (This is normal if you haven't used SSH before)"
     exit 0
 fi
 
@@ -102,28 +106,29 @@ if [[ -z "$HOST" ]]; then
     echo -e "${BOLD}Available hosts:${RESET}"
     echo ""
     
-    # Show all hosts
-    i=1
+    # Build menu options
+    declare -a menu_opts
     declare -a host_array
+    i=1
     while IFS= read -r host; do
         host_array[$i]="$host"
-        echo -e "  ${CYAN}$i)${RESET} $host"
+        menu_opts+=("$host|Cleanup SSH keys for this host")
         i=$((i + 1))
     done <<< "$hosts"
     
-    echo ""
-    echo -e "  ${CYAN}a)${RESET} All hosts"
-    echo -e "  ${CYAN}q)${RESET} Quit"
-    echo ""
+    menu_opts+=("All hosts|Cleanup keys for all hosts")
     
-    read -p "Cleanup keys for which host(s)? " choice
+    choose_menu "Select Host" "${menu_opts[@]}"
+    choice=$MENU_RESULT
     
-    if [[ "$choice" == "q" ]]; then
+    # Check if cancelled
+    if [[ $choice -eq -1 ]]; then
         echo "Cancelled."
         exit 0
     fi
     
-    if [[ "$choice" == "a" ]]; then
+    # Check if "All hosts" selected (last option)
+    if [[ $choice -eq $((${#menu_opts[@]} - 1)) ]]; then
         # Cleanup all hosts
         echo ""
         echo -e "${YELLOW}→${RESET} Cleaning up all hosts..."

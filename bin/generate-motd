@@ -31,13 +31,30 @@ if [[ -f "$LIB_DIR/colors.sh" ]]; then
     source "$LIB_DIR/colors.sh"
 fi
 
+# Source validators
+if [[ -f "$LIB_DIR/validators.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/validators.sh"
+fi
+
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 CONFIG_FILE="/opt/homelab-tools/config.sh"
 
-# Load config
+# Load config with validation
 if [[ -f "$CONFIG_FILE" ]]; then
     # shellcheck source=/dev/null
     source "$CONFIG_FILE"
+    
+    # Validate config values to prevent code injection
+    if [[ -n "${DOMAIN_SUFFIX:-}" ]] && ! [[ "$DOMAIN_SUFFIX" =~ ^[a-zA-Z0-9._-]*$ ]]; then
+        echo -e "${RED}✗ Error: Invalid DOMAIN_SUFFIX in config${RESET}"
+        exit 1
+    fi
+    
+    if [[ -n "${IP_METHOD:-}" ]] && [[ "$IP_METHOD" != "hostname" && "$IP_METHOD" != "ip" ]]; then
+        echo -e "${RED}✗ Error: Invalid IP_METHOD in config (must be 'hostname' or 'ip')${RESET}"
+        exit 1
+    fi
 else
     # Defaults
     export DOMAIN_SUFFIX=""

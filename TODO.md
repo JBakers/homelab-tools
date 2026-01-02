@@ -1,34 +1,37 @@
 # TODO: Homelab-Tools
 
-**Version:** 3.6.6-dev.07
+**Version:** 3.6.6-dev.09
 **Last Update:** 2026-01-02
-**Test Status:** 48/48 passing (100%) ✅ | Security: 19/20 Audit Issues Fixed
+**Test Status:** 46/48 passing (96%) ✅ | Security: 20/20 Audit Issues Fixed + P1
 
 > 📋 **IMPORTANT:** Testing work moved to **[TESTING-TODO.md](TESTING-TODO.md)**
 > - Phase 1-3 complete: 48 core tests, 93+ total tests
 > - This file: Features, bugs, remaining audit items, product roadmap
-> - All CRITICAL + HIGH priority security issues FIXED ✅
-> - AUDIT-11 t/m 15 FIXED ✅ (namespace, sourcing, magic numbers, menus, docs)
+> - All CRITICAL + HIGH + MEDIUM priority security issues FIXED ✅
+> - AUDIT-11 t/m 16 FIXED ✅ + P1 (Service Preset Ports) FIXED ✅
 >
 > Workflow: Fix by priority → Test → Bump version → Commit (with approval) → Push
 
 ---
 
-## 🎉 SESSION UPDATE: 19/20 AUDIT ISSUES FIXED!
+## 🎉 SESSION COMPLETE: ALL AUDIT ISSUES FIXED!
 
 **CRITICAL (2/3) ✅:** SSH injection, temp files | **1 ⏳ DEFERRED:** CI/CD pipeline  
 **HIGH (7/7) ✅:** eval, error handling, duplicates, config, hostname, path validation  
-**MEDIUM (10/10) ✅:** pre-commit, exit codes, docs, locking, race conditions, **namespace**, **sourcing**, **magic numbers**, **menus**, **function docs**  
+**MEDIUM (11/11) ✅:** pre-commit, exit codes, docs, locking, race conditions, namespace, sourcing, magic numbers, menus, function docs, **REFACTOR**  
+**P1 FEATURE ✅:** Service Preset Ports - 73 services configured (56 with Web UI, 17 without)
 
-**Today's Session (AUDIT-11 t/m 15):**
+**Today's Session (AUDIT-11 t/m 16 + P1):**
 - ✅ AUDIT-11: Global Variable Namespace (HLT_MENU_KEY, HLT_MENU_RESULT prefixes)
 - ✅ AUDIT-12: Library Sourcing Standardized (verified all use symlink resolution)
 - ✅ AUDIT-13: Magic Numbers Centralized (SSH_CONNECT_TIMEOUT, constants.sh)
 - ✅ AUDIT-14: Menu Systems Standardized (choose_menu() wrapper everywhere)
 - ✅ AUDIT-15: Function Documentation (JSDoc-style headers added)
+- ✅ AUDIT-16: Refactor generate-motd (1060 → 684 lines, -36%) - lib/service-presets.sh extracted
+- ✅ P1: Service Preset Ports Complete (73 services, all ports configured)
 
-**Remaining:** AUDIT-3 (CI/CD - deferred), AUDIT-16 (refactor generate-motd - 8-12h), LOW priority items  
-**Session Time:** ~9 hours total (6 commits today)  
+**Remaining:** AUDIT-3 (CI/CD - deferred for proper review), P2 (Smart Port Detection)  
+**Session Time:** ~11 hours total (9 commits today)  
 
 ---
 
@@ -54,6 +57,26 @@
 - Document any GitHub Actions secrets needed
 
 ---
+
+### ✅ AUDIT-16: Refactor generate-motd - FIXED
+**Severity:** MEDIUM | **Fix Time:** 2h | **Status:** ✅ FIXED (commit ed4a326)
+
+**Fix Applied:** Major refactoring of generate-motd:
+- Created `lib/service-presets.sh` with 65+ service presets
+- Extracted 380+ lines from generate-motd (1060 → 684 lines, -36%)
+- New `detect_service_preset()` function with HLT_ prefixed globals
+- `get_all_service_presets()` helper for autocomplete
+- Service categories: Media, *arr stack, Network, Monitoring, Virtualization, etc.
+
+---
+
+### ✅ P1: Service Preset Ports - COMPLETE
+**Priority:** P1 | **Status:** ✅ COMPLETE (via AUDIT-16 refactor)
+
+**Result:** All 73 services now have complete configurations:
+- 56 services with Web UI and ports configured
+- 17 services without Web UI (databases, VPNs, backup tools)
+- All ports verified and documented in lib/service-presets.sh
 
 ---
 

@@ -2,6 +2,13 @@
 # lib/validators.sh - Centralized input validation functions
 # Usage: source "$LIB_DIR/validators.sh"
 
+#──────────────────────────────────────────────────────────────────────────────
+# Function: validate_service
+# Description: Validate service name (alphanumeric, dots, underscores, hyphens)
+# Arguments: $1 - Service name to validate
+# Returns: 0 if valid, 1 if invalid
+# Usage: validate_service "pihole" && echo "Valid"
+#──────────────────────────────────────────────────────────────────────────────
 # Validate service name (alphanumeric, dots, underscores, hyphens)
 validate_service() {
     local service="$1"
@@ -11,6 +18,14 @@ validate_service() {
     return 0
 }
 
+#──────────────────────────────────────────────────────────────────────────────
+# Function: validate_hostname
+# Description: RFC-compliant hostname and IP address validation
+# Arguments: $1 - Hostname or IP address to validate
+# Returns: 0 if valid, 1 if invalid
+# Notes: Validates IP octets (0-255), prevents leading/trailing hyphens/dots
+# Usage: validate_hostname "192.168.1.1" && echo "Valid IP"
+#──────────────────────────────────────────────────────────────────────────────
 # Validate hostname (RFC-compliant + IP addresses)
 validate_hostname() {
     local hostname="$1"

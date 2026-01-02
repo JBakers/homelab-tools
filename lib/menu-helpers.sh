@@ -15,6 +15,14 @@ readonly MENU_DIM='\033[2m'
 readonly MENU_RESET='\033[0m'
 readonly MENU_INVERSE='\033[7m'
 
+#──────────────────────────────────────────────────────────────────────────────
+# Function: read_key
+# Description: Read a single keypress from terminal (arrow keys, vim keys, etc.)
+# Globals Modified: MENU_KEY (KEY_UP, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_Q, etc.)
+# Arguments: None
+# Returns: 0 on success
+# Notes: Works with /dev/tty or stdin fallback for Docker environments
+#──────────────────────────────────────────────────────────────────────────────
  
 
 # Read a single key including arrow keys and ESC
@@ -84,6 +92,17 @@ read_key() {
     return 0
 }
 
+#──────────────────────────────────────────────────────────────────────────────
+# Function: show_arrow_menu
+# Description: Display interactive menu with arrow key navigation
+# Globals Modified: MENU_RESULT (selected index 0-based, -1 for quit/ESC)
+# Arguments:
+#   $1 - Menu title
+#   $@ - Menu options (format: "Label|Description" or "HELP"/"BACK"/"QUIT")
+# Returns: 0 on selection, sets MENU_RESULT to chosen index
+# Usage: show_arrow_menu "Title" "Option 1|desc" "Option 2|desc" "BACK"
+# Navigation: ↑↓ arrows, j/k (vim), → (select), ← or q (quit)
+#──────────────────────────────────────────────────────────────────────────────
 # Render a menu with arrow key navigation
 # Usage: show_arrow_menu "Title" "Option 1|desc" "Option 2|desc" ...
 # Last options can be: "HELP" "BACK" "QUIT"

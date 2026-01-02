@@ -215,6 +215,12 @@ Run comprehensive test suite:
 ./test-runner.sh  # 72 tests across 12 sections (5-10 min)
 ```
 
+**CRITICAL RULE: Tests in .test-env MUST ALWAYS run verbose**
+- User requirement: tests must show all output in real-time
+- Implementation: `run-tests.sh` has `VERBOSE=1` hardcoded
+- Output: Uses `tee` to show AND log simultaneously
+- Never suppress test output - user needs to see what happens
+
 **Test Structure**:
 - **12 Sections**: Pre-flight cleanup, fresh install, menu navigation, MOTD generation, deploy/undeploy, templates, uninstall
 - **Interactive Checkboxes**: Tests marked with ✅/❌, progress saved to `~/.homelab-test-progress`

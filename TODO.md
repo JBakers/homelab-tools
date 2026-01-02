@@ -257,12 +257,11 @@ readonly SSH_CONNECT_OPTS=(-o ConnectTimeout=$SSH_CONNECT_TIMEOUT)
 
 ---
 
-## 🟠 HIGH PRIORITY (P1 - Do This Week)
+## 🟠 HIGH PRIORITY (P1 - Features)
 
 ### 1. Complete Service Preset Ports (~2h)
 **Status:** 42/48 implemented, ports incomplete
 **Test:** `.test-env/test-service-presets-extended.sh` exists
-**Result:** 42 pass / 43 fail (names ✓, ports ✗)
 
 **Missing Ports:**
 - navidrome: 4533, audiobookshelf: 13378, whisparr: 6969
@@ -272,47 +271,11 @@ readonly SSH_CONNECT_OPTS=(-o ConnectTimeout=$SSH_CONNECT_TIMEOUT)
 
 **Action:** Add port configs to `bin/generate-motd` case statements
 
-### 2. Non-Interactive Mode Tests (~2h)
-**Problem:** `echo | generate-motd` path untested
-**Impact:** Scripting use case could break
-
-**Create:** `.test-env/test-non-interactive.sh`
-**Test:**
-- HLT markers in non-interactive templates
-- Stdin piping works correctly
-- Service detection without prompts
-
-### 3. Bulk Operations Tests (~2h)
-**Current:** Only generation tested
-**Missing:** deploy-motd --all, undeploy-motd --all
-
-**Create:** `.test-env/test-bulk-operations.sh`
-**Test:**
-- Bulk deploy to all hosts
-- Bulk undeploy from all hosts
-- Deployment log validation
-- Progress display
-
-### 4. Version Consistency Check (~30m)
-**Problem:** No verification all scripts show same version
-**Solution:** Add to static tests in `run-tests.sh`
-
-```bash
-version=$(cat VERSION)
-for script in bin/*; do
-  if ! grep -q "VERSION file" "$script"; then
-    echo "FAIL: $script doesn't use VERSION file"
-  fi
-done
-```
-
-**P1 Total:** 4 tasks, ~6.5 hours
-
 ---
 
-## 🟡 MEDIUM PRIORITY (P2 - Do This Month)
+## 🟡 MEDIUM PRIORITY (P2 - Features)
 
-### 5. Smart Port Detection (~3h) ⭐ NEW
+### 2. Smart Port Detection (~3h) ⭐ OPPORTUNITY
 **Design:** `.design/smart-port-detection.md`
 **Problem:** Users run custom ports (zigbee2mqtt:2804 vs default:8080)
 
@@ -324,38 +287,7 @@ done
 
 **Benefits:** 90%+ auto-detection, <5% wrong URLs (was 30%)
 
-### 6. HLT Marker Validation (~1h)
-**Test:** All templates have proper HLT-MOTD-START/END markers
-**Coverage:** Deploy protection, undeploy safety
-
-### 7. Deployment Log Testing (~2h)
-**Test:** `~/.local/share/homelab-tools/deploy-log` validation
-**Coverage:** Log entries, status tracking, stale detection
-
-### 8. copykey Edge Cases (~1.5h)
-**Test:** Multiple keys, permission errors, missing hosts
-
-### 9. edit-config Testing (~2h)
-**Test:** Config creation, validation, backup
-
-### 10. Error Message Validation (~2h)
-**Test:** All error paths show helpful messages
-
-**P2 Total:** 6 tasks, ~11.5 hours
-
 ---
-
-## 🟢 LOW PRIORITY (P3 - Nice to Have)
-
-### Comprehensive Testing
-- cleanup-homelab tests
-- Performance benchmarking
-- Stress testing (100+ hosts)
-- Security testing
-- Test coverage reporting
-- Regression test suite
-
-**P3 Total:** ~21 hours
 
 ---
 

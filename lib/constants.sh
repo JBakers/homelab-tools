@@ -13,6 +13,19 @@ readonly EXIT_FILE_NOT_FOUND=4
 readonly EXIT_PERMISSION_DENIED=5
 readonly EXIT_SSH_ERROR=6
 
+# SSH Configuration Constants
+readonly SSH_CONNECT_TIMEOUT=5          # Seconds before SSH connection times out
+readonly SSH_BATCH_MODE=yes             # Disable interactive prompts
+readonly SSH_CONNECT_OPTS=(
+    -o ConnectTimeout=$SSH_CONNECT_TIMEOUT
+    -o BatchMode=$SSH_BATCH_MODE
+)
+
+# Timeouts (seconds)
+readonly TEST_TIMEOUT_SHORT=5           # For quick operations
+readonly TEST_TIMEOUT_MEDIUM=30         # For medium operations
+readonly TEST_TIMEOUT_LONG=60           # For long operations
+
 # Systems that don't support MOTD (appliances, Docker, non-Linux, etc.)
 declare -a UNSUPPORTED_SYSTEMS=(
     "homeassistant" "hass" "ha"           # Home Assistant (Docker)

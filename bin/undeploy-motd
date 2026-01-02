@@ -5,14 +5,27 @@ set -euo pipefail
 # Author: J.Bakers
 # Version: See VERSION file
 
-# Colors
-CYAN='\033[0;96m'
-GREEN='\033[0;92m'
-YELLOW='\033[0;93m'
-RED='\033[0;95m'
-DIM='\033[2m'
-BOLD='\033[1m'
-RESET='\033[0m'
+# Load paths and libraries
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
+
+# Source colors
+if [[ -f "$LIB_DIR/colors.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/colors.sh"
+fi
+
+# Source constants (for SSH_CONNECT_TIMEOUT, etc.)
+if [[ -f "$LIB_DIR/constants.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/constants.sh"
+fi
 
 show_help() {
     echo -e "${BOLD}${CYAN}undeploy-motd - Remove MOTD from remote host${RESET}"
@@ -49,8 +62,8 @@ undeploy_single() {
     echo -e "${CYAN}→${RESET} Checking ${BOLD}$service${RESET}..."
     
     # Test SSH connection with timeout
-    if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$service" "echo 2>&1" &>/dev/null; then
-        echo -e "${RED}  ✗${RESET} Cannot connect to $service (timeout after 5s)"
+    if ! ssh -o "ConnectTimeout=$SSH_CONNECT_TIMEOUT" -o "BatchMode=$SSH_BATCH_MODE" "$service" "echo 2>&1" &>/dev/null; then
+        echo -e "${RED}  ✗${RESET} Cannot connect to $service (timeout after ${SSH_CONNECT_TIMEOUT}s)"
         return 1
     fi
     

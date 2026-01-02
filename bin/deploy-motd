@@ -29,6 +29,11 @@ if [[ -f "$LIB_DIR/colors.sh" ]]; then
     # shellcheck source=/dev/null
     source "$LIB_DIR/colors.sh"
 fi
+# Source constants
+if [[ -f "$LIB_DIR/constants.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/constants.sh"
+fi
 
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 
@@ -169,7 +174,7 @@ echo ""
 
 # Test SSH connection
 echo -e "${YELLOW}→${RESET} Test SSH connection..."
-if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$SERVICE" "echo 2>&1" &>/dev/null; then
+if ! ssh -o "ConnectTimeout=$SSH_CONNECT_TIMEOUT" -o "BatchMode=$SSH_BATCH_MODE" "$SERVICE" "echo 2>&1" &>/dev/null; then
     echo -e "${RED}✗ Cannot connect to $SERVICE${RESET}"
     echo -e ""
     echo -e "  Check:"

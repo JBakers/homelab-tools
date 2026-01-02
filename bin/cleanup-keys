@@ -119,7 +119,7 @@ if [[ -z "$HOST" ]]; then
     menu_opts+=("All hosts|Cleanup keys for all hosts")
     
     choose_menu "Select Host" "${menu_opts[@]}"
-    choice=$MENU_RESULT
+    choice=$HLT_HLT_MENU_RESULT
     
     # Check if cancelled
     if [[ $choice -eq -1 ]]; then

@@ -212,7 +212,7 @@ if ssh "$SERVICE" -- "[[ -f /etc/profile.d/00-motd.sh ]]" 2>/dev/null; then
             "Append|Add HLT MOTD after existing" \
             "Cancel|Abort deployment"
         
-        motd_choice=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+        motd_choice=$((HLT_MENU_RESULT + 1))  # Convert 0-based to 1-based
         
         case "$motd_choice" in
             1)

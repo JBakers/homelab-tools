@@ -112,10 +112,10 @@ while true; do
         "Default Clean MOTD|Functional & informative, no ASCII art" \
         "ASCII Art MOTD|Choose from 6 artistic styles"
     
-    style_type=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+    style_type=$((HLT_MENU_RESULT + 1))  # Convert 0-based to 1-based
     
     # Check if cancelled
-    if [[ $MENU_RESULT -eq -1 ]]; then
+    if [[ $HLT_HLT_MENU_RESULT -eq -1 ]]; then
         break  # Return to homelab menu
     fi
 
@@ -136,7 +136,7 @@ while true; do
                     "Small/Smblock|Compact" \
                     "PREVIEW|Show all styles"
                 
-                choice_idx=$MENU_RESULT
+                choice_idx=$HLT_HLT_MENU_RESULT
                 
                 # Check if cancelled
                 if [[ $choice_idx -eq -1 ]]; then
@@ -196,10 +196,10 @@ while true; do
         "Interactive Mode|Customize each host individually" \
         "Smart-Detect Mode|Automatic generation for all hosts"
     
-    gen_mode=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+    gen_mode=$((HLT_MENU_RESULT + 1))  # Convert 0-based to 1-based
     
     # Check if cancelled
-    if [[ $MENU_RESULT -eq -1 ]]; then
+    if [[ $HLT_HLT_MENU_RESULT -eq -1 ]]; then
         break  # Return to homelab menu
     fi
 
@@ -401,10 +401,10 @@ while true; do
             "Yes, deploy now via SSH|Start deployment immediately" \
             "No, deploy manually later|Save templates, deploy later"
         
-        deploy_all=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+        deploy_all=$((HLT_MENU_RESULT + 1))  # Convert 0-based to 1-based
         
         # Check if cancelled
-        if [[ $MENU_RESULT -eq -1 ]]; then
+        if [[ $HLT_HLT_MENU_RESULT -eq -1 ]]; then
             break  # Return to main menu
         fi
 
@@ -499,10 +499,10 @@ while true; do
             "Quit|Exit program"
     fi
     
-    next_action=$((MENU_RESULT + 1))  # Convert 0-based to 1-based
+    next_action=$((HLT_MENU_RESULT + 1))  # Convert 0-based to 1-based
     
     # Check if cancelled
-    if [[ $MENU_RESULT -eq -1 ]]; then
+    if [[ $HLT_HLT_MENU_RESULT -eq -1 ]]; then
         break  # Return to homelab menu
     fi
 

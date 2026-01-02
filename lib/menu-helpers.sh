@@ -18,7 +18,7 @@ readonly MENU_INVERSE='\033[7m'
 #──────────────────────────────────────────────────────────────────────────────
 # Function: read_key
 # Description: Read a single keypress from terminal (arrow keys, vim keys, etc.)
-# Globals Modified: MENU_KEY (KEY_UP, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_Q, etc.)
+# Globals Modified: HLT_MENU_KEY (KEY_UP, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_Q, etc.)
 # Arguments: None
 # Returns: 0 on success
 # Notes: Works with /dev/tty or stdin fallback for Docker environments
@@ -26,11 +26,11 @@ readonly MENU_INVERSE='\033[7m'
  
 
 # Read a single key including arrow keys and ESC
-# Sets global variable MENU_KEY instead of echoing (to avoid subshell issues)
-# MENU_KEY values: KEY_UP, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_Q, or the typed character
+# Sets global variable HLT_MENU_KEY instead of echoing (to avoid subshell issues)
+# HLT_MENU_KEY values: KEY_UP, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_Q, or the typed character
 read_key() {
     local key key2 key3 read_status
-    MENU_KEY=""
+    HLT_MENU_KEY=""
     key=""
     
     # Temporarily disable set -e to handle read timeout properly
@@ -51,7 +51,7 @@ read_key() {
     
     # Timeout returns status > 128
     if [[ $read_status -gt 128 ]]; then
-        MENU_KEY=""
+        HLT_MENU_KEY=""
         return 0
     fi
 
@@ -67,26 +67,26 @@ read_key() {
             IFS= read -rsn1 -t 0.1 key3 < "$input_source" 2>/dev/null
             set -e
             case "$key3" in
-                'A') MENU_KEY="KEY_UP" ;;
-                'B') MENU_KEY="KEY_DOWN" ;;
-                'C') MENU_KEY="KEY_RIGHT" ;;
-                'D') MENU_KEY="KEY_LEFT" ;;
-                *) MENU_KEY="KEY_ESC" ;;
+                'A') HLT_MENU_KEY="KEY_UP" ;;
+                'B') HLT_MENU_KEY="KEY_DOWN" ;;
+                'C') HLT_MENU_KEY="KEY_RIGHT" ;;
+                'D') HLT_MENU_KEY="KEY_LEFT" ;;
+                *) HLT_MENU_KEY="KEY_ESC" ;;
             esac
         else
-            MENU_KEY="KEY_ESC"
+            HLT_MENU_KEY="KEY_ESC"
         fi
     elif [[ -z "$key" ]]; then
         # Empty key with successful read (status 0) = ENTER pressed
-        MENU_KEY="KEY_ENTER"
+        HLT_MENU_KEY="KEY_ENTER"
     elif [[ "$key" == "q" || "$key" == "Q" ]]; then
-        MENU_KEY="KEY_Q"
+        HLT_MENU_KEY="KEY_Q"
     elif [[ "$key" == "j" ]]; then
-        MENU_KEY="KEY_DOWN"  # vim style
+        HLT_MENU_KEY="KEY_DOWN"  # vim style
     elif [[ "$key" == "k" ]]; then
-        MENU_KEY="KEY_UP"    # vim style
+        HLT_MENU_KEY="KEY_UP"    # vim style
     else
-        MENU_KEY="$key"
+        HLT_MENU_KEY="$key"
     fi
     
     return 0
@@ -95,18 +95,18 @@ read_key() {
 #──────────────────────────────────────────────────────────────────────────────
 # Function: show_arrow_menu
 # Description: Display interactive menu with arrow key navigation
-# Globals Modified: MENU_RESULT (selected index 0-based, -1 for quit/ESC)
+# Globals Modified: HLT_MENU_RESULT (selected index 0-based, -1 for quit/ESC)
 # Arguments:
 #   $1 - Menu title
 #   $@ - Menu options (format: "Label|Description" or "HELP"/"BACK"/"QUIT")
-# Returns: 0 on selection, sets MENU_RESULT to chosen index
+# Returns: 0 on selection, sets HLT_MENU_RESULT to chosen index
 # Usage: show_arrow_menu "Title" "Option 1|desc" "Option 2|desc" "BACK"
 # Navigation: ↑↓ arrows, j/k (vim), → (select), ← or q (quit)
 #──────────────────────────────────────────────────────────────────────────────
 # Render a menu with arrow key navigation
 # Usage: show_arrow_menu "Title" "Option 1|desc" "Option 2|desc" ...
 # Last options can be: "HELP" "BACK" "QUIT"
-# Sets global MENU_RESULT to: Selected index (0-based), -1 for ESC/quit, or "IDDQD" for easter egg
+# Sets global HLT_MENU_RESULT to: Selected index (0-based), -1 for ESC/quit, or "IDDQD" for easter egg
 show_arrow_menu() {
     local title="$1"
     shift
@@ -116,7 +116,7 @@ show_arrow_menu() {
     local typed_buffer=""  # For easter egg detection
     local needs_redraw=1   # Flag to control redrawing
     
-    MENU_RESULT=""  # Global result variable
+    HLT_MENU_RESULT=""  # Global result variable
 
     while true; do
         # Only redraw if needed
@@ -187,11 +187,11 @@ show_arrow_menu() {
         needs_redraw=0
         fi  # end of needs_redraw check
 
-        # Read key (sets MENU_KEY global variable)
+        # Read key (sets HLT_MENU_KEY global variable)
         read_key
 
         # Handle input
-        case "$MENU_KEY" in
+        case "$HLT_MENU_KEY" in
             "")
                 # Empty key (timeout) - just wait again without redrawing
                 continue
@@ -212,26 +212,26 @@ show_arrow_menu() {
                 ;;
             KEY_ENTER|KEY_RIGHT)
                 # Enter or Right Arrow = Select
-                MENU_RESULT="$selected"
+                HLT_MENU_RESULT="$selected"
                 return 0
                 ;;
             KEY_LEFT)
                 # Left Arrow = Back/Cancel
-                MENU_RESULT="-1"
+                HLT_MENU_RESULT="-1"
                 return 0
                 ;;
             KEY_Q)
-                MENU_RESULT="-1"
+                HLT_MENU_RESULT="-1"
                 return 0
                 ;;
             KEY_ESC)
                 # ESC behavior: return special code -1
-                MENU_RESULT="-1"
+                HLT_MENU_RESULT="-1"
                 return 0
                 ;;
             *)
                 # Typed character - add to buffer for easter egg detection
-                typed_buffer="${typed_buffer}${MENU_KEY}"
+                typed_buffer="${typed_buffer}${HLT_MENU_KEY}"
 
                 # Keep buffer at max 10 chars
                 if [[ ${#typed_buffer} -gt 10 ]]; then
@@ -241,7 +241,7 @@ show_arrow_menu() {
                 # Check for easter egg
                 if [[ "$typed_buffer" == *"iddqd"* ]]; then
                     # shellcheck disable=SC2034
-                    MENU_RESULT="IDDQD"
+                    HLT_MENU_RESULT="IDDQD"
                     return 0
                 fi
                 ;;
@@ -329,5 +329,5 @@ choose_menu() {
     local title="$1"
     shift
     show_arrow_menu "$title" "$@"
-    # show_arrow_menu sets MENU_RESULT globally
+    # show_arrow_menu sets HLT_MENU_RESULT globally
 }

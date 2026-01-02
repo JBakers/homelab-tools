@@ -241,6 +241,11 @@ fi
 # Create profile.d directory if it doesn't exist
 ssh "$SERVICE" "mkdir -p /etc/profile.d 2>/dev/null || sudo mkdir -p /etc/profile.d 2>/dev/null"
 
+# Create/initialize deployment log EARLY (before any SSH operations)
+# This ensures status tracking even if deployment fails
+DEPLOY_LOG="$HOME/.local/share/homelab-tools/deploy-log"
+mkdir -p "$(dirname "$DEPLOY_LOG")"
+
 # Deploy new MOTD
 echo -e "${YELLOW}→${RESET} Deploying..."
 
@@ -296,10 +301,10 @@ else
 fi
 echo -e "${GREEN}✓${RESET} Deployed"
 
-# Log the deployment
-DEPLOY_LOG="$HOME/.local/share/homelab-tools/deploy-log"
-mkdir -p "$(dirname "$DEPLOY_LOG")"
-echo "$(date +%s)|$SERVICE|$SERVICE|deployed" >> "$DEPLOY_LOG"
+# Update deployment log with success status
+# (Log file initialized earlier to ensure status tracking)
+template_hash=$(md5sum "$TEMPLATE_FILE" 2>/dev/null | awk '{print $1}')
+echo "$SERVICE|$SERVICE|$(date +%s)|$template_hash" >> "$DEPLOY_LOG"
 
 echo ""
 echo -e "${GREEN}✓ Deployment succesvol!${RESET}"

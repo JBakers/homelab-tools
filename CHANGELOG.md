@@ -1,5 +1,47 @@
 # Changelog - Homelab Tools
 
+## v3.6.7-dev.01 (2026-01-02) 🚀 MAJOR REFACTOR + SMART PORT DETECTION
+
+**Major Achievement:** All Audit Issues Fixed + P1 + P2 Complete!
+
+### ✨ NEW FEATURES
+
+#### P2: Smart Port Detection (`lib/port-detection.sh`)
+- **Multi-source detection** with priority order:
+  1. User config (`~/.config/homelab-tools/custom-ports.conf`)
+  2. Docker container inspection
+  3. Active listening ports (ss/netstat)
+  4. Fallback to service-presets.sh defaults
+- **Config file support** - Override default ports without editing scripts
+- **Functions:** `detect_port()`, `get_port_from_config()`, `get_port_from_docker()`, `get_port_from_listening()`
+- **XDG-compliant** config location
+
+#### AUDIT-16: Major Refactoring (`lib/service-presets.sh`)
+- **Extracted 380+ lines** from generate-motd (1060 → 684 lines, -36%)
+- **73 service presets** with complete configurations
+- **56 services with Web UI** and ports configured
+- **17 services without Web UI** (databases, VPNs, backup tools)
+- **New functions:** `detect_service_preset()`, `get_all_service_presets()`
+
+### 🔧 AUDIT FIXES (11-16)
+
+- **AUDIT-11:** Global Variable Namespace - HLT_ prefix for menu globals
+- **AUDIT-12:** Library Sourcing - Verified all use symlink resolution
+- **AUDIT-13:** Magic Numbers - Centralized in `lib/constants.sh`
+- **AUDIT-14:** Menu Systems - Standardized with `choose_menu()` wrapper
+- **AUDIT-15:** Function Documentation - JSDoc-style headers added
+- **AUDIT-16:** Refactored generate-motd (see above)
+
+### 📊 Statistics
+
+- **Commits today:** 10
+- **Lines refactored:** 380+ (extracted to lib/service-presets.sh)
+- **New libraries:** 2 (service-presets.sh, port-detection.sh)
+- **Tests:** 46/48 passing (96%)
+- **Audit completion:** 20/20 (excluding deferred CI/CD)
+
+---
+
 ## v3.6.4-dev.01 (2026-01-02) 🧪 TESTING INFRASTRUCTURE UPGRADE
 
 **Major Achievement:** Phase 1-2 Complete - Test Framework Foundation Built

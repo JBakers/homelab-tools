@@ -1,27 +1,28 @@
 # TODO: Homelab-Tools
 
-**Version:** 3.6.6-dev.09
+**Version:** 3.6.7-dev.01
 **Last Update:** 2026-01-02
-**Test Status:** 46/48 passing (96%) ✅ | Security: 20/20 Audit Issues Fixed + P1
+**Test Status:** 46/48 passing (96%) ✅ | Security: 20/20 Audit Issues + P1 + P2 COMPLETE
 
 > 📋 **IMPORTANT:** Testing work moved to **[TESTING-TODO.md](TESTING-TODO.md)**
 > - Phase 1-3 complete: 48 core tests, 93+ total tests
 > - This file: Features, bugs, remaining audit items, product roadmap
 > - All CRITICAL + HIGH + MEDIUM priority security issues FIXED ✅
-> - AUDIT-11 t/m 16 FIXED ✅ + P1 (Service Preset Ports) FIXED ✅
+> - AUDIT-11 t/m 16 FIXED ✅ + P1 + P2 COMPLETE ✅
 >
 > Workflow: Fix by priority → Test → Bump version → Commit (with approval) → Push
 
 ---
 
-## 🎉 SESSION COMPLETE: ALL AUDIT ISSUES FIXED!
+## 🎉 SESSION COMPLETE: ALL AUDIT ISSUES + P1 + P2 FIXED!
 
 **CRITICAL (2/3) ✅:** SSH injection, temp files | **1 ⏳ DEFERRED:** CI/CD pipeline  
 **HIGH (7/7) ✅:** eval, error handling, duplicates, config, hostname, path validation  
 **MEDIUM (11/11) ✅:** pre-commit, exit codes, docs, locking, race conditions, namespace, sourcing, magic numbers, menus, function docs, **REFACTOR**  
 **P1 FEATURE ✅:** Service Preset Ports - 73 services configured (56 with Web UI, 17 without)
+**P2 FEATURE ✅:** Smart Port Detection - lib/port-detection.sh with config/docker/listening/default priority
 
-**Today's Session (AUDIT-11 t/m 16 + P1):**
+**Today's Session (AUDIT-11 t/m 16 + P1 + P2):**
 - ✅ AUDIT-11: Global Variable Namespace (HLT_MENU_KEY, HLT_MENU_RESULT prefixes)
 - ✅ AUDIT-12: Library Sourcing Standardized (verified all use symlink resolution)
 - ✅ AUDIT-13: Magic Numbers Centralized (SSH_CONNECT_TIMEOUT, constants.sh)
@@ -29,9 +30,10 @@
 - ✅ AUDIT-15: Function Documentation (JSDoc-style headers added)
 - ✅ AUDIT-16: Refactor generate-motd (1060 → 684 lines, -36%) - lib/service-presets.sh extracted
 - ✅ P1: Service Preset Ports Complete (73 services, all ports configured)
+- ✅ P2: Smart Port Detection (config overrides, docker, listening ports, defaults)
 
-**Remaining:** AUDIT-3 (CI/CD - deferred for proper review), P2 (Smart Port Detection)  
-**Session Time:** ~11 hours total (9 commits today)  
+**Remaining:** AUDIT-3 (CI/CD - deferred for proper review)  
+**Session Time:** ~12 hours total (10 commits today)  
 
 ---
 
@@ -77,6 +79,33 @@
 - 56 services with Web UI and ports configured
 - 17 services without Web UI (databases, VPNs, backup tools)
 - All ports verified and documented in lib/service-presets.sh
+
+---
+
+### ✅ P2: Smart Port Detection - COMPLETE
+**Priority:** P2 | **Status:** ✅ COMPLETE (commit 76dbca5)
+
+**Implementation:** Created `lib/port-detection.sh` with multi-source port detection:
+
+**Detection Priority Order:**
+1. User config (`~/.config/homelab-tools/custom-ports.conf`)
+2. Docker container inspection (`docker ps`)
+3. Active listening ports (`ss/netstat`)
+4. Fallback to service-presets.sh defaults
+
+**Functions:**
+- `init_port_detection()` - Initialize config directory
+- `detect_port(service, host)` - Smart detection with priority
+- `get_port_from_config()` - Check user overrides
+- `get_port_from_docker()` - Docker container inspection
+- `get_port_from_listening()` - ss/netstat port scanning
+- `set_custom_port()` / `remove_custom_port()` - Config management
+
+**Config file format:**
+```
+pihole=8080/admin
+jellyfin=8097
+```
 
 ---
 

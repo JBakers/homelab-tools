@@ -1,9 +1,9 @@
-# 🏠 Homelab Management Tools v3.6.3
+# 🏠 Homelab Management Tools v3.6.7
 
-[![Version](https://img.shields.io/badge/version-3.6.3-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
+[![Version](https://img.shields.io/badge/version-3.6.7-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
 [![License](https://img.shields.io/badge/license-GPL--v3-blue.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/shell-bash-lightgrey.svg)](https://www.gnu.org/software/bash/)
-[![Tests](https://img.shields.io/badge/tests-42%20tests%20%7C%2098%25-brightgreen.svg)](https://github.com/JBakers/homelab-tools)
+[![Tests](https://img.shields.io/badge/tests-48%20tests%20%7C%2096%25-brightgreen.svg)](https://github.com/JBakers/homelab-tools)
 
 > **Professional command-line toolkit for managing homelab infrastructure with beautiful, colorful interfaces and intelligent automation.**
 
@@ -13,8 +13,9 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
 
 ### 🎯 Smart Detection
 
-- **60+ Services Auto-Detected** - Pi-hole, Plex, *arr stack, Home Assistant, Nextcloud, and more
+- **73 Services Auto-Detected** - Pi-hole, Plex, *arr stack, Home Assistant, Nextcloud, and more
 - **Intelligent Defaults** - Automatic service names, descriptions, and port configurations
+- **Smart Port Detection** - Auto-detect custom ports via config, Docker, or listening ports
 - **Custom Services** - Easy fallback for any custom application
 
 ### 🎨 Beautiful Interface

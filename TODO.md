@@ -45,77 +45,60 @@
 
 ---
 
-## ⚠️ HIGH PRIORITY SECURITY (Fix This Week)
+### ✅ AUDIT-4: eval() Gebruik (Security Risk) - FIXED
+**Severity:** HIGH | **Fix Time:** 1h | **Status:** ✅ FIXED (2026-01-02)
 
-### AUDIT-4: eval() Gebruik (Security Risk)
-**Severity:** HIGH | **Fix Time:** 1h
-**Locatie:** `bin/homelab:104`, `bin/bulk-generate-motd:49`
-
-**Probleem:** `eval "$var_name=\"\$input\""` - code injection mogelijk
-**Fix:** Gebruik `printf -v` in plaats van `eval`
+**Fix Applied:** Replaced `eval` with `printf -v` in:
+- `bin/homelab:104`
+- `bin/bulk-generate-motd:49`
 
 ---
 
-### AUDIT-5: Inconsistente Error Handling
-**Severity:** HIGH | **Fix Time:** 2h
-**Locatie:** Meerdere scripts
+### ✅ AUDIT-5: Inconsistente Error Handling - FIXED
+**Severity:** HIGH | **Fix Time:** 2h | **Status:** ✅ FIXED (2026-01-02)
 
-**Probleem:** `set -e` wordt aan/uit gezet zonder consistentie, `|| true` maskeert failures
-**Fix:** Standaardiseer error handling pattern
+**Fix Applied:** Removed unnecessary `set +e/+o pipefail` toggles in `bulk-generate-motd`
 
 ---
 
-### AUDIT-6: Duplicate Code
-**Severity:** HIGH | **Fix Time:** 4h
-**Locatie:** Alle scripts
+### ✅ AUDIT-6: Duplicate Code - FIXED
+**Severity:** HIGH | **Fix Time:** 4h | **Status:** ✅ FIXED (2026-01-02)
 
-**Duplicatie:**
-- Color definitions - 12x gedupliceerd
-- SSH config parsing - 4x
-- Symlink resolution - 5x
-- Hostname validatie - 4x
-
-**Fix:** Maak shared libraries: `lib/colors.sh`, `lib/ssh-helpers.sh`, `lib/validators.sh`
+**Fix Applied:** Created shared libraries:
+- `lib/colors.sh` - Centralized color definitions
+- `lib/validators.sh` - RFC-compliant validation functions
+- `lib/ssh-helpers.sh` - Reusable SSH utilities
 
 ---
 
-### AUDIT-7: Inconsistente UNSUPPORTED_SYSTEMS Array
-**Severity:** HIGH | **Fix Time:** 30m
-**Locatie:** `lib/constants.sh:8-13`, `bin/generate-motd:38-46`, `bin/bulk-generate-motd:57-65`
+### ✅ AUDIT-7: Inconsistente UNSUPPORTED_SYSTEMS Array - FIXED
+**Severity:** HIGH | **Fix Time:** 30m | **Status:** ✅ FIXED (2026-01-02)
 
-**Probleem:** Array geëxporteerd in lib maar scripts redefiniëren lokaal
-**Fix:** Gebruik lib/constants.sh overal
+**Fix Applied:** Moved to `lib/constants.sh`, sourced in generate-motd and bulk-generate-motd
 
 ---
 
-### AUDIT-8: Ontbrekende Config File Validatie
-**Severity:** MEDIUM-HIGH | **Fix Time:** 1h
-**Locatie:** `bin/generate-motd:49-56`
+### ✅ AUDIT-8: Ontbrekende Config File Validatie - FIXED
+**Severity:** MEDIUM-HIGH | **Fix Time:** 1h | **Status:** ✅ FIXED (2026-01-02)
 
-**Probleem:** `source "$CONFIG_FILE"` zonder validatie - arbitrary code injection
-**Fix:** Valideer config values na sourcing
+**Fix Applied:** Added validation in `bin/generate-motd` for DOMAIN_SUFFIX and IP_METHOD
 
 ---
 
-### AUDIT-9: Inconsistente Hostname Validatie
-**Severity:** HIGH | **Fix Time:** 2h
-**Locatie:** Meerdere scripts
+### ✅ AUDIT-9: Inconsistente Hostname Validatie - FIXED
+**Severity:** HIGH | **Fix Time:** 2h | **Status:** ✅ FIXED (2026-01-02)
 
-**Probleem:** 
-- Pattern staat toe dat hostname begint met `-` of `.` (niet RFC-compliant)
-- IP validatie checkt geen octet ranges (0-255)
-- Verschillende patterns per script
-
-**Fix:** Centralized validation in `lib/validators.sh`
+**Fix Applied:** 
+- Use `validate_hostname()` in deploy-motd and copykey
+- RFC-compliant: no leading/trailing hyphens or dots
+- IP octet validation (0-255)
 
 ---
 
-### AUDIT-10: Unvalidated User Input in File Operations
-**Severity:** HIGH | **Fix Time:** 1h
-**Locatie:** `bin/homelab:364-370`, `393-402`
+### ✅ AUDIT-10: Unvalidated User Input in File Operations - FIXED
+**Severity:** HIGH | **Fix Time:** 1h | **Status:** ✅ FIXED (2026-01-02)
 
-**Probleem:** User paths zonder sanitization - path traversal attacks mogelijk
-**Fix:** Valideer paths, blokkeer `..` en absolute paths buiten allowed dirs
+**Fix Applied:** Added `validate_path()` in homelab for backup operations
 
 ---
 

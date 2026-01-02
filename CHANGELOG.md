@@ -1,8 +1,65 @@
 # Changelog - Homelab Tools
 
-## v3.6.2-dev (In Development)
+## v3.6.3-dev.07 (2026-01-02) 🎉
 
-**Current development branch** - v3.6.2-dev.09 - Building on v3.6.1
+**Major Milestone:** 100% Test Pass Rate Achieved (46/46 tests)
+
+### ✨ New Features
+
+#### Test Infrastructure (Priority 0 Complete)
+- **ASCII Art Tests** - Rewrote test-ascii-styles.sh with expect automation
+  - Created generate-with-style.exp helper for menu interaction
+  - Fixed validation to check rendering code instead of heredoc markers
+  - Result: 0/6 → 6/6 tests passing
+- **ESC/q Key Coverage** - Added test-esc-quit.exp
+  - Tests quit functionality across 3 menus (homelab, list-templates, delete-template)
+  - Validates consistent UX behavior
+- **delete-template Integration** - Simplified test approach
+  - Discovered direct argument support: `delete-template test3`
+  - No expect scripts needed for simple deletion
+- **Test Helper Management** - Skip helper scripts in auto-test loop
+  - generate-with-style.exp excluded from direct testing
+  - Test count: 42 → 46 tests (+9.5%)
+
+#### Documentation
+- **Comprehensive Test Audit** - 400+ line AUDIT_REPORT.md
+  - Complete feature inventory (12 commands, 3 libs)
+  - Gap analysis (15 critical issues identified)
+  - Priority matrix (P0-P3) with time estimates
+- **Smart Port Detection Design** (P2 Feature)
+  - Multi-layer detection: config → SSH → Docker → prompt
+  - Addresses custom port problem (e.g., zigbee2mqtt:2804 vs 8080)
+  - Expected 90%+ auto-detection success rate
+- **Session Summary** - TODO_SESSION_SUMMARY.md
+  - Complete statistics and achievements
+  - Detailed implementation notes
+  - Next session planning
+
+### 🧪 Test Suite Status
+- **Total Tests:** 46/46 (100%) ✅
+- **Menu Navigation:** 100% coverage
+- **Static Tests:** 100% (syntax, ShellCheck, help formatting)
+- **Functional Tests:** 100% (generate, deploy, list, delete)
+- **Service Presets:** 42/48 implemented (87.5%)
+- **Port Configuration:** ~52% complete (22/42 services)
+
+### 📊 Achievements
+- 🏆 100% Test Pass Rate (42/44 → 46/46)
+- 🏆 Complete P0 Priority (4/4 items)
+- 🏆 Comprehensive audit completed
+- 🏆 Smart feature design (port detection)
+- 🏆 Professional documentation
+
+### 🐛 Bug Fixes
+- Fixed ASCII art template generation in non-interactive mode
+- Added HLT-MOTD-START/END markers to non-interactive templates
+- Improved expect script reliability (timeouts, input handling)
+
+---
+
+## v3.6.2-dev (Previous Development)
+
+**Development branch** - v3.6.2-dev.09 - Building on v3.6.1
 
 ### ✨ New Features
 

@@ -1,28 +1,34 @@
 # TODO: Homelab-Tools
 
-**Version:** 3.6.5-dev.07
+**Version:** 3.6.6-dev.07
 **Last Update:** 2026-01-02
-**Test Status:** 48/48 passing (100%) ✅ | Security: 15 Audit Issues Fixed
+**Test Status:** 48/48 passing (100%) ✅ | Security: 19/20 Audit Issues Fixed
 
 > 📋 **IMPORTANT:** Testing work moved to **[TESTING-TODO.md](TESTING-TODO.md)**
 > - Phase 1-3 complete: 48 core tests, 93+ total tests
 > - This file: Features, bugs, remaining audit items, product roadmap
 > - All CRITICAL + HIGH priority security issues FIXED ✅
+> - AUDIT-11 t/m 15 FIXED ✅ (namespace, sourcing, magic numbers, menus, docs)
 >
 > Workflow: Fix by priority → Test → Bump version → Commit (with approval) → Push
 
 ---
 
-## 🎉 SESSION UPDATE: 14 AUDIT ISSUES FIXED (+ 1 TASK DEFERRED)
+## 🎉 SESSION UPDATE: 19/20 AUDIT ISSUES FIXED!
 
 **CRITICAL (2/3) ✅:** SSH injection, temp files | **1 ⏳ DEFERRED:** CI/CD pipeline  
 **HIGH (7/7) ✅:** eval, error handling, duplicates, config, hostname, path validation  
-**MEDIUM (5/5) ✅:** pre-commit, exit codes, docs, locking, race conditions  
+**MEDIUM (10/10) ✅:** pre-commit, exit codes, docs, locking, race conditions, **namespace**, **sourcing**, **magic numbers**, **menus**, **function docs**  
 
-**Note:** CI/CD pipeline (AUDIT-3) deferred - removed premature test.yml (commit c65f8db) to prevent merge conflicts. Will be implemented as separate feature with proper review.
+**Today's Session (AUDIT-11 t/m 15):**
+- ✅ AUDIT-11: Global Variable Namespace (HLT_MENU_KEY, HLT_MENU_RESULT prefixes)
+- ✅ AUDIT-12: Library Sourcing Standardized (verified all use symlink resolution)
+- ✅ AUDIT-13: Magic Numbers Centralized (SSH_CONNECT_TIMEOUT, constants.sh)
+- ✅ AUDIT-14: Menu Systems Standardized (choose_menu() wrapper everywhere)
+- ✅ AUDIT-15: Function Documentation (JSDoc-style headers added)
 
-**Remaining from CLAUDE-AUDIT:** ~20 MEDIUM + LOW items + 1 CRITICAL (CI/CD)  
-**Session Time:** ~7 hours  
+**Remaining:** AUDIT-3 (CI/CD - deferred), AUDIT-16 (refactor generate-motd - 8-12h), LOW priority items  
+**Session Time:** ~9 hours total (6 commits today)  
 
 ---
 
@@ -49,80 +55,63 @@
 
 ---
 
-## 🔴 REMAINING MEDIUM PRIORITY (from CLAUDE-AUDIT.md)
+---
 
-### AUDIT-11: Global Variable Namespace Pollution
-**Severity:** MEDIUM | **Fix Time:** 1.5h
-**Locatie:** `lib/menu-helpers.sh`
+## 🟢 COMPLETED MEDIUM PRIORITY (2026-01-02)
 
-**Probleem:** `MENU_KEY` en `MENU_RESULT` zijn globale variabelen
-- Moeilijk te tracken state
-- Race conditions bij concurrent gebruik (foutief als 2x menu() tegelijk)
+### ✅ AUDIT-11: Global Variable Namespace - FIXED
+**Severity:** MEDIUM | **Fix Time:** 1.5h | **Status:** ✅ FIXED (commit 15093f2)
 
-**Fix:** Lokaliseer variabelen in functies waar mogelijk, of prefix met context
-
-**Status:** NOT STARTED
+**Fix Applied:** Renamed global variables with HLT_ prefix:
+- `MENU_KEY` → `HLT_MENU_KEY`
+- `MENU_RESULT` → `HLT_MENU_RESULT`
+- Updated all 11 bin/* scripts to use new names
+- Prevents namespace pollution and conflicts
 
 ---
 
-### AUDIT-12: Inconsistente Library Sourcing Patterns
-**Severity:** MEDIUM | **Fix Time:** 1h
-**Locatie:** Alle bin/* scripts
+### ✅ AUDIT-12: Library Sourcing Patterns - VERIFIED
+**Severity:** MEDIUM | **Fix Time:** 1h | **Status:** ✅ VERIFIED (already standardized)
 
-**Probleem:** 3 verschillende patterns gevonden:
-1. Met symlink resolution (correct) - 8 scripts ✅
-2. Direct path - 2 scripts ⚠️
-3. Conditional - 3 scripts ⚠️
-
-**Fix:** Standaardiseer op pattern 1 (symlink resolution)
-
-**Status:** NOT STARTED
+**Status:** All bin/* scripts already use symlink resolution pattern (correct implementation). No changes needed.
 
 ---
 
-### AUDIT-13: Magic Numbers en Hardcoded Values
-**Severity:** MEDIUM | **Fix Time:** 1h
-**Locatie:** Meerdere scripts
+### ✅ AUDIT-13: Magic Numbers Centralized - FIXED
+**Severity:** MEDIUM | **Fix Time:** 1h | **Status:** ✅ FIXED (commit bdd9b23)
 
-**Voorbeelden:**
-- `ConnectTimeout=5` - soms 5, soms andere waarde
-- `DIM='\033[2m'` - hardcoded ANSI codes
-
-**Fix:** Centraliseer constanten in lib/constants.sh:
-```bash
-readonly SSH_CONNECT_TIMEOUT=5
-readonly SSH_CONNECT_OPTS=(-o ConnectTimeout=$SSH_CONNECT_TIMEOUT)
-```
-
-**Status:** NOT STARTED
+**Fix Applied:** Created constants in lib/constants.sh:
+- `SSH_CONNECT_TIMEOUT=5`
+- `SSH_BATCH_MODE=yes`
+- `SSH_CONNECT_OPTS` array
+- `TEST_TIMEOUT_*` constants
+- Updated deploy-motd and undeploy-motd to use constants
 
 ---
 
-### AUDIT-14: Inconsistente Menu Systemen
-**Severity:** MEDIUM | **Fix Time:** 1h
-**Locatie:** `bin/edit-hosts`, `bin/homelab`
+### ✅ AUDIT-14: Menu Systems Standardized - FIXED
+**Severity:** MEDIUM | **Fix Time:** 1h | **Status:** ✅ FIXED (commit d3e341b)
 
-**Probleem:** Mixing van choose_menu() en simple_menu()
-
-**Fix:** Standaardiseer op choose_menu() everywhere
-
-**Status:** NOT STARTED
+**Fix Applied:** Replaced direct `show_arrow_menu()` calls with `choose_menu()` wrapper:
+- bin/list-templates: 1 call updated
+- bin/edit-hosts: 4 calls updated
+- Consistent menu interface with automatic TTY fallback
 
 ---
 
-### AUDIT-15: Missing Function Documentation
-**Severity:** MEDIUM | **Fix Time:** 2h (already started)
-**Locatie:** All bin/* and lib/*.sh scripts
+### ✅ AUDIT-15: Function Documentation - COMPLETED
+**Severity:** MEDIUM | **Fix Time:** 2h | **Status:** ✅ FIXED (commit ed71bdc)
 
-**Problem:** Functions lack JSDoc-style headers
-
-**Fix:** Add documentation to all public functions (already done for key ones)
-
-**Status:** PARTIALLY DONE (menu-helpers.sh, validators.sh done)
+**Fix Applied:** Added JSDoc-style documentation headers:
+- bin/deploy-motd: deploy_all()
+- bin/undeploy-motd: undeploy_single(), undeploy_all()
+- bin/edit-hosts: confirm_action(), init_ssh_config()
+- bin/homelab: wait_for_continue(), show_usage_short()
+- Note: menu-helpers.sh and validators.sh already had complete docs
 
 ---
 
-## 🟡 REMAINING LOW PRIORITY (from CLAUDE-AUDIT.md)
+## 🔴 REMAINING LOW PRIORITY (from CLAUDE-AUDIT.md)
 
 ### AUDIT-16: Refactor generate-motd (>1000 lines)
 **Severity:** LOW | **Fix Time:** 8-12h

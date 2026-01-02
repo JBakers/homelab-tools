@@ -7,10 +7,10 @@
 
 - [x] **Fix bump-dev.sh** - Remove Version prefix from commit messages
   - ✅ RESOLVED: bump-dev.sh now uses clean conventional commits
-  - ✅ Pre-commit hook installed for auto-version bump
-  - ✅ Hook only runs on develop branch
-  - ✅ Hook skips if VERSION manually staged
-  - ✅ Committed: 2fb1f7e (bump-dev.sh fix), 714aa5d (hook install)
+  - ✅ Tested git hooks (pre-commit/post-commit) → Not reliable for file updates
+  - ✅ **Decision: Keep bump-dev.sh as manual workflow (best practice)**
+  - ✅ Usage: `./bump-dev.sh "feat: description"` OR manual `git commit`
+  - ✅ Committed: 2fb1f7e (bump-dev.sh fix)
 
 - [x] **Phase 2 Changes LOST** - Arrow navigation changes from 1b4875d not in current HEAD
   - ✅ RESOLVED: Reapplied all conversions + tested in .test-env

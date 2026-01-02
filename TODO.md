@@ -1,15 +1,152 @@
 # TODO: Homelab-Tools
 
-**Version:** 3.6.3-dev.09
+**Version:** 3.6.4-dev.06
 **Last Update:** 2026-01-02
-**Test Status:** 46/46 passing (100%) ✅ | Testing: Phase 1 Starting
+**Test Status:** 48/48 passing (100%) ✅ | Testing: Phase 3 Complete
 
 > 📋 **IMPORTANT:** Testing work moved to **[TESTING-TODO.md](TESTING-TODO.md)**
-> - Phase 1-6 plan: 16 hours, 100+ test cases, 95%+ coverage
+> - Phase 1-3 complete: 48 core tests, 93+ total tests
 > - This file: Features, bugs, product roadmap only
-> - Once TESTING-TODO complete: Resume P2/P3 features
+> - Audit bevindingen (CLAUDE-AUDIT.md) hieronder toegevoegd
 >
-> Workflow: Fix by priority → Test → Commit (with approval) → Push
+> Workflow: Fix by priority → Test → Bump version → Commit (with approval) → Push
+
+---
+
+## 🚨 CRITICAL SECURITY (Fix Immediately)
+
+### AUDIT-1: Command Injection via SSH Variabelen
+**Severity:** CRITICAL | **Fix Time:** 2-3h
+**Locatie:** `bin/deploy-motd:171,192`, `bin/undeploy-motd:52`, `bin/copykey:85-86`
+
+**Probleem:** SSH commands gebruiken variabelen zonder volledige escaping:
+```bash
+ssh "$SERVICE" "[[ -f /etc/profile.d/00-motd.sh ]]"
+```
+
+**Risico:** Command injection mogelijk als validatie omzeild wordt.
+
+**Fix:**
+```bash
+# Gebruik explicit -- separator
+ssh "$SERVICE" -- "command here"
+```
+
+---
+
+### AUDIT-2: Onveilige Temporary File Handling
+**Severity:** CRITICAL | **Fix Time:** 30m
+**Locatie:** `bin/edit-config:65`, `bin/deploy-motd:255`
+
+**Probleem:** Geen trap handler voor cleanup:
+```bash
+TEMP_CONFIG=$(mktemp)
+# Geen cleanup bij errors!
+```
+
+**Fix:**
+```bash
+TEMP_CONFIG=$(mktemp)
+trap 'rm -f "$TEMP_CONFIG"' EXIT
+```
+
+---
+
+### AUDIT-3: Geen CI/CD Pipeline
+**Severity:** CRITICAL | **Fix Time:** 4-6h
+**Locatie:** `.github/workflows/` - NIET AANWEZIG
+
+**Probleem:** 48+ tests beschikbaar maar niet geautomatiseerd.
+
+**Fix:** Maak `.github/workflows/test.yml`:
+```yaml
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run test suite
+        run: |
+          cd .test-env
+          docker compose up -d
+          docker compose exec -T testhost bash /workspace/.test-env/run-tests.sh
+```
+
+---
+
+## ⚠️ HIGH PRIORITY SECURITY (Fix This Week)
+
+### AUDIT-4: eval() Gebruik (Security Risk)
+**Severity:** HIGH | **Fix Time:** 1h
+**Locatie:** `bin/homelab:104`, `bin/bulk-generate-motd:49`
+
+**Probleem:** `eval "$var_name=\"\$input\""` - code injection mogelijk
+**Fix:** Gebruik `printf -v` in plaats van `eval`
+
+---
+
+### AUDIT-5: Inconsistente Error Handling
+**Severity:** HIGH | **Fix Time:** 2h
+**Locatie:** Meerdere scripts
+
+**Probleem:** `set -e` wordt aan/uit gezet zonder consistentie, `|| true` maskeert failures
+**Fix:** Standaardiseer error handling pattern
+
+---
+
+### AUDIT-6: Duplicate Code
+**Severity:** HIGH | **Fix Time:** 4h
+**Locatie:** Alle scripts
+
+**Duplicatie:**
+- Color definitions - 12x gedupliceerd
+- SSH config parsing - 4x
+- Symlink resolution - 5x
+- Hostname validatie - 4x
+
+**Fix:** Maak shared libraries: `lib/colors.sh`, `lib/ssh-helpers.sh`, `lib/validators.sh`
+
+---
+
+### AUDIT-7: Inconsistente UNSUPPORTED_SYSTEMS Array
+**Severity:** HIGH | **Fix Time:** 30m
+**Locatie:** `lib/constants.sh:8-13`, `bin/generate-motd:38-46`, `bin/bulk-generate-motd:57-65`
+
+**Probleem:** Array geëxporteerd in lib maar scripts redefiniëren lokaal
+**Fix:** Gebruik lib/constants.sh overal
+
+---
+
+### AUDIT-8: Ontbrekende Config File Validatie
+**Severity:** MEDIUM-HIGH | **Fix Time:** 1h
+**Locatie:** `bin/generate-motd:49-56`
+
+**Probleem:** `source "$CONFIG_FILE"` zonder validatie - arbitrary code injection
+**Fix:** Valideer config values na sourcing
+
+---
+
+### AUDIT-9: Inconsistente Hostname Validatie
+**Severity:** HIGH | **Fix Time:** 2h
+**Locatie:** Meerdere scripts
+
+**Probleem:** 
+- Pattern staat toe dat hostname begint met `-` of `.` (niet RFC-compliant)
+- IP validatie checkt geen octet ranges (0-255)
+- Verschillende patterns per script
+
+**Fix:** Centralized validation in `lib/validators.sh`
+
+---
+
+### AUDIT-10: Unvalidated User Input in File Operations
+**Severity:** HIGH | **Fix Time:** 1h
+**Locatie:** `bin/homelab:364-370`, `393-402`
+
+**Probleem:** User paths zonder sanitization - path traversal attacks mogelijk
+**Fix:** Valideer paths, blokkeer `..` en absolute paths buiten allowed dirs
 
 ---
 

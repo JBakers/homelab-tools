@@ -5,6 +5,15 @@
 
 ## 🔴 CRITICAL
 
+- [x] **Husky & commitlint verwijderd** - User wil handmatige commit approval
+  - ✅ RESOLVED: Alle auto-commit functionaliteit verwijderd
+  - ✅ Husky removed (.husky/ directory)
+  - ✅ commitlint removed (package.json, commitlint.config.js)
+  - ✅ node_modules removed
+  - ✅ git hooks reset (core.hooksPath unset)
+  - ✅ bump-dev.sh BEHOUDEN voor handmatig gebruik
+  - ✅ Fundamentele regel: ALTIJD toestemming vragen voor commits
+
 - [x] **Auto-bump VERSION** - Git hook voor automatisch versie increment
   - ✅ RESOLVED: prepare-commit-msg hook in .husky/_/
   - ✅ Auto-bump works: 03 → 04 (tested and working!)

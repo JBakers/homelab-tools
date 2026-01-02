@@ -1,5 +1,40 @@
 # Homelab Tools - AI Agent Instructions
 
+## 🚨 FUNDAMENTELE REGELS (NOOIT OVERTREDEN)
+
+### 1. COMMIT APPROVAL - ALTIJD TOESTEMMING VRAGEN
+**CRITICAL RULE:** Vraag ALTIJD toestemming voor ELKE commit. NOOIT automatisch committen.
+
+**Workflow:**
+1. ✅ Maak wijzigingen in files
+2. ✅ Test de wijzigingen
+3. ✅ Stage files met `git add`
+4. ❌ **STOP HIER** - Commit NIET automatisch
+5. ✅ Vraag gebruiker: "Zal ik deze changes committen?"
+6. ✅ Wacht op expliciete toestemming (ja/yes/commit)
+7. ✅ Pas dan: `git commit -m "message"` en `git push`
+
+**Verboden:**
+- ❌ Auto-commit na elke wijziging
+- ❌ Batch commits zonder toestemming
+- ❌ Git hooks die automatisch committen
+- ❌ Committen "omdat het klaar is"
+
+**Toegestaan:**
+- ✅ `git status` checken
+- ✅ `git diff` tonen
+- ✅ Files stagen met `git add`
+- ✅ Commit message voorbereiden
+
+### 2. TESTING IN .test-env - ALTIJD VERBOSE
+**CRITICAL RULE:** Tests in .test-env moeten ALTIJD verbose output tonen.
+
+**Implementatie:**
+- `VERBOSE=1` hardcoded in `run-tests.sh`
+- Gebruik `| tee` om output te tonen EN loggen
+- Nooit `> /dev/null` of output suppression
+- User moet real-time zien wat er gebeurt
+
 ## Project Overview
 Bash toolkit for managing homelab infrastructure with auto-detecting MOTD generators (60+ services), SSH management, and bulk operations. Target: Linux homelabs (Debian/Ubuntu). Uses clean terminal UIs with arrow navigation and ANSI colors.
 

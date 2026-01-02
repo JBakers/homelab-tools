@@ -17,6 +17,10 @@ SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
 source "$LIB_DIR/menu-helpers.sh"
 source "$LIB_DIR/version.sh"
+# Source validators
+if [[ -f "$LIB_DIR/validators.sh" ]]; then
+    source "$LIB_DIR/validators.sh"
+fi
 
 # Colors
 CYAN="$MENU_CYAN"
@@ -370,6 +374,13 @@ backup_management_menu() {
                 
                 archive_path="${archive_path:-$default_archive}"
                 
+                # Validate archive path to prevent directory traversal attacks
+                if ! validate_path "$archive_path"; then
+                    echo -e "${RED}✗ Error: Invalid path (no absolute paths or traversal sequences allowed)${RESET}"
+                    sleep 2
+                    continue
+                fi
+                
                 echo ""
                 echo -e "${YELLOW}→${RESET} Creating archive..."
                 
@@ -401,6 +412,13 @@ backup_management_menu() {
                 
                 # Expand ~ if used
                 dest_folder="${dest_folder/#\~/$HOME}"
+                
+                # Validate destination path to prevent directory traversal attacks
+                if ! validate_path "$dest_folder"; then
+                    echo -e "${RED}✗ Error: Invalid path (no absolute paths or traversal sequences allowed)${RESET}"
+                    sleep 2
+                    continue
+                fi
                 
                 if [[ ! -d "$dest_folder" ]]; then
                     read -rp "$(echo -e "${YELLOW}Create directory $dest_folder? (y/N): ${RESET}")" create_dir

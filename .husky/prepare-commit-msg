@@ -1,0 +1,15 @@
+#!/bin/sh
+# Husky prepare-commit-msg hook
+
+# Only run on develop branch
+BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+if [ "$BRANCH" != "develop" ]; then
+    exit 0
+fi
+
+# Call bash script for auto-bump
+if [ -f .husky/auto-bump-version.sh ]; then
+    bash .husky/auto-bump-version.sh "$@"
+fi
+
+exit 0

@@ -28,8 +28,14 @@ read_key() {
     # Temporarily disable set -e to handle read timeout properly
     set +e
     
-    # Read from the real terminal with timeout
-    IFS= read -rsn1 -t 1 key < /dev/tty 2>/dev/null
+    # Try /dev/tty first, fallback to stdin
+    local input_source="/dev/tty"
+    if [[ ! -e /dev/tty ]]; then
+        input_source="/dev/stdin"
+    fi
+    
+    # Read from the terminal with timeout
+    IFS= read -rsn1 -t 1 key < "$input_source" 2>/dev/null
     read_status=$?
     
     # Re-enable set -e
@@ -45,12 +51,12 @@ read_key() {
     if [[ $key == $'\x1b' ]]; then
         # Read the bracket (with set +e for timeout safety)
         set +e
-        IFS= read -rsn1 -t 0.1 key2 < /dev/tty 2>/dev/null
+        IFS= read -rsn1 -t 0.1 key2 < "$input_source" 2>/dev/null
         set -e
         if [[ $key2 == "[" ]]; then
             # Read the letter (A/B/C/D)
             set +e
-            IFS= read -rsn1 -t 0.1 key3 < /dev/tty 2>/dev/null
+            IFS= read -rsn1 -t 0.1 key3 < "$input_source" 2>/dev/null
             set -e
             case "$key3" in
                 'A') MENU_KEY="KEY_UP" ;;

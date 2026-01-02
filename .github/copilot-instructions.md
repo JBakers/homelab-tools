@@ -346,7 +346,7 @@ awk '
 ## Common Tasks
 
 ### Adding a New Service Preset
-Edit [`bin/generate-motd`](../bin/generate-motd) case statement (~line 200):
+Edit `bin/generate-motd` case statement (~line 200):
 ```bash
 mynewservice*)
     number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
@@ -518,7 +518,7 @@ shellcheck bin/*
 **For major changes**: Run full `./test-runner.sh` (72 tests, 5-10 min)
 
 ## Documentation
-- [`README.md`](../README.md) - User guide with 60+ service presets
-- [`QUICKSTART.md`](../QUICKSTART.md) - 60-second getting started
-- [`CONTRIBUTING.md`](../CONTRIBUTING.md) - Contribution guidelines
-- [`CHANGELOG.md`](../CHANGELOG.md) - Version history and release notes
+- `README.md` - User guide with 60+ service presets
+- `QUICKSTART.md` - 60-second getting started
+- `CONTRIBUTING.md` - Contribution guidelines
+- `CHANGELOG.md` - Version history and release notes

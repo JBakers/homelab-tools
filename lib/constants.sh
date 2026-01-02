@@ -4,10 +4,15 @@
 # Author: J.Bakers
 # Version: See VERSION file
 
-# Example: unsupported systems list for service detection (extend as needed)
+# Systems that don't support MOTD (appliances, Docker, non-Linux, etc.)
 declare -a UNSUPPORTED_SYSTEMS=(
-    "hassio"    # Home Assistant OS (Docker-in-Docker detection unsupported)
-    "alpine"    # Busybox variants lacking tools
+    "homeassistant" "hass" "ha"           # Home Assistant (Docker)
+    "truenas"                              # TrueNAS (FreeBSD appliance)
+    "pfsense" "opnsense"                   # Firewall appliances
+    "windows" "win"                        # Windows systems
+    "unraid"                               # Unraid (different MOTD)
+    "synology" "nas"                       # Synology NAS
+    "qnap"                                 # QNAP NAS
 )
 
 export UNSUPPORTED_SYSTEMS

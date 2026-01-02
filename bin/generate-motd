@@ -25,25 +25,14 @@ if [[ -f "$LIB_DIR/menu-helpers.sh" ]]; then
     # shellcheck source=/dev/null
     source "$LIB_DIR/menu-helpers.sh"
 fi
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BOLD='\033[1m'
-RESET='\033[0m'
+# Source color definitions
+if [[ -f "$LIB_DIR/colors.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/colors.sh"
+fi
 
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 CONFIG_FILE="/opt/homelab-tools/config.sh"
-
-# Systems that don't support MOTD (appliances, Docker, non-Linux)
-UNSUPPORTED_SYSTEMS=(
-    "homeassistant" "hass" "ha"           # Home Assistant (Docker)
-    "truenas"                              # TrueNAS (FreeBSD appliance)
-    "pfsense" "opnsense"                   # Firewall appliances
-    "windows" "win"                        # Windows systems
-    "unraid"                               # Unraid (different MOTD)
-    "synology" "nas"                       # Synology NAS
-    "qnap"                                 # QNAP NAS
-)
 
 # Load config
 if [[ -f "$CONFIG_FILE" ]]; then

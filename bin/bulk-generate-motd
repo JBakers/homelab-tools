@@ -17,14 +17,8 @@ done
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
 source "$LIB_DIR/menu-helpers.sh"
-
-# Colors (from menu-helpers.sh)
-CYAN="$MENU_CYAN"
-GREEN="$MENU_GREEN"
-YELLOW="$MENU_YELLOW"
-RED="$MENU_RED"
-BOLD="$MENU_BOLD"
-RESET="$MENU_RESET"
+source "$LIB_DIR/constants.sh"
+source "$LIB_DIR/colors.sh"
 
 # Read choice with q to cancel - returns to menu
 # Usage: read_choice "prompt" variable default [valid_pattern]
@@ -53,17 +47,6 @@ read_choice() {
 
 SSH_CONFIG="$HOME/.ssh/config"
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
-
-# Systems that don't support MOTD (appliances, Docker, non-Linux)
-UNSUPPORTED_SYSTEMS=(
-    "homeassistant" "hass" "ha"           # Home Assistant (Docker)
-    "truenas"                              # TrueNAS (FreeBSD appliance)
-    "pfsense" "opnsense"                   # Firewall appliances
-    "windows" "win"                        # Windows systems
-    "unraid"                               # Unraid (different MOTD)
-    "synology" "nas"                       # Synology NAS
-    "qnap"                                 # QNAP NAS
-)
 
 show_help() {
     echo -e "${BOLD}${CYAN}bulk-generate-motd - Generate MOTDs for all hosts${RESET}"

@@ -1,10 +1,14 @@
 # TODO: Homelab-Tools
 
-**Version:** 3.6.3-dev.08
+**Version:** 3.6.3-dev.09
 **Last Update:** 2026-01-02
-**Test Status:** 46/46 passing (100%) ✅
+**Test Status:** 46/46 passing (100%) ✅ | Testing: Phase 1 Starting
 
-> Self-contained task list - read this + `.github/copilot-instructions.md` to continue work.
+> 📋 **IMPORTANT:** Testing work moved to **[TESTING-TODO.md](TESTING-TODO.md)**
+> - Phase 1-6 plan: 16 hours, 100+ test cases, 95%+ coverage
+> - This file: Features, bugs, product roadmap only
+> - Once TESTING-TODO complete: Resume P2/P3 features
+>
 > Workflow: Fix by priority → Test → Commit (with approval) → Push
 
 ---
@@ -307,12 +311,18 @@ done
 
 ---
 
-## 🎯 NEXT SESSION: Start Here
+## 🎯 NEXT SESSION: Testing-TODO Implementation
 
-1. **Read:** This TODO.md + `.github/copilot-instructions.md`
-2. **Test:** `cd .test-env && docker compose up -d && docker compose exec -T testhost bash /workspace/.test-env/run-tests.sh`
-3. **Status:** Should see 46/46 tests passing
-4. **Begin:** P1 #1 (Service preset ports) - 2 hour task
+1. **Read:** [TESTING-TODO.md](TESTING-TODO.md) (Complete testing rebuild plan)
+2. **Current Phase:** Fase 1 - Testing Audit (1 hour)
+3. **Phases 2-6:** Framework setup → Test cases → Fixes → CI/CD (15 hours total)
+4. **After TESTING-TODO:** Resume P1/P2 feature work
+
+**Quick Start:**
+```bash
+cd .test-env && docker compose up -d
+# See: TESTING-TODO.md for Phase 1 audit instructions
+```
 
 **Commands:**
 ```bash

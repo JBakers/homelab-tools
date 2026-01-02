@@ -55,6 +55,11 @@
 ## Project Overview
 Bash toolkit for managing homelab infrastructure with auto-detecting MOTD generators (60+ services), SSH management, and bulk operations. Target: Linux homelabs (Debian/Ubuntu). Uses clean terminal UIs with arrow navigation and ANSI colors.
 
+### 📋 Critical Documents
+- **TODO.md** - Product roadmap (features, bugs, priorities)
+- **TESTING-TODO.md** - Complete test-env rebuild plan (16 phases, 100+ tests)
+- **.github/copilot-instructions.md** - This file (AI workflow + architecture)
+
 ## Architecture
 
 ### Directory Structure

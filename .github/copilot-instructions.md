@@ -30,10 +30,23 @@
 **CRITICAL RULE:** Tests in .test-env moeten ALTIJD verbose output tonen.
 
 **Implementatie:**
-- `VERBOSE=1` hardcoded in `run-tests.sh`
+- `VERBOSE=1` hardcoded in `run-tests.sh` (line 16)
 - Gebruik `| tee` om output te tonen EN loggen
-- Nooit `> /dev/null` of output suppression
-- User moet real-time zien wat er gebeurt
+- **NOOIT** `> /dev/null` of output suppression
+- **NOOIT** `&>/dev/null` in test commands
+- User moet real-time zien wat er gebeurt tijdens tests
+
+**Terminal Commands:**
+- ✅ Gebruik: `docker compose exec -T testhost bash /workspace/.test-env/run-tests.sh`
+- ✅ Live output zonder timeout: Tests tonen progress
+- ❌ NOOIT: `timeout 600` - als test langer dan 60s duurt is er een bug
+- ❌ NOOIT: Output suppression in test scripts
+
+**Test Output Requirements:**
+- Elke test toont wat het doet voordat het draait
+- Failures tonen volledige error context
+- Lange tests (>10s) tonen progress updates
+- Hangende tests zijn bugs - fix de test, niet de timeout
 
 ### 3. TESTING LOCATION - ALLEEN IN .test-env
 **CRITICAL RULE:** NOOIT lokaal in /opt/ testen. Alle tests in .test-env Docker container.

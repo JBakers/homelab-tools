@@ -101,7 +101,8 @@ read_input() {
         return 1
     fi
     
-    eval "$var_name=\"\$input\""
+    # Use printf -v for safe variable assignment (prevents eval injection)
+    printf -v "$var_name" '%s' "$input"
     return 0
 }
 

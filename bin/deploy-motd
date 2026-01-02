@@ -19,15 +19,16 @@ if [[ -f "$LIB_DIR/menu-helpers.sh" ]]; then
     # shellcheck source=/dev/null
     source "$LIB_DIR/menu-helpers.sh"
 fi
-
-# Colors
-CYAN='\033[0;96m'
-GREEN='\033[0;92m'
-YELLOW='\033[0;93m'
-RED='\033[0;95m'
-DIM='\033[2m'
-BOLD='\033[1m'
-RESET='\033[0m'
+# Source validators
+if [[ -f "$LIB_DIR/validators.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/validators.sh"
+fi
+# Source colors
+if [[ -f "$LIB_DIR/colors.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/colors.sh"
+fi
 
 TEMPLATES_DIR="$HOME/.local/share/homelab-tools/templates"
 
@@ -140,7 +141,7 @@ if [[ "$SERVICE" == "--all" ]] || [[ "$SERVICE" == "-a" ]]; then
 fi
 
 # Validate service name to prevent command injection
-if [[ ! "$SERVICE" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+if ! validate_service "$SERVICE"; then
     echo -e "${RED}✗ Error: Invalid service name${RESET}"
     echo -e "  Only letters, digits, dots, underscores and hyphens are allowed"
     echo -e "  Example: ${GREEN}deploy-motd pihole${RESET}"

@@ -1,5 +1,108 @@
 # Changelog - Homelab Tools
 
+## v3.6.4-dev.01 (2026-01-02) 🧪 TESTING INFRASTRUCTURE UPGRADE
+
+**Major Achievement:** Phase 1-2 Complete - Test Framework Foundation Built
+
+### 🐛 BUG FIXES (Phase 1 Audit)
+
+#### Critical Bug #1: HLT Markers Missing in Non-Interactive Mode
+- **Problem:** generate-motd stdin path didn't include HLT-MOTD-START/END markers
+- **Impact:** Deploy protection system couldn't detect self-generated MOTDs
+- **Fix:** Complete template generation in non-interactive path with markers
+- **Verification:** Container testing confirmed markers present ✅
+
+#### Critical Bug #2: Template Generation Incomplete (Non-Interactive)
+- **Problem:** Stdin templates were minimal (10 lines), missing system info
+- **Impact:** Generated MOTDs non-functional compared to interactive mode
+- **Fix:** Full template generation with colors, uptime, IP, hostname, Web UI links (33 lines)
+- **Verification:** Container testing confirmed complete output ✅
+
+#### Critical Bug #3: Deploy Log Not Created
+- **Problem:** Deploy log written AFTER SSH success, unreached on failure
+- **Impact:** Status tracking broken, stale detection non-functional
+- **Fix:** Deploy log directory created BEFORE SSH operations, guaranteed write
+- **Verification:** Container testing confirmed log initialized ✅
+
+### ✨ NEW FEATURES
+
+#### Test Infrastructure (Phase 2)
+- **BATS Framework:** Installed 1.8.2 in container (Dockerfile.testhost)
+- **Test Structure:** spec/ directory with support helpers
+- **Helpers Library:** 40+ test functions (setup, cleanup, assertions, mocks)
+- **Sample Tests:** motd-generation.bats with 13 test cases
+- **Framework Docs:** spec/README.md with 80+ test coverage roadmap
+
+#### VS Code Extensions Integration
+- **BATS Test Runner** - Run tests with UI buttons (kherring.bats-test-runner)
+- **Bash Debug** - Step-through debugging for scripts (rogalmic.bash-debug)
+- **Better Shell Syntax** - Enhanced syntax highlighting (jeff-hykin.better-shellscript-syntax)
+- **Trunk Code Quality** - Universal linter + formatter (trunk.io)
+- **Code Runner** - Execute scripts directly from editor (formulahendry.code-runner)
+- **ShellCheck** - Already installed, now configured (timonwong.shellcheck)
+
+#### Development Tooling
+- Trunk linter initialized for VS Code (`.trunk/trunk.yaml`)
+- ShellCheck diagnostics in editor
+- Code formatting on save support
+- Real-time bash validation
+
+### 🧪 Testing Status
+
+**Phase 1: Audit** ✅ COMPLETE
+- Identified 3 critical bugs
+- All bugs fixed and verified
+- Ready for Phase 2
+
+**Phase 2: Framework Setup** ✅ COMPLETE  
+- BATS infrastructure built
+- Test helpers created
+- VS Code tooling configured
+- Foundation for 80+ tests
+
+**Phase 3: Test Suite Expansion** 🚀 STARTING
+- Menu navigation tests (20+)
+- MOTD generation tests (25+)
+- Deployment tests (20+)
+- Integration workflows (15+)
+
+### 📊 Metrics
+
+| Metric | Value |
+|--------|-------|
+| Bugs Fixed | 3 |
+| Code Lines Added (fixes) | ~100 |
+| Test Framework Files | 3 |
+| Test Helper Functions | 40+ |
+| VS Code Extensions | 5 new |
+| Commits | 2 |
+| Phase Duration | 4 hours |
+
+### 🛠️ Technical Details
+
+**Bug #1 Fix Location:** bin/generate-motd lines 575-620
+- Added HLT-MOTD-START/END markers to stdin template
+- Complete template structure with proper formatting
+
+**Bug #2 Fix Location:** bin/generate-motd lines 575-610  
+- Complete template with colors, system info
+- Web UI link support
+- Proper closing markers
+
+**Bug #3 Fix Location:** bin/deploy-motd lines 220-300
+- Deploy log directory created before SSH
+- Guaranteed initialization
+- Hash-based stale detection support
+
+### 📝 Development Notes
+
+- All changes made following COMMIT APPROVAL workflow
+- Container testing verified all fixes
+- Code passes bash syntax validation
+- Ready for full test suite integration
+
+---
+
 ## v3.6.3-dev.07 (2026-01-02) 🎉
 
 **Major Milestone:** 100% Test Pass Rate Achieved (46/46 tests)

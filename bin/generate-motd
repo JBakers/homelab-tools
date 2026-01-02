@@ -37,6 +37,12 @@ if [[ -f "$LIB_DIR/service-presets.sh" ]]; then
     source "$LIB_DIR/service-presets.sh"
 fi
 
+# Source port detection (P2: Smart Port Detection)
+if [[ -f "$LIB_DIR/port-detection.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$LIB_DIR/port-detection.sh"
+fi
+
 # Source validators
 if [[ -f "$LIB_DIR/validators.sh" ]]; then
     # shellcheck source=/dev/null
@@ -172,6 +178,25 @@ has_webui="$HLT_HAS_WEBUI"
 webui_port="$HLT_WEBUI_PORT"
 
 # ============================================================
+# SMART PORT DETECTION (P2: check config, docker, listening ports)
+# ============================================================
+# Initialize port detection (creates config dir if needed)
+if type init_port_detection &>/dev/null; then
+    init_port_detection
+fi
+
+# Try smart port detection (config file overrides, docker, listening ports)
+if type detect_port &>/dev/null; then
+    if detect_port "$SERVICE" "$SERVICE"; then
+        # Only use detected port if different from default and source is not "default"
+        if [[ "$HLT_PORT_SOURCE" != "default" && -n "$HLT_DETECTED_PORT" ]]; then
+            webui_port="$HLT_DETECTED_PORT"
+            # Also set has_webui to y if we detected a port
+            [[ -n "$webui_port" ]] && has_webui="y"
+        fi
+    fi
+fi
+
 # ============================================================
 # NON-INTERACTIVE MODE
 # ============================================================

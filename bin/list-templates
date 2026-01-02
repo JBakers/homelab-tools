@@ -194,8 +194,8 @@ if [[ "$INTERACTIVE_VIEW" == "true" ]]; then
     source "$LIB_DIR/menu-helpers.sh"
     
     while true; do
-        show_arrow_menu "📋 Select Template to Preview" "${menu_options[@]}"
-        selection=$HLT_HLT_MENU_RESULT
+        choose_menu "📋 Select Template to Preview" "${menu_options[@]}"
+        selection=$HLT_MENU_RESULT
         
         if [[ $selection -eq -1 ]] || [[ $selection -eq $((${#menu_options[@]} - 1)) ]]; then
             break

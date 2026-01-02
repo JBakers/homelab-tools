@@ -568,7 +568,7 @@ host_menu() {
         )
         
         local choice
-        show_arrow_menu "📋 Host Options" "${options[@]}"
+        choose_menu "📋 Host Options" "${options[@]}"
         choice="$HLT_HLT_MENU_RESULT"
         
         if [[ "$choice" == "-1" ]]; then
@@ -841,7 +841,7 @@ bulk_operations_menu() {
         )
         
         local choice
-        show_arrow_menu "📦 Bulk Operations" "${options[@]}"
+        choose_menu "📦 Bulk Operations" "${options[@]}"
         choice="$HLT_HLT_MENU_RESULT"
         
         if [[ "$choice" == "-1" ]]; then
@@ -880,7 +880,7 @@ interactive_menu() {
         )
         
         local choice
-        show_arrow_menu "$menu_title" "${options[@]}"
+        choose_menu "$menu_title" "${options[@]}"
         choice="$HLT_HLT_MENU_RESULT"
         
         if [[ "$choice" == "-1" ]]; then
@@ -912,7 +912,7 @@ interactive_menu() {
                 host_array+=("← Back")
                 
                 local host_choice
-                show_arrow_menu "📋 Select Host" "${host_array[@]}"
+                choose_menu "📋 Select Host" "${host_array[@]}"
                 host_choice="$HLT_HLT_MENU_RESULT"
                 
                 if [[ "$host_choice" != "-1" ]] && [[ $host_choice -lt $((${#host_array[@]}-1)) ]]; then

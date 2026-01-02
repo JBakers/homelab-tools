@@ -5,6 +5,15 @@
 
 ## 🔴 CRITICAL
 
+- [x] **Auto-bump VERSION** - Git hook voor automatisch versie increment
+  - ✅ RESOLVED: prepare-commit-msg hook in .husky/_/
+  - ✅ Auto-bump works: 03 → 04 (tested and working!)
+  - ✅ Commit format: [3.6.3-dev.04] commit message
+  - ✅ Only on develop branch
+  - ✅ Skips merge/squash/amend commits
+  - ✅ Auto-bump .09 → patch version bump
+  - ✅ Committed: 62ceedb (v3.6.3-dev.04)
+
 - [x] **Fix bump-dev.sh** - Remove Version prefix from commit messages
   - ✅ RESOLVED: bump-dev.sh now uses clean conventional commits
   - ✅ Tested git hooks (pre-commit/post-commit) → Not reliable for file updates

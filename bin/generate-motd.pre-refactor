@@ -30,8 +30,7 @@ if [[ -f "$LIB_DIR/colors.sh" ]]; then
     # shellcheck source=/dev/null
     source "$LIB_DIR/colors.sh"
 fi
-
-# Source service presets (AUDIT-16: Extracted from generate-motd)
+# Source service presets
 if [[ -f "$LIB_DIR/service-presets.sh" ]]; then
     # shellcheck source=/dev/null
     source "$LIB_DIR/service-presets.sh"
@@ -161,17 +160,398 @@ for unsupported in "${UNSUPPORTED_SYSTEMS[@]}"; do
 done
 
 # ============================================================
-# SERVICE AUTO-DETECTION (using lib/service-presets.sh)
+# SERVICE AUTO-DETECTION (used by both interactive and non-interactive modes)
 # ============================================================
-detect_service_preset "$SERVICE"
+service_name=""
+description=""
+has_webui="n"
+webui_port=""
 
-# Map globals to local variables for backward compatibility
-service_name="$HLT_SERVICE_NAME"
-description="$HLT_SERVICE_DESC"
-has_webui="$HLT_HAS_WEBUI"
-webui_port="$HLT_WEBUI_PORT"
+case "$SERVICE" in
+    # Media Servers
+    jellyfin*)
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
+        service_name="Jellyfin${number:+ $number}"
+        description="Media Server"
+        has_webui="y"
+        webui_port="8096"
+        ;;
+    plex*)
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
+        service_name="Plex${number:+ $number}"
+        description="Media Server"
+        has_webui="y"
+        webui_port="32400/web"
+        ;;
+    emby*)
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
+        service_name="Emby${number:+ $number}"
+        description="Media Server"
+        has_webui="y"
+        webui_port="8096"
+        ;;
+    navidrome)
+        service_name="Navidrome"
+        description="Music Streaming Server"
+        has_webui="y"
+        webui_port="4533"
+        ;;
+    audiobookshelf)
+        service_name="Audiobookshelf"
+        description="Audiobook & Podcast Server"
+        has_webui="y"
+        webui_port="13378"
+        ;;
+    
+    # *arr Stack
+    sonarr)
+        service_name="Sonarr"
+        description="TV Series Management"
+        has_webui="y"
+        webui_port="8989"
+        ;;
+    radarr)
+        service_name="Radarr"
+        description="Movie Management"
+        has_webui="y"
+        webui_port="7878"
+        ;;
+    lidarr)
+        service_name="Lidarr"
+        description="Music Management"
+        has_webui="y"
+        webui_port="8686"
+        ;;
+    readarr)
+        service_name="Readarr"
+        description="Book Management"
+        has_webui="y"
+        webui_port="8787"
+        ;;
+    prowlarr)
+        service_name="Prowlarr"
+        description="Indexer Manager"
+        has_webui="y"
+        webui_port="9696"
+        ;;
+    bazarr)
+        service_name="Bazarr"
+        description="Subtitle Management"
+        has_webui="y"
+        webui_port="6767"
+        ;;
+    whisparr)
+        service_name="Whisparr"
+        description="Adult Content Management"
+        has_webui="y"
+        webui_port="6969"
+        ;;
+    
+    # Download Clients
+    sabnzbd)
+        service_name="SABnzbd"
+        description="Usenet Downloader"
+        has_webui="y"
+        webui_port="8080"
+        ;;
+    nzbget)
+        service_name="NZBGet"
+        description="Usenet Downloader"
+        has_webui="y"
+        webui_port="6789"
+        ;;
+    transmission)
+        service_name="Transmission"
+        description="Torrent Client"
+        has_webui="y"
+        webui_port="9091"
+        ;;
+    qbittorrent)
+        service_name="qBittorrent"
+        description="Torrent Client"
+        has_webui="y"
+        webui_port="8080"
+        ;;
+    deluge)
+        service_name="Deluge"
+        description="Torrent Client"
+        has_webui="y"
+        webui_port="8112"
+        ;;
+    
+    # Request Management
+    overseerr)
+        service_name="Overseerr"
+        description="Request Management"
+        has_webui="y"
+        webui_port="5055"
+        ;;
+    ombi)
+        service_name="Ombi"
+        description="Request Management"
+        has_webui="y"
+        webui_port="3579"
+        ;;
+    
+    # Network & DNS
+    pihole*|pi-hole*)
+        # Extract number if present (pihole2 -> 2)
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
+        if [[ -n "$number" ]]; then
+            service_name="Pi-hole $number"
+        else
+            service_name="Pi-hole"
+        fi
+        description="Network-wide Ad Blocking"
+        has_webui="y"
+        webui_port="80/admin"
+        ;;
+    adguard*)
+        number=$(echo "$SERVICE" | grep -o '[0-9]\+$' || true)
+        if [[ -n "$number" ]]; then
+            service_name="AdGuard Home $number"
+        else
+            service_name="AdGuard Home"
+        fi
+        description="Network-wide Ad Blocking"
+        has_webui="y"
+        webui_port="3000"
+        ;;
+    unbound)
+        service_name="Unbound"
+        description="DNS Resolver"
+        has_webui="n"
+        ;;
+    unifi)
+        service_name="UniFi Controller"
+        description="Network Management"
+        has_webui="y"
+        webui_port="8443"
+        ;;
+    
+    # Virtualization & Containers
+    portainer)
+        service_name="Portainer"
+        description="Docker Management"
+        has_webui="y"
+        webui_port="9000"
+        ;;
+    proxmox)
+        service_name="Proxmox"
+        description="Virtualization Platform"
+        has_webui="y"
+        webui_port="8006"
+        ;;
+    pbs)
+        service_name="PBS"
+        description="Proxmox Backup Server"
+        has_webui="y"
+        webui_port="8007"
+        ;;
+    yacht)
+        service_name="Yacht"
+        description="Docker Management"
+        has_webui="y"
+        webui_port="8000"
+        ;;
 
-# ============================================================
+    # Home Automation
+    nodered|node-red)
+        service_name="Node-RED"
+        description="Flow Programming"
+        has_webui="y"
+        webui_port="1880"
+        ;;
+    zigbee2mqtt|z2m)
+        service_name="Zigbee2MQTT"
+        description="Zigbee to MQTT Bridge"
+        has_webui="y"
+        webui_port="8080"
+        ;;
+    mosquitto|mqtt)
+        service_name="Mosquitto"
+        description="MQTT Broker"
+        has_webui="n"
+        ;;
+    esphome)
+        service_name="ESPHome"
+        description="ESP Device Management"
+        has_webui="y"
+        webui_port="6052"
+        ;;
+    
+    # Monitoring & Analytics
+    frigate)
+        service_name="Frigate"
+        description="NVR with AI Detection"
+        has_webui="y"
+        webui_port="5000"
+        ;;
+    kuma|uptime*)
+        service_name="Uptime Kuma"
+        description="Status Monitoring"
+        has_webui="y"
+        webui_port="3001"
+        ;;
+    grafana)
+        service_name="Grafana"
+        description="Analytics & Monitoring"
+        has_webui="y"
+        webui_port="3000"
+        ;;
+    prometheus)
+        service_name="Prometheus"
+        description="Metrics Collection"
+        has_webui="y"
+        webui_port="9090"
+        ;;
+    influxdb)
+        service_name="InfluxDB"
+        description="Time Series Database"
+        has_webui="y"
+        webui_port="8086"
+        ;;
+    tautulli)
+        service_name="Tautulli"
+        description="Plex Monitoring"
+        has_webui="y"
+        webui_port="8181"
+        ;;
+    netdata)
+        service_name="Netdata"
+        description="Real-time Monitoring"
+        has_webui="y"
+        webui_port="19999"
+        ;;
+    glances)
+        service_name="Glances"
+        description="System Monitoring"
+        has_webui="y"
+        webui_port="61208"
+        ;;
+    
+    # VPN & Network Tools
+    wireguard|wg)
+        service_name="WireGuard"
+        description="VPN Server"
+        has_webui="n"
+        ;;
+    openvpn)
+        service_name="OpenVPN"
+        description="VPN Server"
+        has_webui="n"
+        ;;
+    nginx*)
+        service_name="Nginx"
+        description="Reverse Proxy"
+        has_webui="n"
+        ;;
+    traefik)
+        service_name="Traefik"
+        description="Reverse Proxy"
+        has_webui="y"
+        webui_port="8080"
+        ;;
+    
+    # File Management & Sync
+    nextcloud)
+        service_name="Nextcloud"
+        description="File Sync & Share"
+        has_webui="y"
+        webui_port="443"
+        ;;
+    syncthing)
+        service_name="Syncthing"
+        description="File Synchronization"
+        has_webui="y"
+        webui_port="8384"
+        ;;
+    filebrowser)
+        service_name="File Browser"
+        description="Web File Manager"
+        has_webui="y"
+        webui_port="8080"
+        ;;
+    
+    # Gaming
+    minecraft|mc)
+        service_name="Minecraft"
+        description="Game Server"
+        has_webui="n"
+        ;;
+    pocketmine|pmmp)
+        service_name="PocketMine"
+        description="Minecraft PE Server"
+        has_webui="n"
+        ;;
+    powernukkitx|pnx)
+        service_name="PowerNukkitX"
+        description="Minecraft BE Server"
+        has_webui="n"
+        ;;
+    
+    # Cameras & Security
+    motioneye)
+        service_name="motionEye"
+        description="Video Surveillance"
+        has_webui="y"
+        webui_port="8765"
+        ;;
+    zoneminder)
+        service_name="ZoneMinder"
+        description="Video Surveillance"
+        has_webui="y"
+        webui_port="80"
+        ;;
+    
+    # Misc Services
+    allsky)
+        service_name="AllSky"
+        description="All-Sky Camera"
+        has_webui="y"
+        webui_port="80"
+        ;;
+    emqx)
+        service_name="EMQX"
+        description="MQTT Broker"
+        has_webui="y"
+        webui_port="18083"
+        ;;
+    docker*)
+        service_name="Docker"
+        description="Container Host"
+        has_webui="n"
+        ;;
+    test*|demo*)
+        service_name="Test"
+        description="Test Server"
+        has_webui="n"
+        ;;
+    
+    *)
+        # Capitalize eerste letter voor onbekende services
+        # Preserve numbers in service name (e.g., test1 → Test 1)
+        base_name=$(echo "$SERVICE" | sed 's/[0-9]*$//')
+        service_name="$(echo "$base_name" | sed 's/\b\(.\)/\u\1/g')"
+        
+        # Add number if present
+        if [[ "$SERVICE" =~ ([0-9]+)$ ]]; then
+            num="${BASH_REMATCH[1]}"
+            service_name="$service_name $num"
+        fi
+        
+        description="Server"
+
+        # Preserve numbers in service name for unknown services (e.g., myservice2 → Myservice 2)
+        # Only for default case - known services handle numbers in their case statements
+        if [[ "$SERVICE" =~ ([0-9]+)$ ]]; then
+            num="${BASH_REMATCH[1]}"
+            # Remove number from service_name and add it back with space
+            service_name="${service_name%$num} $num"
+        fi
+        ;;
+esac
+
 # ============================================================
 # NON-INTERACTIVE MODE
 # ============================================================

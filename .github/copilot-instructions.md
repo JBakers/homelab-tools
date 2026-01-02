@@ -35,6 +35,23 @@
 - Nooit `> /dev/null` of output suppression
 - User moet real-time zien wat er gebeurt
 
+### 3. TESTING LOCATION - ALLEEN IN .test-env
+**CRITICAL RULE:** NOOIT lokaal in /opt/ testen. Alle tests in .test-env Docker container.
+
+**Verboden:**
+- ❌ Lokaal testen met `/opt/homelab-tools/bin/*` commands
+- ❌ Lokaal `./sync-dev.sh` draaien en dan testen in /opt
+- ❌ Templates genereren in `~/.local/share/homelab-tools/`
+- ❌ Wijzigingen testen buiten de container
+
+**Verplicht:**
+- ✅ Alle tests draaien in `.test-env/` Docker container
+- ✅ Gebruik: `docker compose exec testhost bash -c '...'`
+- ✅ Update container: `docker compose exec testhost cp /workspace/bin/X /opt/homelab-tools/bin/`
+- ✅ Test suite: `docker compose exec -T testhost bash /workspace/.test-env/run-tests.sh`
+
+**Waarom:** Lokale tests vervuilen het development system en zijn niet reproduceerbaar
+
 ## Project Overview
 Bash toolkit for managing homelab infrastructure with auto-detecting MOTD generators (60+ services), SSH management, and bulk operations. Target: Linux homelabs (Debian/Ubuntu). Uses clean terminal UIs with arrow navigation and ANSI colors.
 

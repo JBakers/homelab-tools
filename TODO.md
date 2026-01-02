@@ -1,11 +1,100 @@
 # TODO: Homelab-Tools
 
-**Version:** 3.6.3-dev.07
+**Version:** 3.6.3-dev.08
 **Last Update:** 2026-01-02
 **Test Status:** 46/46 passing (100%) ✅
 
 > Self-contained task list - read this + `.github/copilot-instructions.md` to continue work.
 > Workflow: Fix by priority → Test → Commit (with approval) → Push
+
+---
+
+## ✅ BUGS & UX ISSUES (Session Complete!)
+
+### User Experience Issues
+1. **generate-motd: No arrow menu**
+   - Problem: Still uses old prompt-based input
+   - Expected: Arrow menu for customization (y/n), Web UI (y/n), port selection
+   - Impact: Inconsistent UX across tools
+
+2. **Navigation help missing on some pages**
+   - Problem: Not all menus show "Use ↑/↓ to navigate, Enter to select, q to quit"
+   - Expected: Consistent footer on ALL interactive menus
+   - Impact: Users don't know navigation keys
+
+3. **Help text missing on some commands**
+   - Problem: Some pages lack --help or in-menu help
+   - Expected: Every command/menu should have help option
+   - Impact: Reduced discoverability
+
+4. **Arrow key enhancements**
+   - Feature: → (right arrow) = Enter (select)
+   - Feature: ← (left arrow) = Back/Cancel
+   - Impact: Better navigation, matches user expectations
+
+### Feature Gaps
+5. **Limited ASCII art variants**
+   - Current: 6 styles (clean, rainbow future, rainbow standard, mono future, big mono, small)
+   - Requested: More variety (different fonts, colors, sizes)
+   - Impact: More personalization options
+
+6. **No custom MOTD designer**
+   - Problem: Users can't design MOTD from scratch
+   - Requested: Interactive MOTD builder (choose colors, layout, info blocks)
+   - Impact: Full customization for advanced users
+
+8. **No backup listing**
+   - Problem: Can't see what backups exist before restore
+   - Expected: List available backups with dates/sizes
+   - Impact: Blind restore process
+
+### Bugs (High Priority)
+7. **BUG: bulk-generate-motd doesn't show existing MOTDs** ⚠️
+   - Problem: Deploy phase doesn't display MOTD protection options
+   - Expected: Show Replace/Append/Cancel when MOTD exists
+   - Impact: Users overwrite MOTDs without knowing
+   - Priority: HIGH (data loss risk)
+
+9. **delete-template: Missing ALL function** ⚠️
+   - Problem: Can't delete all templates at once anymore
+   - Expected: "Delete ALL" option in menu (like before)
+   - Impact: Tedious to clean up multiple templates
+   - Priority: MEDIUM (regression)
+
+### Fixed This Session (2026-01-02)
+
+1. ✅ **generate-motd: Arrow menu converted**
+   - Converted "Customize?" and "Deploy now?" prompts to arrow menus
+   - Web UI selection now uses arrow menu
+   - Consistent UX across all tools
+
+2. ✅ **Navigation help updated**
+   - Menu footer now shows: `↑/↓ or j/k │ Enter or → │ ← or q`
+   - Users can use arrow keys OR vim keys OR q to navigate
+
+3. ✅ **Arrow key enhancements implemented**
+   - Added: → (right arrow) = Enter (select)
+   - Added: ← (left arrow) = Back/Cancel
+   - Better navigation, matches user expectations
+
+4. ✅ **delete-template: ALL function verified**
+   - Already present! (line 72-73 in delete-template)
+   - "Delete ALL|Remove all templates" option in menu
+
+5. ✅ **bulk-generate-motd: MOTD protection verified**
+   - Already working! deploy-motd output is visible
+   - Deploy phase calls `deploy-motd "$hostname"` without suppression
+   - MOTD protection dialog shows Replace/Append/Cancel
+
+### Remaining Feature Requests (P2)
+- Limited ASCII art variants (nice-to-have, 6 styles exist)
+- Custom MOTD designer (future feature)
+- Backup listing (cleanup-homelab already handles backups)
+
+### New: UX Test Suite Added
+- Created `.test-env/ux/` with 17 UX test scripts
+- Tests: arrow navigation, help flags, quit keys, colors, boxes, emojis
+- Run with: `./run-ux-tests.sh`
 
 ---
 

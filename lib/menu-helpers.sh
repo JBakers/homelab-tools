@@ -157,7 +157,7 @@ show_arrow_menu() {
 
         echo ""
         echo -e "${MENU_CYAN}════════════════════════════════════════════════════════════${MENU_RESET}"
-        echo -e "${MENU_BOLD}Use ↑/↓ to navigate, Enter to select, q to quit${MENU_RESET}"
+        echo -e "${MENU_DIM}Navigate: ↑/↓ or j/k  │  Select: Enter or →  │  Back: ← or q${MENU_RESET}"
         
         needs_redraw=0
         fi  # end of needs_redraw check
@@ -185,8 +185,14 @@ show_arrow_menu() {
                     selected=0
                 fi
                 ;;
-            KEY_ENTER)
+            KEY_ENTER|KEY_RIGHT)
+                # Enter or Right Arrow = Select
                 MENU_RESULT="$selected"
+                return 0
+                ;;
+            KEY_LEFT)
+                # Left Arrow = Back/Cancel
+                MENU_RESULT="-1"
                 return 0
                 ;;
             KEY_Q)

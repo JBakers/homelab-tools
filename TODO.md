@@ -3,7 +3,121 @@
 > Quick task list - mark [x] when done, move to archive on commit.
 > Workflow: Fix Critical → High Priority → Commit → Comprehensive Testing → Merge to main → Version bump
 
-## 🔴 CRITICAL
+## � TEST AUDIT COMPLETED (2026-01-02)
+
+**Current Status: 42/44 tests passing (95.5%)**
+**Full Audit Report: `.test-env/AUDIT_REPORT.md`**
+
+**Key Findings:**
+- ✅ Menu navigation: 100% coverage
+- ⚠️  Service presets: 8% coverage (5/60 tested)
+- ❌ ASCII art: Broken (5 failures)
+- ❌ MOTD protection: 0% coverage
+- ⚠️  Bulk operations: 30% coverage
+
+## 🔴 CRITICAL (Priority 0 - Do Now)
+
+### 1. Fix ASCII Art Tests (BLOCKER)
+- [ ] **Problem:** test-ascii-styles.sh uses echo input, not expect
+- [ ] **Impact:** Styles 2-6 completely broken in tests
+- [ ] **Solution:** Rewrite to use generate-with-style.exp
+- [ ] **Files:** `.test-env/test-ascii-styles.sh`
+- [ ] **Est. Time:** 2 hours
+- [ ] **Blocks:** 95%+ test pass rate
+
+### 2. Integrate delete-template-select.exp
+- [ ] **Problem:** test-delete-template fails on /dev/tty
+- [ ] **Impact:** Template deletion untested
+- [ ] **Solution:** Use new expect/test-delete-template-select.exp
+- [ ] **Files:** `.test-env/run-tests.sh` (line ~710)
+- [ ] **Est. Time:** 30 min
+- [ ] **Status:** Expect script ready, needs integration
+
+### 3. Test MOTD Protection Scenarios
+- [ ] **Problem:** Replace/Append/Cancel logic never tested
+- [ ] **Impact:** Critical data safety feature could break
+- [ ] **Solution:** Create expect/test-motd-protection.exp
+- [ ] **Scenarios:** 
+  - Deploy to clean host → success
+  - Deploy to HLT MOTD → Replace/Append/Cancel
+  - Deploy to non-HLT MOTD → Replace/Append/Cancel with backup
+  - Undeploy HLT MOTD → removes file
+  - Undeploy non-HLT MOTD → preserves file
+- [ ] **Est. Time:** 3 hours
+
+### 4. Add ESC Key Test Coverage
+- [ ] **Problem:** ESC=quit exists but untested
+- [ ] **Impact:** Core UX feature could be broken
+- [ ] **Solution:** Add ESC test to all 12 expect scripts
+- [ ] **Est. Time:** 1 hour
+
+**P0 Total: 4 issues, 6.5 hours, Achieves 95%+ pass rate**
+
+---
+
+## 🟠 HIGH PRIORITY (Priority 1 - Do This Week)
+
+### 5. Service Preset Expansion (8% → 80%)
+- [ ] **Current:** 5/60 presets tested (pihole, docker, jellyfin, plex, sonarr)
+- [ ] **Target:** 48/60 presets tested (80%)
+- [ ] **Create:** `.test-env/test-service-presets.sh`
+- [ ] **Test Groups:**
+  - [ ] Media servers (8): jellyfin, plex, emby, navidrome, audiobookshelf
+  - [ ] *arr stack (7): sonarr, radarr, prowlarr, lidarr, readarr, bazarr, whisparr
+  - [ ] Download clients (5): sabnzbd, nzbget, transmission, qbittorrent, deluge
+  - [ ] Network/DNS (4): pihole, adguard, unbound, unifi
+  - [ ] Containers (4): portainer, proxmox, pbs, yacht
+  - [ ] Home automation (5): node-red, zigbee2mqtt, mosquitto, esphome, frigate
+  - [ ] Monitoring (7): uptime-kuma, grafana, prometheus, influxdb, tautulli, netdata, glances
+  - [ ] Request mgmt (2): overseerr, ombi
+  - [ ] VPN (2): wireguard, openvpn
+  - [ ] Reverse proxy (2): nginx, traefik
+  - [ ] File sync (2): nextcloud, syncthing
+- [ ] **Validation:** Service name, description, port, Web UI
+- [ ] **Number handling:** pihole2 → "Pi-hole 2"
+- [ ] **Est. Time:** 4 hours
+
+### 6. Non-Interactive Mode Tests
+- [ ] **Problem:** `echo | generate-motd` path untested
+- [ ] **Impact:** Scripting use case could break
+- [ ] **Create:** `.test-env/test-non-interactive.sh`
+- [ ] **Test Cases:**
+  - [ ] `echo -e "\\n\\nn\\n" | generate-motd test` → template created
+  - [ ] `echo -e "y\\n8080\\n" | generate-motd web-service` → Web UI config
+  - [ ] Non-interactive with piped service list
+  - [ ] HLT markers present in non-interactive templates
+- [ ] **Est. Time:** 2 hours
+
+### 7. Bulk Operations Complete Testing
+- [ ] **Current:** Only bulk-generate tested
+- [ ] **Missing:** bulk deploy, bulk undeploy
+- [ ] **Create:** `.test-env/test-bulk-operations.sh`
+- [ ] **Test Cases:**
+  - [ ] `deploy-motd --all` → all templates deployed
+  - [ ] `undeploy-motd --all` → all MOTDs removed
+  - [ ] Deployment log updated correctly
+  - [ ] Failed hosts listed with retry option
+  - [ ] Progress display works
+- [ ] **Est. Time:** 2 hours
+
+### 8. Version Consistency Validation
+- [ ] **Problem:** No check that all scripts show same version
+- [ ] **Impact:** Version mismatches possible
+- [ ] **Add to:** `.test-env/run-tests.sh` (Static Tests section)
+- [ ] **Test:**
+  ```bash
+  for cmd in homelab generate-motd deploy-motd list-templates; do
+    version=$($cmd --version 2>&1 | grep -oP '\d+\.\d+\.\d+')
+    if [[ "$version" != "$EXPECTED" ]]; then fail; fi
+  done
+  ```
+- [ ] **Est. Time:** 30 min
+
+**P1 Total: 4 issues, 8.5 hours, Core functionality validated**
+
+---
+
+## 🟡 MEDIUM PRIORITY (Priority 2 - Do This Month)
 
 - [x] **Husky & commitlint verwijderd** - User wil handmatige commit approval
   - ✅ RESOLVED: Alle auto-commit functionaliteit verwijderd

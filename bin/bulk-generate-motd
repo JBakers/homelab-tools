@@ -249,7 +249,8 @@ while true; do
 
     # Initialize progress display for Smart-detect mode
     current=0
-    # Disable -e during bulk generation to tolerate non-critical failures and EOF on non-tty
+    
+    # Disable -e during bulk generation to tolerate non-critical failures
     set +e
     if [[ "$gen_mode" == "2" ]]; then
         # Smart-detect mode will show progress bar
@@ -325,13 +326,10 @@ while true; do
             # Smart-detect mode: auto-generate with chosen style
             show_progress "$current" "$host_count" "$hostname" "${CYAN}Generating MOTD...${RESET}"
 
-            # Prepare input for generate-motd; guard against non-zero exit so loop continues
-            set +e
-            set +o pipefail
+            # Smart-detect: auto-generate with chosen style
+            # Use proper error handling instead of set +e toggles
             echo -e "n\n${ascii_style}\nn\n" | generate-motd "$hostname" &>/dev/null
-            gen_status=${PIPESTATUS[1]:-0}
-            set -e
-            set -o pipefail
+            gen_status=$?
 
             if [[ $gen_status -eq 0 && -f "$template_file" ]]; then
                 show_progress "$current" "$host_count" "$hostname" "${GREEN}✓ Generated successfully${RESET}"
@@ -348,12 +346,8 @@ while true; do
             echo ""
 
             # Pre-fill with chosen ASCII style
-            set +e
-            set +o pipefail
             echo -e "y\n${ascii_style}\nn\n" | generate-motd "$hostname"
-            gen_status=${PIPESTATUS[1]:-0}
-            set -e
-            set -o pipefail
+            gen_status=$?
 
             if [[ $gen_status -eq 0 && -f "$template_file" ]]; then
                 echo -e "  ${GREEN}✓${RESET} Generated"

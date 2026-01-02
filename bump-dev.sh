@@ -76,9 +76,11 @@ if [[ $# -gt 0 ]]; then
     MSG="$*"
     echo -e "${YELLOW}→${RESET} Committing with message: ${CYAN}$MSG${RESET}"
     git add -A
-    git commit -m "Version: $NEW_VERSION - $MSG"
+    git commit -m "$MSG"
     echo -e "${GREEN}✓${RESET} Committed!"
+    echo -e "${GREEN}✓${RESET} Version: $NEW_VERSION"
 else
     echo -e "${YELLOW}→${RESET} Ready to commit"
-    echo -e "  Run: ${GREEN}git add -A && git commit -m 'Version: $NEW_VERSION - your message'${RESET}"
+    echo -e "  Version updated to: ${CYAN}$NEW_VERSION${RESET}"
+    echo -e "  Run: ${GREEN}git add -A && git commit -m 'type: your message'${RESET}"
 fi

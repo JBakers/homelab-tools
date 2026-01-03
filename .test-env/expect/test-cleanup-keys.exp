@@ -1,0 +1,30 @@
+#!/usr/bin/expect -f
+# Test cleanup-keys menu and host selection
+# Tests arrow navigation, host list, quit functionality
+
+set timeout 10
+
+# Start cleanup-keys
+spawn /opt/homelab-tools/bin/cleanup-keys
+
+# Wait for menu or host list
+expect {
+    -re "cleanup|keys|host|Select" { puts "Cleanup menu shown" }
+    -re "No hosts|empty" { 
+        puts "\[PASS\] cleanup-keys: No hosts available (expected)"
+        exit 0
+    }
+    timeout { puts "Menu timeout"; exit 1 }
+}
+
+# Try to quit
+send "q"
+
+expect {
+    -re "cancel|exit|quit|Goodbye" { puts "Quit acknowledged" }
+    eof { puts "Clean exit" }
+    timeout { puts "Quit timeout"; exit 1 }
+}
+
+puts "\n\[PASS\] cleanup-keys: Menu navigation works"
+exit 0

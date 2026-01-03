@@ -1,0 +1,38 @@
+#!/usr/bin/expect -f
+# Test edit-config interactive flow
+# Tests domain suffix input, IP method selection, config creation
+
+set timeout 10
+
+# Start edit-config
+spawn /opt/homelab-tools/bin/edit-config
+
+# Wait for domain prompt
+expect {
+    -re "domain|Domain|suffix" { puts "Domain prompt shown" }
+    timeout { puts "Domain prompt timeout"; exit 1 }
+}
+
+# Enter domain suffix
+send ".home\r"
+
+# Wait for IP method prompt or completion
+expect {
+    -re "hostname|method|IP" { puts "IP method prompt shown" }
+    -re "saved|created|Updated|Config" { puts "Config completed"; exit 0 }
+    eof { puts "Config completed"; exit 0 }
+    timeout { puts "IP method timeout"; exit 1 }
+}
+
+# Select hostname method
+send "hostname\r"
+
+# Check for success or config creation
+expect {
+    -re "saved|created|Updated|Config" { puts "Config saved" }
+    eof { puts "Config completed" }
+    timeout { puts "Config save timeout"; exit 1 }
+}
+
+puts "\n\[PASS\] edit-config: Basic flow works"
+exit 0

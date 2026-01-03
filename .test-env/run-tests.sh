@@ -912,6 +912,42 @@ else
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 13: EXTENDED TESTS (new coverage)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+header "EXTENDED TESTS"
+
+# Port detection tests
+if [[ -f "$SCRIPT_DIR/test-port-detection.sh" ]]; then
+    log "  Testing: Port detection..."
+    if bash "$SCRIPT_DIR/test-port-detection.sh" > "$LOG_DIR/port-detection.log" 2>&1; then
+        pass "Port detection tests"
+    else
+        fail "Port detection (see logs)"
+    fi
+fi
+
+# Extended edge cases
+if [[ -f "$SCRIPT_DIR/test-edge-cases-extended.sh" ]]; then
+    log "  Testing: Extended edge cases..."
+    if bash "$SCRIPT_DIR/test-edge-cases-extended.sh" > "$LOG_DIR/edge-cases-extended.log" 2>&1; then
+        pass "Extended edge cases"
+    else
+        fail "Extended edge cases (see logs)"
+    fi
+fi
+
+# ASCII styles v2 (all 10 styles)
+if [[ -f "$SCRIPT_DIR/test-ascii-styles-v2.sh" ]]; then
+    log "  Testing: All ASCII styles..."
+    if bash "$SCRIPT_DIR/test-ascii-styles-v2.sh" > "$LOG_DIR/ascii-styles-v2.log" 2>&1; then
+        pass "ASCII styles (10 variants)"
+    else
+        fail "ASCII styles (see logs)"
+    fi
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # REPORT SUMMARY
 # ═══════════════════════════════════════════════════════════════════════════════
 

@@ -1,9 +1,9 @@
 # TESTING-TODO: Homelab-Tools Complete Testing Plan
 
-**Version:** 3.6.7-dev.08  
-**Last Update:** 2026-01-03 (Phase 5 COMPLETE! ✅)  
-**Focus:** Complete test-env rebuild with 100+ test cases  
-**Status:** Phase 1-5 Complete ✅ | BATS Integrated 🎉
+**Version:** 3.7.0-dev.02  
+**Last Update:** 2026-01-03 (Coverage Audit Complete)  
+**Focus:** Complete test-env with 100% coverage  
+**Status:** Phase 1-5 Complete ✅ | Phase 6 IN PROGRESS 🚀
 
 ---
 
@@ -11,192 +11,133 @@
 
 | Metric | Current | Target | Status |
 |--------|---------|--------|--------|
-| Core Tests | 54 | 60+ | 90% ✅ |
-| BATS Tests | 26 | 40+ | 65% |
+| Core Tests | 55 | 70+ | 79% |
+| BATS Tests | 28 | 40+ | 70% |
 | Pass Rate | 100% | 100% | ✅ |
-| Coverage | ~95% | 95%+ | ✅ |
+| Coverage | ~85% | 95%+ | 🔄 |
 | CI/CD | ACTIVE | ACTIVE | ✅ |
 
-**Current Session:** 2026-01-03 - Phase 5 COMPLETE! 🎉
-- ✅ test-hlt-markers.sh: 11 tests for marker validation
-- ✅ test-error-messages.sh: 13 tests for error quality
-- ✅ test-deploy-log.sh: Created (SSH-dependent)
-- ✅ BATS Integration: 26 tests (2 suites, BATS 1.13)
-- ✅ CI/CD Pipeline: .github/workflows/test.yml
-- ✅ Post-install verification: 7 checks in install.sh
-- ✅ All 54 core tests + 26 BATS tests passing!
+**Coverage Matrix:** See [COVERAGE-MATRIX.md](COVERAGE-MATRIX.md) for detailed breakdown.
 
-**Previous Session:** 2026-01-03 (earlier) - Phase 4 COMPLETE! 🎉
-- ✅ Fixed HLT_HLT_MENU_RESULT regression (48/48 → 50/50 tests)
-- ✅ test-non-interactive.sh: 12 tests for scripting use case
-- ✅ test-version-consistency.sh: 32 tests for VERSION file
-- ✅ test-bulk-operations.sh: Created for deploy/undeploy --all
-- ✅ Updated run-tests.sh with new test sections
-- ✅ All 50 core tests passing!
+**Missing Coverage (10 items):**
+1. edit-config interactive
+2. cleanup-keys flow
+3. cleanup-homelab flow
+4. bulk-generate-motd wizard
+5. generate-motd preview/customize
+6. motd-designer interactive
+7. Smart port detection
+8. New ASCII styles (4 of 10 untested)
+9. Long service names edge case
+10. Concurrent execution
 
 ---
 
-## ✅ FASE 4: P1 TEST CASES - COMPLETE (2026-01-03)
+## 🔴 FASE 6: COVERAGE GAPS (Current Priority)
 
-### Purpose
-Add missing tests for core functionality paths that are critical for basic usage
+### 1. edit-config Tests (~30m)
+**File:** `.test-env/expect/test-edit-config.exp`
+**Priority:** HIGH (no tests exist)
 
-### 1. Non-Interactive Mode Tests ✅
-**File:** `.test-env/test-non-interactive.sh`
-**Status:** COMPLETE - 12 tests passing
-
-**Tests Implemented:**
-- Non-interactive template generation with Enter key
-- HLT-MOTD-START/END marker presence and format
-- Template syntax validation (bash -n)
-- Template permissions (executable)
-- Service preset detection (pihole, jellyfin, sonarr, plex)
+**Tests Needed:**
+- Domain suffix input validation
+- IP method selection (hostname/ip)
+- Config file creation
+- Config file update (overwrites)
 
 ---
 
-### 2. Bulk Operations Tests ✅
-**File:** `.test-env/test-bulk-operations.sh`
-**Status:** COMPLETE - Script created (SSH-dependent tests)
+### 2. cleanup-keys Tests (~30m)
+**File:** `.test-env/expect/test-cleanup-keys.exp`
+**Priority:** HIGH (no tests exist)
 
-**Tests Implemented:**
-- Single deploy with log tracking
-- Deploy log format validation
-- list-templates -s status display
-- Undeploy single host
-- --all flag documentation check
+**Tests Needed:**
+- Host selection menu
+- Confirmation dialog
+- Key removal verification
 
 ---
 
-### 3. Version Consistency Check ✅
-**File:** `.test-env/test-version-consistency.sh`
-**Status:** COMPLETE - 32 tests passing
+### 3. cleanup-homelab Tests (~30m)
+**File:** `.test-env/expect/test-cleanup-homelab.exp`
+**Priority:** HIGH (no tests exist)
 
-**Tests Implemented:**
-- VERSION file existence and format
-- lib/version.sh integrity
-- All 12 main scripts reference VERSION
-- No hardcoded versions in scripts
-- Version displayed correctly in --help
+**Tests Needed:**
+- Backup listing
+- Backup deletion
+- Orphan detection
 
 ---
 
-## 🟡 FASE 5: P2 TEST CASES (11.5 hours) - NOT STARTED
+### 4. bulk-generate-motd Wizard (~1h)
+**File:** `.test-env/expect/test-bulk-generate-wizard.exp`
+**Priority:** MEDIUM (complex flow)
 
-### Purpose
-Add comprehensive tests for deployment protection, logging, edge cases
-
-### 1. HLT Marker Validation (~1h)
-**File:** `.test-env/test-hlt-markers.sh`
-**Test:** All templates have proper HLT-MOTD-START/END markers
-
-**Test:**
-```bash
-# Test 1: Interactive mode adds markers
-printf "y\n8080\n" | generate-motd pihole
-grep -A 1 "HLT-MOTD-START" ~/.local/share/homelab-tools/templates/pihole.sh
-
-# Test 2: Non-interactive mode adds markers
-printf "\n\n\n" | generate-motd sonarr
-grep "HLT-MOTD-END" ~/.local/share/homelab-tools/templates/sonarr.sh
-
-# Test 3: Markers properly formatted (no typos)
-grep "^# HLT-MOTD-START" ~/.local/share/homelab-tools/templates/*.sh
-```
-
-**Status:** NOT STARTED
+**Tests Needed:**
+- Host checkbox selection
+- Service name input per host
+- Style selection
+- Batch generation
+- Deploy phase
 
 ---
 
-### 2. Deployment Log Testing (~2h)
-**File:** `.test-env/test-deploy-log.sh`
-**Test:** `~/.local/share/homelab-tools/deploy-log` validation
+### 5. generate-motd Preview/Customize (~30m)
+**File:** `.test-env/expect/test-generate-preview.exp`
+**Priority:** MEDIUM
 
-**Test:**
-```bash
-# Test 1: Log created on deploy
-deploy-motd pihole
-[ -f ~/.local/share/homelab-tools/deploy-log ]
-
-# Test 2: Log format correct (service|hostname|timestamp|hash)
-log_line=$(tail -1 ~/.local/share/homelab-tools/deploy-log)
-[[ "$log_line" =~ ^[a-z0-9]+\|[a-z0-9.-]+\|[0-9]+\|[a-f0-9]+$ ]]
-
-# Test 3: Multiple deploys tracked
-deploy-motd jellyfin
-[ $(wc -l < ~/.local/share/homelab-tools/deploy-log) -eq 2 ]
-```
-
-**Status:** NOT STARTED
+**Tests Needed:**
+- Preview all styles option
+- Customize flow (service name, description, port)
+- Cancel mid-flow
 
 ---
 
-### 3. copykey Edge Cases (~1.5h)
-**File:** `.test-env/test-copykey-edge-cases.sh`
+### 6. motd-designer Interactive (~30m)
+**File:** `.test-env/expect/test-motd-designer-interactive.exp`
+**Priority:** MEDIUM (CLI tested, interactive not)
 
-**Test:**
-```bash
-# Test 1: Multiple SSH keys
-create_test_keys() {
-  ssh-keygen -N "" -f ~/.ssh/test_key1
-  ssh-keygen -N "" -f ~/.ssh/test_key2
-}
-
-# Test 2: Permission denied handling
-ssh-server-fail "Permission denied" 
-copykey 2>&1 | grep "Permission denied"
-
-# Test 3: Partial success (some hosts fail)
-copykey 2>&1 | grep "✓.*✗"
-```
-
-**Status:** NOT STARTED
+**Tests Needed:**
+- Template name input
+- Header input
+- Style selection menu
+- Block selection (hostname/ip/uptime/load/disk)
 
 ---
 
-### 4. edit-config Testing (~2h)
-**File:** `.test-env/test-edit-config.sh`
+### 7. New ASCII Styles Tests (~30m)
+**File:** `.test-env/test-ascii-styles-v2.sh`
+**Priority:** LOW (existing tests cover 6/10)
 
-**Test:**
-```bash
-# Test 1: Config creation with validation
-echo "y\nmy.domain\nhostname" | edit-config
-[ -f /opt/homelab-tools/config.sh ]
-
-# Test 2: Domain suffix validation
-echo "y\ninvalid!domain\n" | edit-config 2>&1 | grep "Invalid"
-
-# Test 3: IP method validation
-echo "y\n.domain\nwrong_method\n" | edit-config 2>&1 | grep "must be"
-
-# Test 4: Backup on overwrite
-cp /opt/homelab-tools/config.sh /tmp/config.backup
-echo "y\nnew.domain\nip" | edit-config
-[ -f /opt/homelab-tools/config.sh.backup ]
-```
-
-**Status:** NOT STARTED
+**Tests Needed:**
+- emboss style rendering
+- pagga style rendering
+- trek style rendering
+- term style rendering
 
 ---
 
-### 5. Error Message Validation (~2h)
-**File:** `.test-env/test-error-messages.sh`
+### 8. Smart Port Detection (~1h)
+**File:** `.test-env/test-port-detection.sh`
+**Priority:** LOW (lib not yet integrated in commands)
 
-**Test:**
-```bash
-# Test 1: Invalid service name shows helpful message
-generate-motd "; rm -rf /" 2>&1 | grep "Invalid service name"
+**Tests Needed:**
+- Config file priority
+- Docker detection mock
+- Listening port detection mock
+- Fallback to defaults
 
-# Test 2: Non-existent host shows helpful message
-deploy-motd nonexistent 2>&1 | grep "cannot connect\|not found"
+---
 
-# Test 3: Permission denied shows actionable advice
-ssh-deny-test; copykey 2>&1 | grep -E "permission|sudo|key"
+### 9. Edge Cases (~30m)
+**File:** `.test-env/test-edge-cases-extended.sh`
+**Priority:** LOW
 
-# Test 4: No cryptic shell errors
-generate-motd "" 2>&1 | grep -v "^✗\|^ERROR\|^-" | grep -q "^" && exit 1
-```
-
-**Status:** NOT STARTED
+**Tests Needed:**
+- Very long service names (50+ chars)
+- Service names with numbers (pihole2, arr3)
+- Unicode in descriptions
+- Empty template directory
 
 ---
 

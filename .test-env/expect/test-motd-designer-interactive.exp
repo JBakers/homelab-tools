@@ -1,0 +1,84 @@
+#!/usr/bin/expect -f
+# Test motd-designer interactive flow
+# Tests template name, header, style selection, block selection
+
+set timeout 15
+
+# Start motd-designer
+spawn /opt/homelab-tools/bin/motd-designer
+
+# Wait for template name prompt
+expect {
+    -re "name|Template|service" { puts "Name prompt shown" }
+    timeout { puts "Name prompt timeout"; exit 1 }
+}
+
+# Enter template name
+send "testdesigner\r"
+
+# Wait for header prompt
+expect {
+    -re "header|Header|text" { puts "Header prompt shown" }
+    timeout { puts "Header timeout"; exit 1 }
+}
+
+# Enter header (use default)
+send "\r"
+
+# Wait for style selection
+expect {
+    -re "style|Style|Choose" { puts "Style menu shown" }
+    timeout { puts "Style menu timeout"; exit 1 }
+}
+
+# Select first style (Clean)
+send "\r"
+
+# Now block selection (hostname)
+expect {
+    -re "hostname|Include|block" { puts "Block selection shown" }
+    timeout { puts "Block selection timeout"; exit 1 }
+}
+
+# Select Yes for hostname
+send "\r"
+
+# IP block
+expect {
+    -re "ip|IP|Include" { puts "IP block shown" }
+    timeout { puts "IP block timeout"; exit 1 }
+}
+send "\r"
+
+# Uptime block
+expect {
+    -re "uptime|Uptime|Include" { puts "Uptime block shown" }
+    timeout { puts "Uptime timeout"; exit 1 }
+}
+send "\r"
+
+# Load block
+expect {
+    -re "load|Load|Include" { puts "Load block shown" }
+    timeout { puts "Load timeout"; exit 1 }
+}
+# Select No for load
+send "\033\[B\r"
+
+# Disk block
+expect {
+    -re "disk|Disk|Include" { puts "Disk block shown" }
+    timeout { puts "Disk timeout"; exit 1 }
+}
+# Select No for disk
+send "\033\[B\r"
+
+# Wait for completion
+expect {
+    -re "created|Template|saved" { puts "Template created" }
+    eof { puts "Completed" }
+    timeout { puts "Completion timeout"; exit 1 }
+}
+
+puts "\n\[PASS\] motd-designer: Interactive flow works"
+exit 0

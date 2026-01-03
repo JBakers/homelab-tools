@@ -1,0 +1,30 @@
+#!/usr/bin/expect -f
+# Test cleanup-homelab backup management
+# Tests backup listing, menu navigation, quit
+
+set timeout 10
+
+# Start cleanup-homelab
+spawn /opt/homelab-tools/bin/cleanup-homelab
+
+# Wait for menu or backup list
+expect {
+    -re "cleanup|Backup|orphan|template" { puts "Cleanup menu shown" }
+    -re "No backups|No orphan|Nothing" { 
+        puts "\[PASS\] cleanup-homelab: Nothing to clean (expected)"
+        exit 0
+    }
+    timeout { puts "Menu timeout"; exit 1 }
+}
+
+# Try to quit
+send "q"
+
+expect {
+    -re "cancel|exit|Goodbye" { puts "Quit acknowledged" }
+    eof { puts "Clean exit" }
+    timeout { puts "Quit timeout"; exit 1 }
+}
+
+puts "\n\[PASS\] cleanup-homelab: Menu works"
+exit 0

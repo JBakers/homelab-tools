@@ -1,7 +1,7 @@
-# 🏠 Homelab Management Tools v3.5.0
+# 🏠 Homelab Management Tools v3.7.0
 
 [![Tests](https://github.com/JBakers/homelab-tools/actions/workflows/test.yml/badge.svg?branch=develop)](https://github.com/JBakers/homelab-tools/actions/workflows/test.yml)
-[![Version](https://img.shields.io/badge/version-3.5.0-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
+[![Version](https://img.shields.io/badge/version-3.7.0-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
 [![License](https://img.shields.io/badge/license-GPL--v3-blue.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/shell-bash-lightgrey.svg)](https://www.gnu.org/software/bash/)
 
@@ -21,7 +21,8 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
 ### 🎨 Beautiful Interface
 
 - **Clean & Functional MOTDs** - Professional login screens with system info (default)
-- **Optional ASCII Art** - 5 colorful styles including rainbow banners with `toilet -F gay`
+- **ASCII Art (10 styles)** - Future/Standard rainbow, mono, big/small, emboss, pagga, trek, term (toilet/figlet)
+- **Custom MOTD Designer** - New `motd-designer` to build MOTDs with selectable blocks & ASCII header
 - **Color-Coded Output** - Clear visual feedback with ANSI colors
 - **Interactive Menus** - Arrow key navigation (↑↓, j/k), q=cancel everywhere
 - **Checkbox Selection** - Multi-select for batch operations
@@ -38,6 +39,30 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
   - Only removes HLT MOTDs on undeploy (preserves third-party configs)
 - **Undeploy Support** - Remove MOTDs from single host or all hosts (`undeploy-motd --all`)
 - **Retry Failed** - Bulk deploy shows failed hosts with retry option
+
+### 🎨 ASCII Styles (10 options)
+
+| # | Style | Font/Filter | Notes |
+|---|-------|-------------|-------|
+| 1 | Clean & Functional | none | No ASCII, info-only |
+| 2 | Rainbow Future | toilet: future, gay | Colorful, modern |
+| 3 | Rainbow Standard | toilet: standard, gay | Classic rainbow |
+| 4 | Mono Future | toilet: future | Modern mono |
+| 5 | Big Mono | toilet: bigmono9 | Large, bold |
+| 6 | Small/Smblock | toilet: smblock | Compact |
+| 7 | Emboss | toilet: emboss | Raised effect |
+| 8 | Pagga Rounded | toilet: pagga | Rounded dots |
+| 9 | Trek | toilet: trek | Sci-fi style |
+| 10 | Term Wide | toilet: term | Wide terminal font |
+
+> Preview/selection is in `generate-motd` (interactive). Non-interactive defaults to Rainbow Future if toilet is available.
+
+### 🛠️ MOTD Designer (new)
+
+- Command: `motd-designer`
+- Interactive mode: choose template name, header, ASCII style, blocks (hostname/IP/uptime/load/disk)
+- Non-interactive: `motd-designer --name svc --style clean --header "Title" --blocks hostname,ip,uptime`
+- Outputs to `~/.local/share/homelab-tools/templates/<name>.sh` with HLT markers
 - **Deployment Status** - Track deployments with `list-templates -s` (🟢 deployed, 🟡 ready, 🔴 stale)
 - **Interactive Preview** - Preview templates with `list-templates -v`
 

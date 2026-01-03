@@ -1,7 +1,7 @@
 ═══════════════════════════════════════════════════════════════════════════════
   HOMELAB-TOOLS TEST REPORT
-  Date: 2026-01-03 14:12:13
-  Version: 3.6.7-dev.08
+  Date: 2026-01-03 14:46:21
+  Version: 3.7.0-dev.01
   Environment: Docker (isolated)
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -13,7 +13,7 @@
   [0;32m[PASS][0m ShellCheck: All scripts pass
   Testing: Help output formatting...
   [0;32m[PASS][0m Help output: No raw escape codes
-  [0;32m[PASS][0m VERSION file valid: 3.6.7-dev.08
+  [0;32m[PASS][0m VERSION file valid: 3.7.0-dev.01
 
 [1m[0;36mINSTALL TEST[0m
 ────────────────────────────────────────
@@ -186,6 +186,8 @@
   Running BATS test suites...
   Running: motd-generation.bats...
   [0;32m[PASS][0m BATS motd-generation.bats: 13 tests passed
+  Running: motd-designer.bats...
+  [0;32m[PASS][0m BATS motd-designer.bats: 2 tests passed
   Running: motd-generation-v2.bats...
   [0;32m[PASS][0m BATS motd-generation-v2.bats: 13 tests passed
 
@@ -193,10 +195,10 @@
   SUMMARY
 ═══════════════════════════════════════════════════════════════════════════════
 
-  [0;32mPASSED:[0m  54
+  [0;32mPASSED:[0m  55
   [0;31mFAILED:[0m  0
   [1;33mSKIPPED:[0m 0
-  [1mTOTAL:[0m   54 tests
+  [1mTOTAL:[0m   55 tests
 
   [0;32m[1m✓✓✓ ALL TESTS PASSED! 🎉[0m
   [0;32mReady for commit and merge![0m

@@ -398,6 +398,10 @@ if command -v toilet &> /dev/null; then
             "Mono Future|Black & white, modern" \
             "Big Mono|Large, bold" \
             "Small/Smblock|Small, compact" \
+            "Emboss|Raised effect (emboss)" \
+            "Pagga Rounded|Rounded dots (pagga)" \
+            "Trek|Sci-fi style" \
+            "Term Wide|Terminal wide font" \
             "PREVIEW|Show all styles"
         
         choice_idx=$HLT_MENU_RESULT
@@ -409,7 +413,7 @@ if command -v toilet &> /dev/null; then
         fi
         
         # Handle preview (last option)
-        if [[ $choice_idx -eq 6 ]]; then
+        if [[ $choice_idx -eq 10 ]]; then
             clear
             echo -e "${BOLD}${CYAN}ASCII Art Preview - \"$service_name\"${RESET}"
             echo ""
@@ -434,6 +438,22 @@ if command -v toilet &> /dev/null; then
             show_ascii_preview "$service_name" "smblock" ""
             echo ""
 
+            echo -e "${CYAN}7) Emboss:${RESET}"
+            show_ascii_preview "$service_name" "emboss" ""
+            echo ""
+
+            echo -e "${CYAN}8) Pagga Rounded:${RESET}"
+            show_ascii_preview "$service_name" "pagga" ""
+            echo ""
+
+            echo -e "${CYAN}9) Trek:${RESET}"
+            show_ascii_preview "$service_name" "trek" ""
+            echo ""
+
+            echo -e "${CYAN}10) Term Wide:${RESET}"
+            show_ascii_preview "$service_name" "term" ""
+            echo ""
+
             read -p "$(echo -e ${GREEN}Press Enter to continue...${RESET} )"
             continue
         fi
@@ -451,7 +471,6 @@ fi
 # Determine font and filter based on choice
 case "$style_choice" in
     1|"")
-        # Clean & Functional - no ASCII art
         ascii_font="none"
         ascii_filter=""
         echo -e "${GREEN}✓${RESET} Selected: Clean & Functional (no ASCII)"
@@ -481,8 +500,27 @@ case "$style_choice" in
         ascii_filter=""
         echo -e "${GREEN}✓${RESET} Selected: Small/Smblock"
         ;;
+    7)
+        ascii_font="emboss"
+        ascii_filter=""
+        echo -e "${GREEN}✓${RESET} Selected: Emboss"
+        ;;
+    8)
+        ascii_font="pagga"
+        ascii_filter=""
+        echo -e "${GREEN}✓${RESET} Selected: Pagga Rounded"
+        ;;
+    9)
+        ascii_font="trek"
+        ascii_filter=""
+        echo -e "${GREEN}✓${RESET} Selected: Trek"
+        ;;
+    10)
+        ascii_font="term"
+        ascii_filter=""
+        echo -e "${GREEN}✓${RESET} Selected: Term Wide"
+        ;;
     *)
-        # Default to clean functional
         ascii_font="none"
         ascii_filter=""
         echo -e "${YELLOW}⚠${RESET} Invalid choice, using Clean & Functional"

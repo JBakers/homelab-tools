@@ -1,7 +1,7 @@
 ═══════════════════════════════════════════════════════════════════════════════
   HOMELAB-TOOLS TEST REPORT
-  Date: 2026-01-03 13:35:57
-  Version: 3.6.7-dev.06
+  Date: 2026-01-03 14:01:48
+  Version: 3.6.7-dev.07
   Environment: Docker (isolated)
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -13,7 +13,7 @@
   [0;32m[PASS][0m ShellCheck: All scripts pass
   Testing: Help output formatting...
   [0;32m[PASS][0m Help output: No raw escape codes
-  [0;32m[PASS][0m VERSION file valid: 3.6.7-dev.06
+  [0;32m[PASS][0m VERSION file valid: 3.6.7-dev.07
 
 [1m[0;36mINSTALL TEST[0m
 ────────────────────────────────────────
@@ -97,7 +97,7 @@
   Testing: Generate multiple templates...
   [0;32m[PASS][0m Multiple templates generated: test1, test2, test3
   Testing: list-templates with multiple templates...
-  [0;32m[PASS][0m list-templates shows 20 templates
+  [0;32m[PASS][0m list-templates shows 5 templates
   Testing: delete-template removes templates...
   [0;32m[PASS][0m delete-template removes template
   Testing: deploy-motd protection scenarios...
@@ -181,14 +181,22 @@
   [0;36mUX Summary:[0m 13 passed, 3 need attention
   [0;32m[PASS][0m UX tests: 13 passed (3 informational warnings)
 
+[1m[0;36mBATS FRAMEWORK TESTS[0m
+────────────────────────────────────────
+  Running BATS test suites...
+  Running: motd-generation.bats...
+  [0;32m[PASS][0m BATS motd-generation.bats: 13 tests passed
+  Running: motd-generation-v2.bats...
+  [0;32m[PASS][0m BATS motd-generation-v2.bats: 13 tests passed
+
 ═══════════════════════════════════════════════════════════════════════════════
   SUMMARY
 ═══════════════════════════════════════════════════════════════════════════════
 
-  [0;32mPASSED:[0m  52
+  [0;32mPASSED:[0m  54
   [0;31mFAILED:[0m  0
   [1;33mSKIPPED:[0m 0
-  [1mTOTAL:[0m   52 tests
+  [1mTOTAL:[0m   54 tests
 
   [0;32m[1m✓✓✓ ALL TESTS PASSED! 🎉[0m
   [0;32mReady for commit and merge![0m

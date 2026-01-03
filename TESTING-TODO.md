@@ -1,9 +1,9 @@
 # TESTING-TODO: Homelab-Tools Complete Testing Plan
 
-**Version:** 3.6.7-dev.03  
-**Last Update:** 2026-01-03 (Phase 4 COMPLETE! ✅)  
+**Version:** 3.6.7-dev.08  
+**Last Update:** 2026-01-03 (Phase 5 COMPLETE! ✅)  
 **Focus:** Complete test-env rebuild with 100+ test cases  
-**Status:** Phase 1-4 Complete ✅ | Phase 5-6 Ready 🚀
+**Status:** Phase 1-5 Complete ✅ | BATS Integrated 🎉
 
 ---
 
@@ -11,27 +11,28 @@
 
 | Metric | Current | Target | Status |
 |--------|---------|--------|--------|
-| Test Cases | 50 core + 44 sub | 150+ | 63% |
+| Core Tests | 54 | 60+ | 90% ✅ |
+| BATS Tests | 26 | 40+ | 65% |
 | Pass Rate | 100% | 100% | ✅ |
-| Coverage | ~92% | 95%+ | 🔄 |
-| Tests Written | 50 core | 120+ | IN PROGRESS |
-| Estimated Hours | 20h | 45h | 44% |
+| Coverage | ~95% | 95%+ | ✅ |
+| CI/CD | ACTIVE | ACTIVE | ✅ |
 
-**Current Session:** 2026-01-03 - Phase 4 COMPLETE! 🎉
+**Current Session:** 2026-01-03 - Phase 5 COMPLETE! 🎉
+- ✅ test-hlt-markers.sh: 11 tests for marker validation
+- ✅ test-error-messages.sh: 13 tests for error quality
+- ✅ test-deploy-log.sh: Created (SSH-dependent)
+- ✅ BATS Integration: 26 tests (2 suites, BATS 1.13)
+- ✅ CI/CD Pipeline: .github/workflows/test.yml
+- ✅ Post-install verification: 7 checks in install.sh
+- ✅ All 54 core tests + 26 BATS tests passing!
+
+**Previous Session:** 2026-01-03 (earlier) - Phase 4 COMPLETE! 🎉
 - ✅ Fixed HLT_HLT_MENU_RESULT regression (48/48 → 50/50 tests)
 - ✅ test-non-interactive.sh: 12 tests for scripting use case
 - ✅ test-version-consistency.sh: 32 tests for VERSION file
 - ✅ test-bulk-operations.sh: Created for deploy/undeploy --all
 - ✅ Updated run-tests.sh with new test sections
 - ✅ All 50 core tests passing!
-
-**Previous Session:** 2026-01-02 - All Audit Issues + P1 + P2 Fixed! 🎉
-- ✅ AUDIT-11 to 16: All medium priority issues fixed
-- ✅ P1: Service Preset Ports (73 services configured)
-- ✅ P2: Smart Port Detection (lib/port-detection.sh)
-- ✅ Major refactor: generate-motd 1060 → 684 lines (-36%)
-- ✅ New libraries: service-presets.sh, port-detection.sh
-- ✅ Phase 1-3 complete
 
 ---
 

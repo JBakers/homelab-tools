@@ -2,14 +2,10 @@
 # BATS Tests - MOTD Generation
 # Tests for generate-motd functionality
 
-# Get the absolute path to this test file's directory
-TEST_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-# Source helpers with absolute path
-source "$TEST_DIR/support/helpers.sh"
+# Load helpers from fixed path
+load '/workspace/.test-env/spec/support/helpers.sh'
 
 setup() {
-    export BATS_TEST_DIRNAME="$TEST_DIR"
     setup_test_env
     cleanup_templates
     cleanup_deploy_log

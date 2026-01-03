@@ -39,9 +39,21 @@ expect {
     eof { fail "Process ended unexpectedly" }
 }
 
-# Exit backup menu with 'q' (choose_menu returns -1/back)
-send "q"
-sleep 0.3
+# Check if "Press Enter" prompt (no backups) or menu
+# If no backups, we see "Press Enter to go back..."
+expect {
+    "Press Enter" {
+        # No backups found - press Enter to go back
+        send "\r"
+        sleep 0.3
+    }
+    "Archive" {
+        # Has backups - use q to go back
+        send "q"
+        sleep 0.3
+    }
+    timeout { }
+}
 
 # Back at main menu, quit
 expect {

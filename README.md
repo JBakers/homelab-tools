@@ -1,9 +1,9 @@
 # 🏠 Homelab Management Tools v3.6.7
 
+[![Tests](https://github.com/JBakers/homelab-tools/actions/workflows/test.yml/badge.svg?branch=develop)](https://github.com/JBakers/homelab-tools/actions/workflows/test.yml)
 [![Version](https://img.shields.io/badge/version-3.6.7-blue.svg)](https://github.com/JBakers/homelab-tools/releases)
 [![License](https://img.shields.io/badge/license-GPL--v3-blue.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/shell-bash-lightgrey.svg)](https://www.gnu.org/software/bash/)
-[![Tests](https://img.shields.io/badge/tests-48%20tests%20%7C%2096%25-brightgreen.svg)](https://github.com/JBakers/homelab-tools)
 
 > **Professional command-line toolkit for managing homelab infrastructure with beautiful, colorful interfaces and intelligent automation.**
 

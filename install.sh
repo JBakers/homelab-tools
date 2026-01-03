@@ -658,6 +658,84 @@ echo -e "${BOLD}${CYAN}╔══════════════════
 echo -e "║           ✅ INSTALLATION COMPLETE                      ║"
 echo -e "╚════════════════════════════════════════════════════════════╝${RESET}"
 echo ""
+
+# Post-install verification
+echo -e "${BOLD}Verifying installation...${RESET}"
+VERIFY_PASS=0
+VERIFY_FAIL=0
+
+# Check 1: /opt/homelab-tools exists
+if [[ -d "$INSTALL_DIR" ]]; then
+    echo -e "  ${GREEN}✓${RESET} Installation directory exists"
+    ((VERIFY_PASS++)) || true
+else
+    echo -e "  ${RED}✗${RESET} Installation directory missing"
+    ((VERIFY_FAIL++)) || true
+fi
+
+# Check 2: bin/ scripts exist
+if [[ -f "$INSTALL_DIR/bin/homelab" ]]; then
+    echo -e "  ${GREEN}✓${RESET} Main scripts installed"
+    ((VERIFY_PASS++)) || true
+else
+    echo -e "  ${RED}✗${RESET} Main scripts missing"
+    ((VERIFY_FAIL++)) || true
+fi
+
+# Check 3: Symlinks created
+if [[ -L "$ACTUAL_HOME/.local/bin/homelab" ]]; then
+    echo -e "  ${GREEN}✓${RESET} Command symlinks created"
+    ((VERIFY_PASS++)) || true
+else
+    echo -e "  ${RED}✗${RESET} Command symlinks missing"
+    ((VERIFY_FAIL++)) || true
+fi
+
+# Check 4: lib/ files exist
+if [[ -f "$INSTALL_DIR/lib/menu-helpers.sh" ]]; then
+    echo -e "  ${GREEN}✓${RESET} Library files installed"
+    ((VERIFY_PASS++)) || true
+else
+    echo -e "  ${RED}✗${RESET} Library files missing"
+    ((VERIFY_FAIL++)) || true
+fi
+
+# Check 5: VERSION file exists
+if [[ -f "$INSTALL_DIR/VERSION" ]]; then
+    echo -e "  ${GREEN}✓${RESET} VERSION file present"
+    ((VERIFY_PASS++)) || true
+else
+    echo -e "  ${RED}✗${RESET} VERSION file missing"
+    ((VERIFY_FAIL++)) || true
+fi
+
+# Check 6: Templates directory accessible
+if [[ -d "$ACTUAL_HOME/.local/share/homelab-tools/templates" ]]; then
+    echo -e "  ${GREEN}✓${RESET} Templates directory ready"
+    ((VERIFY_PASS++)) || true
+else
+    echo -e "  ${RED}✗${RESET} Templates directory missing"
+    ((VERIFY_FAIL++)) || true
+fi
+
+# Check 7: homelab --help works (quick syntax check)
+if "$INSTALL_DIR/bin/homelab" --help </dev/null >/dev/null 2>&1; then
+    echo -e "  ${GREEN}✓${RESET} Commands executable"
+    ((VERIFY_PASS++)) || true
+else
+    echo -e "  ${RED}✗${RESET} Commands not executable"
+    ((VERIFY_FAIL++)) || true
+fi
+
+echo ""
+if [[ $VERIFY_FAIL -eq 0 ]]; then
+    echo -e "${GREEN}✓ Verification passed: $VERIFY_PASS/$((VERIFY_PASS + VERIFY_FAIL)) checks${RESET}"
+else
+    echo -e "${YELLOW}⚠ Verification: $VERIFY_PASS passed, $VERIFY_FAIL failed${RESET}"
+    echo -e "  Some features may not work correctly."
+fi
+echo ""
+
 echo -e "${GREEN}✓ Homelab Tools installed!${RESET}"
 echo ""
 echo -e "${BOLD}Installed Version:${RESET}"

@@ -1,5 +1,57 @@
 # Changelog - Homelab Tools
 
+## v3.6.7-dev.08 (2026-01-03) 🎉 ALL AUDIT ISSUES COMPLETE!
+
+**Major Achievement:** ALL audit issues fixed including CI/CD pipeline!
+
+### ✨ NEW FEATURES
+
+#### AUDIT-3: CI/CD Pipeline (`.github/workflows/test.yml`)
+- **GitHub Actions** workflow for automated testing
+- **Triggers:** Push and PR to develop/main branches
+- **Jobs:** Static analysis, Docker tests, version check, BATS
+- **Badge:** README.md now shows live test status
+
+#### AUDIT-10: BATS Integration
+- **BATS 1.13** installed in test container
+- **26 BATS tests** in 2 suites (motd-generation.bats, motd-generation-v2.bats)
+- **bats-support** and **bats-assert** libraries included
+- **Section 12** added to run-tests.sh
+
+#### AUDIT-18: Post-install Verification
+- **7 verification checks** after installation
+- Validates: install dir, scripts, symlinks, lib files, VERSION, templates, executability
+- Shows clear pass/fail status with counts
+
+### 🔧 AUDIT FIXES (3, 10, 18, 24, 26, 27)
+
+- **AUDIT-3:** CI/CD Pipeline - GitHub Actions workflow ✅
+- **AUDIT-10:** BATS Integration - 26 tests, BATS 1.13 ✅
+- **AUDIT-18:** Post-install verification - 7 checks ✅
+- **AUDIT-24:** Performance - `${var,,}` instead of `tr` subprocess ✅
+- **AUDIT-26:** README badge - GitHub Actions test status ✅
+- **AUDIT-27:** Remove commented code - pre-refactor files deleted ✅
+
+### 🧪 NEW TEST SUITES (Fase 5)
+
+- **test-hlt-markers.sh:** 11 tests for HLT marker validation
+- **test-error-messages.sh:** 13 tests for error message quality
+- **test-deploy-log.sh:** Deploy log testing (SSH-dependent)
+
+### 🐛 BUG FIXES
+
+- **install.sh:** Fixed `((VERIFY_PASS++))` causing exit with `set -e`
+- **test-backup-menu.exp:** Fixed "Press Enter" prompt handling
+
+### 📊 Statistics
+
+- **Commits today:** 8
+- **Tests:** 54 core + 26 BATS = 80 total
+- **Pass rate:** 100%
+- **Audit completion:** 28/28 (100%) 🎉
+
+---
+
 ## v3.6.7-dev.01 (2026-01-02) 🚀 MAJOR REFACTOR + SMART PORT DETECTION
 
 **Major Achievement:** All Audit Issues Fixed + P1 + P2 Complete!

@@ -129,7 +129,7 @@ if [[ ! "$SERVICE" =~ ^[a-zA-Z0-9._-]+$ ]]; then
 fi
 
 # Check if system is unsupported (before detection logic)
-SERVICE_LOWER=$(echo "$SERVICE" | tr '[:upper:]' '[:lower:]')
+SERVICE_LOWER="${SERVICE,,}"  # Bash 4+ lowercase expansion (avoids subprocess)
 for unsupported in "${UNSUPPORTED_SYSTEMS[@]}"; do
     if [[ "$SERVICE_LOWER" == "$unsupported" ]]; then
         echo -e "${YELLOW}⚠${RESET} ${BOLD}$SERVICE${RESET} doesn't support MOTD"

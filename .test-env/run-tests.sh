@@ -875,6 +875,43 @@ else
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 12: BATS TESTS (if available)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+header "BATS FRAMEWORK TESTS"
+
+BATS_DIR="$SCRIPT_DIR/spec"
+
+if command -v bats &>/dev/null && [[ -d "$BATS_DIR" ]]; then
+    log "  Running BATS test suites..."
+    
+    bats_files=$(find "$BATS_DIR" -name "*.bats" -type f 2>/dev/null)
+    
+    if [[ -n "$bats_files" ]]; then
+        for bats_file in $bats_files; do
+            bats_name=$(basename "$bats_file")
+            log "  Running: $bats_name..."
+            
+            if timeout 120 bats --tap "$bats_file" > "$LOG_DIR/$bats_name.log" 2>&1; then
+                bats_count=$(grep -c "^ok" "$LOG_DIR/$bats_name.log" 2>/dev/null || echo 0)
+                pass "BATS $bats_name: $bats_count tests passed"
+            else
+                bats_fail=$(grep -c "^not ok" "$LOG_DIR/$bats_name.log" 2>/dev/null || echo 0)
+                fail "BATS $bats_name: $bats_fail test(s) failed (see logs)"
+            fi
+        done
+    else
+        skip "BATS: No .bats files found in spec/"
+    fi
+else
+    if ! command -v bats &>/dev/null; then
+        skip "BATS: bats command not found (install with: apt install bats)"
+    else
+        skip "BATS: spec/ directory not found"
+    fi
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # REPORT SUMMARY
 # ═══════════════════════════════════════════════════════════════════════════════
 

@@ -254,7 +254,7 @@ while true; do
         fi
 
         # Check if system is unsupported
-        hostname_lower=$(echo "$hostname" | tr '[:upper:]' '[:lower:]')
+        hostname_lower="${hostname,,}"  # Bash 4+ lowercase expansion
         is_unsupported=false
         for unsupported in "${UNSUPPORTED_SYSTEMS[@]}"; do
             if [[ "$hostname_lower" == "$unsupported" ]]; then

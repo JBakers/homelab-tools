@@ -747,6 +747,42 @@ else
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 9.10: HLT MARKER VALIDATION TESTS (Phase 5)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+header "HLT MARKER VALIDATION TESTS"
+
+log "  Running HLT marker validation tests..."
+if [[ -x "$SCRIPT_DIR/test-hlt-markers.sh" ]]; then
+    if timeout 60 bash "$SCRIPT_DIR/test-hlt-markers.sh" > "$LOG_DIR/test-hlt-markers.log" 2>&1; then
+        hlt_passed=$(grep -c "\[PASS\]" "$LOG_DIR/test-hlt-markers.log" || echo 0)
+        pass "HLT markers: $hlt_passed tests passed"
+    else
+        fail "HLT markers: Test failures (see logs/test-hlt-markers.log)"
+    fi
+else
+    skip "test-hlt-markers.sh not found"
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 9.11: ERROR MESSAGE VALIDATION TESTS (Phase 5)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+header "ERROR MESSAGE VALIDATION TESTS"
+
+log "  Running error message validation tests..."
+if [[ -x "$SCRIPT_DIR/test-error-messages.sh" ]]; then
+    if timeout 60 bash "$SCRIPT_DIR/test-error-messages.sh" > "$LOG_DIR/test-error-messages.log" 2>&1; then
+        err_passed=$(grep -c "\[PASS\]" "$LOG_DIR/test-error-messages.log" || echo 0)
+        pass "Error messages: $err_passed tests passed"
+    else
+        fail "Error messages: Test failures (see logs/test-error-messages.log)"
+    fi
+else
+    skip "test-error-messages.sh not found"
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 10: FULL MENU NAVIGATION (NEW EXPECT SCRIPTS)
 # ═══════════════════════════════════════════════════════════════════════════════
 

@@ -1,0 +1,54 @@
+#!/usr/bin/expect -f
+# Test Configuration submenu navigation
+# Tests: all options accessible, navigation works, quit/back works
+
+set timeout 10
+set testname "config-submenu"
+
+proc pass {msg} {
+    puts "\[PASS\] $msg"
+}
+
+proc fail {msg} {
+    puts "\[FAIL\] $msg"
+    exit 1
+}
+
+# Start homelab
+spawn /opt/homelab-tools/bin/homelab
+
+# Wait for main menu
+expect {
+    "Homelab Tools" { pass "Main menu loaded" }
+    timeout { fail "Main menu timeout" }
+    eof { fail "Process ended unexpectedly" }
+}
+
+# Navigate to Configuration (down arrow once - MOTD is first)
+send "\033\[B"
+sleep 0.3
+
+# Select Configuration
+send "\r"
+sleep 0.5
+
+expect {
+    "Configuration" { pass "Configuration submenu loaded" }
+    "Manage Hosts" { pass "Configuration submenu loaded (alt)" }
+    timeout { fail "Configuration submenu timeout" }
+    eof { fail "Process ended unexpectedly" }
+}
+
+# Go back with 'q'
+send "q"
+sleep 0.3
+
+# Quit main menu
+send "q"
+expect {
+    eof { pass "Clean exit" }
+    timeout { fail "Quit timeout" }
+}
+
+puts "\[PASS\] config-submenu: All tests passed"
+exit 0

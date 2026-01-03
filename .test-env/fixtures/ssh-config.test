@@ -1,0 +1,28 @@
+# Test SSH Config for Homelab-Tools Testing
+# These hosts map to Docker containers in the test network
+
+Host pihole
+    HostName pihole
+    User root
+    Port 22
+
+Host docker-host
+    HostName docker-host
+    User root
+    Port 22
+
+Host jellyfin
+    HostName jellyfin
+    User root
+    Port 22
+
+Host proxmox
+    HostName proxmox
+    User root
+    Port 22
+
+# Catch-all for test hosts
+Host *
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    LogLevel ERROR

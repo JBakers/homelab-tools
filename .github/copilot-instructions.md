@@ -65,6 +65,56 @@
 
 **Waarom:** Lokale tests vervuilen het development system en zijn niet reproduceerbaar
 
+## 📚 Terminologie (Teach User Correct Terms)
+
+Bij elke interactie, gebruik de correcte terminologie en leer de gebruiker:
+
+### Git & Version Control
+| Term | Betekenis |
+|------|-----------|
+| **Repository (repo)** | Git database met alle versies van de code |
+| **Working tree** | Lokale kopie van bestanden op disk |
+| **Tracked files** | Bestanden die git volgt (ooit gecommit) |
+| **Untracked files** | Nieuwe bestanden die git nog niet kent |
+| **Ignored files** | Bestanden in `.gitignore` (nooit committen) |
+| **Staging area / Index** | Bestanden klaar voor commit (`git add`) |
+| **Commit** | Snapshot van staged changes met message |
+| **Push** | Lokale commits uploaden naar remote (GitHub) |
+| **Pull** | Remote changes downloaden naar lokaal |
+| **Branch** | Parallelle versie van de code |
+| **Merge** | Branches samenvoegen |
+| **Rebase** | Commits verplaatsen naar nieuwe base |
+
+### Software Distribution
+| Term | Betekenis |
+|------|-----------|
+| **Source code** | Originele code inclusief tests en dev tools |
+| **Source distribution** | Volledige broncode voor developers |
+| **Release artifact** | Gepakte versie voor eindgebruikers |
+| **Runtime dependencies** | Benodigdheden voor de gebruiker |
+| **Development dependencies** | Tools alleen nodig voor ontwikkeling |
+| **Build artifacts** | Gegenereerde files (niet committen) |
+
+### Testing
+| Term | Betekenis |
+|------|-----------|
+| **Unit test** | Test van één functie/component |
+| **Integration test** | Test van meerdere componenten samen |
+| **End-to-end (E2E) test** | Test van complete user workflow |
+| **Test suite** | Verzameling van alle tests |
+| **Test coverage** | Percentage code gedekt door tests |
+| **CI/CD** | Continuous Integration/Deployment (automated tests) |
+| **Regression** | Bug die terugkomt na eerder gefixt te zijn |
+
+### Files & Directories
+| Term | Betekenis |
+|------|-----------|
+| **Hidden file/dir** | Begint met `.` (bijv. `.gitignore`) |
+| **Config file** | Instellingen voor tool/app |
+| **Executable** | Bestand dat kan worden uitgevoerd |
+| **Symlink** | Verwijzing naar ander bestand |
+| **Library (lib)** | Herbruikbare code voor andere scripts |
+
 ## Project Overview
 Bash toolkit for managing homelab infrastructure with auto-detecting MOTD generators (60+ services), SSH management, and bulk operations. Target: Linux homelabs (Debian/Ubuntu). Uses clean terminal UIs with arrow navigation and ANSI colors.
 

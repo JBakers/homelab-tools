@@ -1,0 +1,46 @@
+#!/usr/bin/expect -f
+# Test edit-hosts menu system
+# Tests: main menu loads, quit works
+
+set timeout 10
+set testname "edit-hosts"
+
+proc pass {msg} {
+    puts "\[PASS\] $msg"
+}
+
+proc fail {msg} {
+    puts "\[FAIL\] $msg"
+    exit 1
+}
+
+# Start edit-hosts
+spawn /opt/homelab-tools/bin/edit-hosts
+
+# Wait for main menu - look for the menu box or host list
+expect {
+    "SSH Host Configuration" { pass "Edit-hosts menu loaded" }
+    "Configured hosts" { pass "Edit-hosts menu loaded (host count)" }
+    "Add new host" { pass "Edit-hosts menu loaded (option visible)" }
+    "pihole" { pass "Edit-hosts loaded (hosts visible)" }
+    timeout { fail "Edit-hosts menu timeout" }
+    eof { fail "Process ended unexpectedly" }
+}
+
+# Wait a moment then press q to quit
+sleep 1
+send "q"
+
+# Wait for exit
+expect {
+    eof { pass "Clean exit" }
+    timeout { 
+        # Try sending q again
+        send "q"
+        expect eof
+        pass "Clean exit (second q)"
+    }
+}
+
+puts "\[PASS\] edit-hosts: All tests passed"
+exit 0

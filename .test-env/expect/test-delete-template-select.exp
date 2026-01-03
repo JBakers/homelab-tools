@@ -1,0 +1,25 @@
+#!/usr/bin/expect -f
+set timeout 10
+
+# Spawn delete-template
+spawn /opt/homelab-tools/bin/delete-template
+
+# Wait for menu, then send 'test3' + Enter to search/filter
+expect {
+    "Select Template" {
+        # Try typing test3 to filter/search
+        send "test3\r"
+        exp_continue
+    }
+    "Delete this template" {
+        send "Y\r"
+        exit 0
+    }
+    "template" {
+        # If we see "template" but not the confirmation, try pressing Enter
+        send "\r"
+        exp_continue
+    }
+    eof { exit 0 }
+    timeout { exit 1 }
+}

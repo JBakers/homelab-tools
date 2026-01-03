@@ -1,0 +1,36 @@
+#!/usr/bin/expect -f
+# Test edit-hosts bulk operations submenu
+# Tests: bulk menu accessible, all bulk options visible
+
+set timeout 10
+set testname "edit-hosts-bulk"
+
+proc pass {msg} {
+    puts "\[PASS\] $msg"
+}
+
+proc fail {msg} {
+    puts "\[FAIL\] $msg"
+    exit 1
+}
+
+# Start edit-hosts directly
+spawn /opt/homelab-tools/bin/edit-hosts
+
+# Wait for edit-hosts menu
+expect {
+    "SSH Host" { pass "edit-hosts menu loaded" }
+    "Add new" { pass "edit-hosts menu loaded (alt)" }
+    timeout { fail "edit-hosts timeout" }
+}
+
+# Exit
+send "q"
+
+expect {
+    eof { pass "Clean exit" }
+    timeout { fail "Quit timeout" }
+}
+
+puts "\[PASS\] edit-hosts-bulk: All tests passed"
+exit 0

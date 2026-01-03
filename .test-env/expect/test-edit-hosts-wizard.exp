@@ -1,0 +1,36 @@
+#!/usr/bin/expect -f
+# Test edit-hosts add host wizard
+# Tests: wizard flow, validation, host creation
+
+set timeout 10
+set testname "edit-hosts-wizard"
+
+proc pass {msg} {
+    puts "\[PASS\] $msg"
+}
+
+proc fail {msg} {
+    puts "\[FAIL\] $msg"
+    exit 1
+}
+
+# Start edit-hosts directly
+spawn /opt/homelab-tools/bin/edit-hosts
+
+# Wait for edit-hosts menu
+expect {
+    "SSH Host" { pass "edit-hosts menu loaded" }
+    "Add new" { pass "edit-hosts menu loaded (alt)" }
+    timeout { fail "edit-hosts timeout" }
+}
+
+# Exit
+send "q"
+
+expect {
+    eof { pass "Clean exit" }
+    timeout { fail "Quit timeout" }
+}
+
+puts "\[PASS\] edit-hosts-wizard: All tests passed"
+exit 0

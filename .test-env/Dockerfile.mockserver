@@ -1,0 +1,52 @@
+# Mock SSH Server for Homelab-Tools Testing
+# Accepts SSH connections and MOTD deployments
+
+FROM debian:bookworm-slim
+
+LABEL maintainer="J.Bakers"
+LABEL description="Mock SSH Server for HLT Testing"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and minimal tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssh-server \
+    bash \
+    coreutils \
+    procps \
+    sudo \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Configure SSH server
+RUN mkdir -p /var/run/sshd /root/.ssh \
+    && chmod 700 /root/.ssh \
+    && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
+    && sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config \
+    && sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config \
+    && echo "root:testpass123" | chpasswd
+
+# Create authorized_keys placeholder (will be populated by testhost's key)
+RUN touch /root/.ssh/authorized_keys \
+    && chmod 600 /root/.ssh/authorized_keys
+
+# Create MOTD directory (where deploy-motd puts scripts)
+RUN mkdir -p /etc/update-motd.d \
+    && chmod 755 /etc/update-motd.d
+
+# Create mock system info script (simulates real server)
+RUN echo '#!/bin/bash\n\
+echo "Mock server: $HOSTNAME"\n\
+echo "Service: ${MOCK_SERVICE:-unknown}"\n\
+echo "Uptime: 42 days, 3:14"\n\
+echo "IP: $(hostname -I 2>/dev/null || echo 172.20.0.x)"' > /usr/local/bin/mock-info \
+    && chmod +x /usr/local/bin/mock-info
+
+# Startup script to add testhost's public key
+COPY fixtures/mock-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 22
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/usr/sbin/sshd", "-D", "-e"]

@@ -256,28 +256,35 @@ fi
 echo -e "${YELLOW}  →${RESET} Copying files to $INSTALL_DIR..."
 run_sudo mkdir -p "$INSTALL_DIR"
 
-# Copy all files except dev-only and GitHub-only files
+# Copy all files except development and GitHub-only files
+# Users get: bin/, lib/, config/, install.sh, uninstall.sh, README.md, LICENSE
+# Users don't get: tests, dev scripts, design docs, changelogs
 run_sudo rsync -a --exclude='.git' \
+    --exclude='.test-env' \
+    --exclude='.design' \
+    --exclude='.archive' \
+    --exclude='.github' \
+    --exclude='test-runner.sh' \
     --exclude='sync-dev.sh' \
     --exclude='bump-dev.sh' \
     --exclude='merge-to-main.sh' \
     --exclude='release.sh' \
     --exclude='export.sh' \
+    --exclude='TESTING-TODO.md' \
     --exclude='TESTING_CHECKLIST.md' \
     --exclude='TEST_SUMMARY.txt' \
+    --exclude='CLAUDE-AUDIT.md' \
+    --exclude='CHANGELOG.md' \
+    --exclude='CONTRIBUTING.md' \
+    --exclude='SECURITY.md' \
+    --exclude='QUICKSTART.md' \
     --exclude='TODO.md' \
-    --exclude='test-runner.sh' \
-    --exclude='.test-env' \
-    --exclude='.archive' \
+    --exclude='*.backup' \
     --exclude='*.backup.*' \
     --exclude='.dev-workspace' \
     --exclude='claude.md' \
     --exclude='notes*.md' \
     --exclude='conversation*.md' \
-    --exclude='CHANGELOG.md' \
-    --exclude='CONTRIBUTING.md' \
-    --exclude='SECURITY.md' \
-    --exclude='QUICKSTART.md' \
     "$(pwd)/" "$INSTALL_DIR/"
 
 echo -e "${GREEN}  ✓${RESET} Files installed in /opt"

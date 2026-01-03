@@ -1,0 +1,144 @@
+═══════════════════════════════════════════════════════════════════════════════
+  COMPLETE HOMELAB-TOOLS INTEGRATION TEST
+  Date: 2026-01-01 00:14:36
+  Environment: Docker (isolated)
+═══════════════════════════════════════════════════════════════════════════════
+
+[1m[0;36mPHASE 1: INSTALLATION[0m
+────────────────────────────────────────
+  Installing homelab-tools...
+  [0;32m[PASS][0m install.sh completed
+  [0;32m[PASS][0m /opt/homelab-tools exists
+  [0;32m[PASS][0m VERSION file: 3.6.0-dev.21
+  [0;32m[PASS][0m homelab in PATH
+
+[1m[0;36mPHASE 2: HELP & VERSION OUTPUT[0m
+────────────────────────────────────────
+  Testing: homelab --help...
+  [0;32m[PASS][0m homelab --help: Clean output with colors
+  Testing: homelab help...
+  [0;32m[PASS][0m homelab help: Detailed help works
+  Testing: homelab --usage...
+  [0;32m[PASS][0m homelab --usage works
+  [0;32m[PASS][0m generate-motd --help works
+  [0;32m[PASS][0m deploy-motd --help works
+  [0;32m[PASS][0m undeploy-motd --help works
+  [0;32m[PASS][0m list-templates --help works
+  [0;32m[PASS][0m delete-template --help works
+  [0;32m[PASS][0m edit-hosts --help works
+  [0;32m[PASS][0m copykey --help works
+  [0;32m[PASS][0m cleanup-keys --help works
+
+[1m[0;36mPHASE 3: MAIN MENU NAVIGATION[0m
+────────────────────────────────────────
+  Testing: Main menu loads...
+  [0;32m[PASS][0m Main menu loads and quits
+  Testing: MOTD submenu...
+  [0;32m[PASS][0m MOTD submenu accessible
+  Testing: Configuration submenu...
+  [0;32m[PASS][0m Configuration submenu accessible
+  Testing: SSH submenu...
+  [0;32m[PASS][0m SSH submenu accessible
+
+[1m[0;36mPHASE 4: MOTD GENERATION[0m
+────────────────────────────────────────
+  Testing: generate-motd style1 (style 1)...
+  [0;32m[PASS][0m generate-motd style1: Template created
+  Testing: generate-motd style4-mono (style 4)...
+  [0;32m[PASS][0m generate-motd style4-mono: Template created
+  Testing: generate-motd style2-rainbow (style 2)...
+  [0;32m[PASS][0m generate-motd style2-rainbow: Template created
+  Testing: generate-motd style5-big (style 5)...
+  [0;32m[PASS][0m generate-motd style5-big: Template created
+  Testing: generate-motd style3-classic (style 3)...
+  [0;32m[PASS][0m generate-motd style3-classic: Template created
+  Testing: generate-motd style6-small (style 6)...
+  [0;32m[PASS][0m generate-motd style6-small: Template created
+  Testing: Service auto-detection...
+  [0;32m[PASS][0m Auto-detect: docker recognized
+  [0;32m[PASS][0m Auto-detect: pihole recognized
+  [0;32m[PASS][0m Auto-detect: proxmox recognized
+  [0;32m[PASS][0m Auto-detect: portainer recognized
+
+[1m[0;36mPHASE 5: TEMPLATE MANAGEMENT[0m
+────────────────────────────────────────
+  Testing: list-templates...
+  [0;32m[PASS][0m list-templates: Shows 10 templates
+  Testing: list-templates --status...
+  [0;32m[PASS][0m list-templates --status: Status column shown
+  Testing: list-templates --view...
+  [0;32m[PASS][0m list-templates --view: Interactive preview works
+  Testing: delete-template...
+  [1;33m[SKIP][0m delete-template: Interactive test complex
+
+[1m[0;36mPHASE 6: EDIT-HOSTS (SSH Config Management)[0m
+────────────────────────────────────────
+  Testing: edit-hosts menu loads...
+  [0;32m[PASS][0m edit-hosts: Menu loads
+  Testing: edit-hosts shows configured hosts...
+  [0;32m[PASS][0m edit-hosts: Shows configured hosts
+  Testing: edit-hosts add host...
+  [1;33m[SKIP][0m edit-hosts: Add requires specific navigation
+  Testing: SSH config readable...
+  [0;32m[PASS][0m SSH config exists with 4 hosts
+
+[1m[0;36mPHASE 7: SSH DEPLOYMENT TO MOCK SERVERS[0m
+────────────────────────────────────────
+  Setting up SSH keys...
+  [0;32m[PASS][0m SSH keys distributed to mock servers
+  Testing: SSH connectivity to mock servers...
+  [0;32m[PASS][0m SSH to pihole: Connected
+  [0;32m[PASS][0m SSH to docker-host: Connected
+  [0;32m[PASS][0m SSH to proxmox: Connected
+  Creating pihole template for deploy test...
+  [0;32m[PASS][0m pihole.sh template created
+  Testing: deploy-motd pihole...
+  [0;32m[PASS][0m deploy-motd pihole: Deployment successful
+  Verifying: MOTD deployed on pihole...
+  [0;32m[PASS][0m MOTD verified on pihole
+  Testing: undeploy-motd pihole...
+  [0;32m[PASS][0m undeploy-motd pihole: Removal successful
+
+[1m[0;36mPHASE 8: SSH TOOLS[0m
+────────────────────────────────────────
+  Testing: copykey functionality...
+  [0;32m[PASS][0m copykey: Help works
+  Testing: cleanup-keys...
+  [0;32m[PASS][0m cleanup-keys: Works for IP
+  Testing: cleanup-keys with hostname...
+  [0;32m[PASS][0m cleanup-keys: Works for hostname
+
+[1m[0;36mPHASE 9: ERROR HANDLING & SECURITY[0m
+────────────────────────────────────────
+  Testing: Command injection protection...
+  [0;32m[PASS][0m Command injection: Blocked
+  Testing: Empty input handling...
+  [0;32m[PASS][0m Empty input: Rejected properly
+  Testing: Invalid character handling...
+  [0;32m[PASS][0m Invalid characters: Rejected
+  Testing: Deploy non-existent template...
+  [0;32m[PASS][0m Missing template: Error shown
+  Testing: Unreachable host handling...
+  [0;32m[PASS][0m Unreachable host: Handled gracefully
+
+[1m[0;36mPHASE 10: BULK OPERATIONS[0m
+────────────────────────────────────────
+  Testing: bulk-generate-motd...
+  [0;32m[PASS][0m bulk-generate-motd: Works
+
+[1m[0;36mPHASE 11: UNINSTALL[0m
+────────────────────────────────────────
+  Testing: Uninstall cancel...
+  [0;32m[PASS][0m Uninstall cancel: Preserved installation
+
+═══════════════════════════════════════════════════════════════════════════════
+                        COMPLETE TEST REPORT
+═══════════════════════════════════════════════════════════════════════════════
+
+  [0;32mPASSED:[0m  53
+  [0;31mFAILED:[0m  0
+  [1;33mSKIPPED:[0m 2
+  TOTAL:   55 tests
+
+  [0;32m[1m✓✓✓ ALL TESTS PASSED! 🎉[0m
+  Ready for production release!

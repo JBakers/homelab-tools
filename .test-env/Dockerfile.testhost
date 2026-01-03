@@ -1,0 +1,57 @@
+# Test Host Container for Homelab-Tools
+# Simulates a fresh user environment for testing
+
+FROM debian:bookworm-slim
+
+LABEL maintainer="J.Bakers"
+LABEL description="Homelab-Tools Test Environment"
+
+# Avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TERM=xterm-256color
+
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    expect \
+    toilet \
+    toilet-fonts \
+    figlet \
+    openssh-client \
+    sudo \
+    git \
+    curl \
+    procps \
+    coreutils \
+    ncurses-bin \
+    shellcheck \
+    rsync \
+    bats \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create test user (non-root)
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Create required directories
+RUN mkdir -p /home/testuser/.ssh /home/testuser/.local/bin /home/testuser/.local/share && \
+    chown -R testuser:testuser /home/testuser
+
+# Generate test SSH key
+RUN ssh-keygen -t ed25519 -f /home/testuser/.ssh/id_ed25519 -N "" -C "test@testhost" \
+    && chown testuser:testuser /home/testuser/.ssh/id_ed25519*
+
+# Copy test SSH config
+COPY fixtures/ssh-config.test /home/testuser/.ssh/config
+RUN chown testuser:testuser /home/testuser/.ssh/config && \
+    chmod 600 /home/testuser/.ssh/config
+
+# Set working directory
+WORKDIR /workspace
+
+# Switch to test user
+USER testuser
+
+# Default command
+CMD ["/bin/bash"]

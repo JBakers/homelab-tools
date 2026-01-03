@@ -1,0 +1,37 @@
+#!/usr/bin/expect -f
+# Test homelab main menu navigation
+# Tests: menu loads, all submenus accessible, quit works
+
+set timeout 10
+set testname "homelab-menu"
+
+proc pass {msg} {
+    puts "\[PASS\] $msg"
+}
+
+proc fail {msg} {
+    puts "\[FAIL\] $msg"
+    exit 1
+}
+
+# Start homelab
+spawn /opt/homelab-tools/bin/homelab
+
+# Wait for main menu
+expect {
+    "MOTD" { pass "Main menu loaded" }
+    "Homelab Tools" { pass "Main menu loaded (alt)" }
+    timeout { fail "Main menu timeout" }
+    eof { fail "Process ended unexpectedly" }
+}
+
+# Test quit with 'q'
+send "q"
+
+expect {
+    eof { pass "Clean exit" }
+    timeout { fail "Quit timeout" }
+}
+
+puts "\[PASS\] homelab-menu: All tests passed"
+exit 0

@@ -1,0 +1,117 @@
+#!/usr/bin/expect -f
+# UX Test: Interactive Menu Navigation
+# Tests real menu interaction with expect
+
+set timeout 5
+
+# Test 1: Homelab main menu arrow navigation
+spawn homelab
+expect {
+    -re "MOTD|Management|Menu" {
+        # Send down arrow
+        send "\033\[B"
+        expect {
+            -re "►|>|Configuration" {
+                send "q"
+                puts "\n✓ TEST 1: homelab arrow navigation works"
+            }
+            timeout {
+                puts "\n○ TEST 1: homelab arrow navigation unclear"
+            }
+        }
+    }
+    timeout {
+        puts "\n✗ TEST 1: homelab did not start"
+        exit 1
+    }
+}
+
+# Wait for exit
+expect eof
+
+# Test 2: list-templates with q to quit
+spawn list-templates
+expect {
+    -re "Template|template|No template" {
+        send "q"
+        puts "✓ TEST 2: list-templates responds to q"
+    }
+    timeout {
+        puts "○ TEST 2: list-templates unclear"
+    }
+}
+expect eof
+
+# Test 3: Menu shows navigation help
+spawn homelab
+expect {
+    -re "Navigate|↑|↓|Enter|quit" {
+        send "q"
+        puts "✓ TEST 3: Navigation help displayed"
+    }
+    -re "MOTD|Management" {
+        send "q"
+        puts "○ TEST 3: Menu works but help text unclear"
+    }
+    timeout {
+        puts "✗ TEST 3: homelab did not display"
+    }
+}
+expect eof
+
+# Test 4: ESC key works
+spawn homelab
+expect {
+    -re "MOTD|Management|Menu" {
+        # Send ESC
+        send "\033"
+        sleep 0.5
+        expect {
+            eof {
+                puts "✓ TEST 4: ESC key exits menu"
+            }
+            -re "MOTD|Management" {
+                # Still in menu, try q
+                send "q"
+                puts "○ TEST 4: ESC may not work, q works"
+            }
+            timeout {
+                send "q"
+                puts "○ TEST 4: ESC behavior unclear"
+            }
+        }
+    }
+    timeout {
+        puts "✗ TEST 4: homelab did not start"
+    }
+}
+expect eof
+
+# Test 5: Enter selects item
+spawn homelab
+expect {
+    -re "MOTD|Management" {
+        # Press Enter on first item
+        send "\r"
+        expect {
+            -re "Generate|Deploy|Template|MOTD" {
+                send "q"
+                puts "✓ TEST 5: Enter selects menu item"
+            }
+            timeout {
+                send "q"
+                puts "○ TEST 5: Enter behavior unclear"
+            }
+        }
+    }
+    timeout {
+        puts "✗ TEST 5: homelab did not start"
+    }
+}
+expect eof
+
+puts "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+puts "Interactive Menu Tests Complete"
+puts "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+exit 0

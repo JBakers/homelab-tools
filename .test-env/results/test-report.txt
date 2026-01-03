@@ -1,0 +1,184 @@
+═══════════════════════════════════════════════════════════════════════════════
+  HOMELAB-TOOLS TEST REPORT
+  Date: 2026-01-03 12:55:57
+  Version: 3.6.7-dev.03
+  Environment: Docker (isolated)
+═══════════════════════════════════════════════════════════════════════════════
+
+[1m[0;36mSTATIC TESTS[0m
+────────────────────────────────────────
+  Testing: bash -n for all scripts...
+  [0;32m[PASS][0m bash -n: All scripts valid (12 bin + 3 lib)
+  Testing: ShellCheck for all scripts...
+  [0;32m[PASS][0m ShellCheck: All scripts pass
+  Testing: Help output formatting...
+  [0;32m[PASS][0m Help output: No raw escape codes
+  [0;32m[PASS][0m VERSION file valid: 3.6.7-dev.03
+
+[1m[0;36mINSTALL TEST[0m
+────────────────────────────────────────
+  Installing homelab-tools...
+  [0;32m[PASS][0m install.sh completed
+  [0;32m[PASS][0m /opt/homelab-tools exists
+  [0;32m[PASS][0m Symlinks created
+  [0;32m[PASS][0m VERSION file installed
+
+[1m[0;36mMENU TESTS (Expect)[0m
+────────────────────────────────────────
+  Testing: test-arrow-navigation...
+  [0;32m[PASS][0m test-arrow-navigation
+  Testing: test-backup-menu...
+  [0;32m[PASS][0m test-backup-menu
+  Testing: test-config-submenu...
+  [0;32m[PASS][0m test-config-submenu
+  Testing: test-delete-template-select...
+  [0;32m[PASS][0m test-delete-template-select
+  Testing: test-delete-template...
+  [0;32m[PASS][0m test-delete-template
+  Testing: test-edit-hosts-bulk...
+  [0;32m[PASS][0m test-edit-hosts-bulk
+  Testing: test-edit-hosts-wizard...
+  [0;32m[PASS][0m test-edit-hosts-wizard
+  Testing: test-edit-hosts...
+  [0;32m[PASS][0m test-edit-hosts
+  Testing: test-esc-quit...
+  [0;32m[PASS][0m test-esc-quit
+  Testing: test-homelab-menu...
+  [0;32m[PASS][0m test-homelab-menu
+  Testing: test-list-templates-view...
+  [0;32m[PASS][0m test-list-templates-view
+  Testing: test-motd-submenu...
+  [0;32m[PASS][0m test-motd-submenu
+
+[1m[0;36mFUNCTIONAL TESTS[0m
+────────────────────────────────────────
+  Testing: generate-motd...
+  [0;32m[PASS][0m generate-motd creates template
+  Testing: list-templates...
+  [0;32m[PASS][0m list-templates shows templates
+  Testing: list-templates --status...
+  [0;32m[PASS][0m list-templates --status shows deployment status
+  Testing: homelab help...
+  [0;32m[PASS][0m homelab help shows commands
+  Testing: homelab --usage...
+  [0;32m[PASS][0m homelab --usage works
+
+[1m[0;36mSSH TESTS (Mock Servers)[0m
+────────────────────────────────────────
+  Setting up SSH keys for mock servers...
+  Testing: Mock server connectivity...
+  [0;32m[PASS][0m Mock server 'pihole' reachable (key auth)
+  Testing: deploy-motd to pihole...
+  [0;32m[PASS][0m deploy-motd pihole
+  Testing: undeploy-motd from pihole...
+  [0;32m[PASS][0m undeploy-motd pihole
+
+[1m[0;36mEDGE CASES[0m
+────────────────────────────────────────
+  Testing: Invalid input rejection...
+  [0;32m[PASS][0m Invalid input handled safely
+  Testing: Unreachable host handling...
+  [0;32m[PASS][0m Unreachable host error shown
+
+[1m[0;36mUNINSTALL TEST[0m
+────────────────────────────────────────
+  Testing: Uninstall cancel...
+  [0;32m[PASS][0m Uninstall cancel preserves installation
+  Testing: Uninstall confirm...
+  [0;32m[PASS][0m Uninstall removes symlinks
+
+[1m[0;36mCLI OPTIONS TESTS[0m
+────────────────────────────────────────
+  Running: test-cli-options.sh...
+  [0;32m[PASS][0m CLI options: 35 tests passed
+
+[1m[0;36mADDITIONAL FUNCTIONAL TESTS[0m
+────────────────────────────────────────
+  Testing: Generate multiple templates...
+  [0;32m[PASS][0m Multiple templates generated: test1, test2, test3
+  Testing: list-templates with multiple templates...
+  [0;32m[PASS][0m list-templates shows 19 templates
+  Testing: delete-template removes templates...
+  [0;32m[PASS][0m delete-template removes template
+  Testing: deploy-motd protection scenarios...
+  [0;32m[PASS][0m deploy-motd to jellyfin (protection working)
+  [0;32m[PASS][0m deploy-motd to docker-host (protection working)
+  Testing: undeploy-motd from test hosts...
+  [0;32m[PASS][0m undeploy-motd docker-host works
+
+[1m[0;36mSERVICE PRESET TESTS[0m
+────────────────────────────────────────
+  Testing: Service auto-detection...
+  [0;32m[PASS][0m Service presets: 5 presets detected correctly
+
+[1m[0;36mASCII ART STYLES TESTS[0m
+────────────────────────────────────────
+  Running comprehensive ASCII style tests...
+  [0;32m[PASS][0m ASCII art styles: All 6 styles + bulk generation valid
+
+[1m[0;36mMOTD DEPLOYMENT SCENARIOS[0m
+────────────────────────────────────────
+  Running MOTD deployment scenario tests...
+  [0;32m[PASS][0m MOTD scenarios: All deployment/undeploy scenarios handled correctly
+
+[1m[0;36mINTEGRATION WORKFLOW TESTS[0m
+────────────────────────────────────────
+  Running integration workflow tests...
+  [0;32m[PASS][0m Integration workflows: All end-to-end workflows passed
+
+[1m[0;36mNON-INTERACTIVE MODE TESTS[0m
+────────────────────────────────────────
+  Running non-interactive mode tests...
+  [0;32m[PASS][0m Non-interactive mode: 12 tests passed
+
+[1m[0;36mVERSION CONSISTENCY TESTS[0m
+────────────────────────────────────────
+  Running version consistency tests...
+  [0;32m[PASS][0m Version consistency: 32 tests passed
+
+[1m[0;36mFULL MENU NAVIGATION TESTS[0m
+────────────────────────────────────────
+  Running: test-config-submenu.exp...
+  [0;32m[PASS][0m test-config-submenu.exp: Passed
+  Running: test-backup-menu.exp...
+  [0;32m[PASS][0m test-backup-menu.exp: Passed
+  Running: test-arrow-navigation.exp...
+  [0;32m[PASS][0m test-arrow-navigation.exp: Passed
+  Running: test-edit-hosts-bulk.exp...
+  [0;32m[PASS][0m test-edit-hosts-bulk.exp: Passed
+
+[1m[0;36mUX CONSISTENCY TESTS[0m
+────────────────────────────────────────
+  [1;33mNote: UX tests are informational and don't block the build[0m
+
+  [0;32m✓[0m test-all-options
+  [0;32m✓[0m test-arrow-navigation
+  [0;32m✓[0m test-back-cancel
+  [0;32m✓[0m test-backup-listing
+  [0;32m✓[0m test-box-borders
+  [0;32m✓[0m test-color-formatting
+  [0;32m✓[0m test-edge-cases
+  [0;32m✓[0m test-emoji-usage
+  [0;32m✓[0m test-generate-motd-menu
+  [1;33m○[0m test-help-flags (see logs)
+  [0;32m✓[0m test-invalid-input
+  [0;32m✓[0m test-motd-protection
+  [1;33m○[0m test-navigation-help (see logs)
+  [0;32m✓[0m test-quit-keys
+  [0;32m✓[0m test-usage-examples
+  [1;33m○[0m test-interactive-menus (see logs)
+
+  [0;36mUX Summary:[0m 13 passed, 3 need attention
+  [0;32m[PASS][0m UX tests: 13 passed (3 informational warnings)
+
+═══════════════════════════════════════════════════════════════════════════════
+  SUMMARY
+═══════════════════════════════════════════════════════════════════════════════
+
+  [0;32mPASSED:[0m  50
+  [0;31mFAILED:[0m  0
+  [1;33mSKIPPED:[0m 0
+  [1mTOTAL:[0m   50 tests
+
+  [0;32m[1m✓✓✓ ALL TESTS PASSED! 🎉[0m
+  [0;32mReady for commit and merge![0m

@@ -1,0 +1,51 @@
+#!/usr/bin/expect -f
+# Test MOTD submenu navigation
+# Tests: all 8 options accessible, back works
+
+set timeout 10
+set testname "motd-submenu"
+
+proc pass {msg} {
+    puts "\[PASS\] $msg"
+}
+
+proc fail {msg} {
+    puts "\[FAIL\] $msg"
+    exit 1
+}
+
+# Start homelab
+spawn /opt/homelab-tools/bin/homelab
+
+# Wait for main menu
+expect {
+    "MOTD" { pass "Main menu loaded" }
+    "Homelab Tools" { pass "Main menu loaded (alt)" }
+    timeout { fail "Main menu timeout" }
+}
+
+# Press Enter to select MOTD (first option)
+send "\r"
+sleep 0.5
+
+# Wait for MOTD submenu
+expect {
+    "Generate" { pass "MOTD submenu loaded" }
+    "Deploy" { pass "MOTD submenu loaded (alt)" }
+    timeout { fail "MOTD submenu timeout" }
+}
+
+# Press q to go back
+send "q"
+sleep 0.3
+
+# Quit completely
+send "q"
+
+expect {
+    eof { pass "Clean exit" }
+    timeout { fail "Final quit timeout" }
+}
+
+puts "\[PASS\] motd-submenu: All tests passed"
+exit 0

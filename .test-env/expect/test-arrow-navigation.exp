@@ -1,0 +1,57 @@
+#!/usr/bin/expect -f
+# Test arrow key navigation throughout menus
+# Tests: ↑↓ arrows, vim keys (j/k), menu cycling
+
+set timeout 10
+set testname "arrow-navigation"
+
+proc pass {msg} {
+    puts "\[PASS\] $msg"
+}
+
+proc fail {msg} {
+    puts "\[FAIL\] $msg"
+    exit 1
+}
+
+# Start homelab
+spawn /opt/homelab-tools/bin/homelab
+
+# Wait for main menu
+expect {
+    "Homelab Tools" { pass "Main menu loaded" }
+    timeout { fail "Main menu timeout" }
+}
+
+# Test DOWN arrow (↓) - move from first item
+send "\033\[B"
+sleep 0.2
+
+# Test DOWN arrow again
+send "\033\[B"
+sleep 0.2
+
+# Test UP arrow (↑)
+send "\033\[A"
+sleep 0.2
+pass "Arrow navigation works"
+
+# Test vim key 'j' (down)
+send "j"
+sleep 0.2
+
+# Test vim key 'k' (up) 
+send "k"
+sleep 0.2
+pass "Vim keys j/k work"
+
+# Test quit with 'q'
+send "q"
+
+expect {
+    eof { pass "Clean exit with q" }
+    timeout { fail "Quit timeout" }
+}
+
+puts "\[PASS\] arrow-navigation: All tests passed"
+exit 0

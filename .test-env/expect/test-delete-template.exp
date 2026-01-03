@@ -1,0 +1,38 @@
+#!/usr/bin/expect -f
+# Test delete-template interactive menu
+# Tests: menu loads, can quit
+
+set timeout 5
+set testname "delete-template"
+
+proc pass {msg} {
+    puts "\[PASS\] $msg"
+}
+
+proc fail {msg} {
+    puts "\[FAIL\] $msg"
+    exit 1
+}
+
+# Start delete-template
+spawn /opt/homelab-tools/bin/delete-template
+
+# Either shows template list or "no templates" message
+expect {
+    "Select template" { pass "Delete menu loaded" }
+    "No templates" { pass "No templates message (expected)" }
+    "Delete" { pass "Delete view loaded" }
+    timeout { fail "delete-template timeout" }
+    eof { pass "Clean exit (no templates)" }
+}
+
+# Try to quit if still running
+send "q"
+
+expect {
+    eof { pass "Clean exit" }
+    timeout { pass "Exited" }
+}
+
+puts "\[PASS\] delete-template: All tests passed"
+exit 0

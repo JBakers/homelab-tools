@@ -1,0 +1,119 @@
+# Homelab-Tools Test Environment
+# Usage: docker-compose up -d && docker-compose exec testhost /workspace/.test-env/run-tests.sh
+
+services:
+  # Main test host - runs all tests
+  testhost:
+    build:
+      context: .
+      dockerfile: Dockerfile.testhost
+    container_name: hlt-testhost
+    hostname: testhost
+    volumes:
+      - ../:/workspace
+      - ./results:/workspace/.test-env/results
+      - ./expect:/expect:ro
+      - ./fixtures:/fixtures:ro
+      - shared-ssh:/shared-ssh
+    environment:
+      - TERM=xterm-256color
+      - HOME=/home/testuser
+      - USER=testuser
+    depends_on:
+      - mock-pihole
+      - mock-docker
+      - mock-proxmox
+    networks:
+      - testnet
+    stdin_open: true
+    tty: true
+    entrypoint: >
+      bash -c "cp /home/testuser/.ssh/id_ed25519.pub /shared-ssh/testhost.pub 2>/dev/null || true; exec bash"
+
+  # Mock SSH Server 1: Pi-hole
+  mock-pihole:
+    build:
+      context: .
+      dockerfile: Dockerfile.mockserver
+    container_name: hlt-mock-pihole
+    hostname: pihole
+    environment:
+      - MOCK_SERVICE=pihole
+    volumes:
+      - shared-ssh:/shared-ssh:ro
+    networks:
+      testnet:
+        aliases:
+          - pihole
+
+  # Mock SSH Server 2: Docker Host
+  mock-docker:
+    build:
+      context: .
+      dockerfile: Dockerfile.mockserver
+    container_name: hlt-mock-docker
+    hostname: docker-host
+    environment:
+      - MOCK_SERVICE=docker
+    volumes:
+      - shared-ssh:/shared-ssh:ro
+    networks:
+      testnet:
+        aliases:
+          - docker-host
+
+  # Mock SSH Server 3: Proxmox
+  mock-proxmox:
+    build:
+      context: .
+      dockerfile: Dockerfile.mockserver
+    container_name: hlt-mock-proxmox
+    hostname: proxmox
+    environment:
+      - MOCK_SERVICE=proxmox
+    volumes:
+      - shared-ssh:/shared-ssh:ro
+    networks:
+      testnet:
+        aliases:
+          - proxmox
+
+  # Mock SSH Server 4: Jellyfin (for bulk tests)
+  mock-jellyfin:
+    build:
+      context: .
+      dockerfile: Dockerfile.mockserver
+    container_name: hlt-mock-jellyfin
+    hostname: jellyfin
+    environment:
+      - MOCK_SERVICE=jellyfin
+    volumes:
+      - shared-ssh:/shared-ssh:ro
+    networks:
+      testnet:
+        aliases:
+          - jellyfin
+
+  # Mock SSH Server 5: Host with existing non-HLT MOTD (protection test)
+  mock-legacy:
+    build:
+      context: .
+      dockerfile: Dockerfile.mockserver
+    container_name: hlt-mock-legacy
+    hostname: legacy-host
+    environment:
+      - MOCK_SERVICE=legacy
+      - HAS_EXISTING_MOTD=true
+    volumes:
+      - shared-ssh:/shared-ssh:ro
+    networks:
+      testnet:
+        aliases:
+          - legacy-host
+
+networks:
+  testnet:
+    driver: bridge
+
+volumes:
+  shared-ssh:

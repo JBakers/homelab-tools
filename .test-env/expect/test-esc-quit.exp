@@ -1,0 +1,38 @@
+#!/usr/bin/expect -f
+# Test 'q' key quit functionality (ESC shares same code path)
+set timeout 5
+
+# Test 1: homelab main menu
+spawn /opt/homelab-tools/bin/homelab
+expect {
+    -re "Navigate.*Back" {
+        send "q"
+    }
+    timeout { exit 1 }
+}
+expect eof
+
+# Test 2: list-templates --view
+spawn /opt/homelab-tools/bin/list-templates --view
+expect {
+    -re "Navigate.*Back" {
+        send "q"
+    }
+    "No templates" { exit 0 }
+    timeout { exit 1 }
+}
+expect eof
+
+# Test 3: delete-template
+spawn /opt/homelab-tools/bin/delete-template
+expect {
+    -re "Navigate.*Back" {
+        send "q"
+    }
+    "No templates" { exit 0 }
+    timeout { exit 1 }
+}
+expect eof
+
+# All tests passed
+exit 0

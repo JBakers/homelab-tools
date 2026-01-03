@@ -1,0 +1,45 @@
+#!/usr/bin/expect -f
+# Generate MOTD with specific ASCII style
+# Usage: generate-with-style.exp <service-name> <style-number>
+
+set timeout 15
+set service [lindex $argv 0]
+set style [lindex $argv 1]
+
+if {$service eq "" || $style eq ""} {
+    puts "Usage: generate-with-style.exp <service-name> <style-number>"
+    exit 1
+}
+
+# Convert style number to arrow key presses (0-based menu)
+# Style 1 = index 0 (Clean - already selected by default)
+# Style 2 = index 1 (need 1 down)
+# Style 3 = index 2 (need 2 down)
+# etc.
+set down_presses [expr {$style - 1}]
+
+spawn /opt/homelab-tools/bin/generate-motd $service
+
+expect {
+    "Choose MOTD Style" {
+        # Send down arrow keys to select style
+        for {set i 0} {$i < $down_presses} {incr i} {
+            send "\033\[B"
+            sleep 0.1
+        }
+        send "\r"
+        exp_continue
+    }
+    "Customize" {
+        send "n\r"
+        exp_continue
+    }
+    "Deploy now" {
+        send "n\r"
+        exp_continue
+    }
+    "successfully" { exit 0 }
+    "Template created" { exit 0 }
+    eof { exit 0 }
+    timeout { exit 1 }
+}

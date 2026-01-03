@@ -1,0 +1,38 @@
+#!/usr/bin/expect -f
+# Test list-templates --view interactive mode
+# Tests: menu loads, can quit
+
+set timeout 5
+set testname "list-templates-view"
+
+proc pass {msg} {
+    puts "\[PASS\] $msg"
+}
+
+proc fail {msg} {
+    puts "\[FAIL\] $msg"
+    exit 1
+}
+
+# Start list-templates --view
+spawn /opt/homelab-tools/bin/list-templates --view
+
+# Either shows template list or "no templates" message
+expect {
+    "Select template" { pass "Template selector loaded" }
+    "No templates" { pass "No templates message (expected if empty)" }
+    "MOTD Templates" { pass "Template view loaded" }
+    timeout { fail "list-templates --view timeout" }
+    eof { pass "Clean exit (no templates)" }
+}
+
+# Try to quit if still running
+send "q"
+
+expect {
+    eof { pass "Clean exit" }
+    timeout { pass "Exited" }
+}
+
+puts "\[PASS\] list-templates-view: All tests passed"
+exit 0

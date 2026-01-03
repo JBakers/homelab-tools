@@ -1,0 +1,60 @@
+#!/usr/bin/expect -f
+# Test Backup management menu
+# Tests: all backup options, menu navigation, actions work
+
+set timeout 10
+set testname "backup-menu"
+
+proc pass {msg} {
+    puts "\[PASS\] $msg"
+}
+
+proc fail {msg} {
+    puts "\[FAIL\] $msg"
+    exit 1
+}
+
+# Start homelab
+spawn /opt/homelab-tools/bin/homelab
+
+# Wait for main menu
+expect {
+    "Homelab Tools" { pass "Main menu loaded" }
+    timeout { fail "Main menu timeout" }
+    eof { fail "Process ended unexpectedly" }
+}
+
+# Navigate to Backups (down twice: MOTD -> Config -> Backups)
+send "\033\[B\033\[B"
+sleep 0.3
+
+# Select Backups
+send "\r"
+sleep 0.5
+
+expect {
+    "Backup" { pass "Backup menu loaded" }
+    "Archive" { pass "Backup menu loaded with options" }
+    timeout { fail "Backup menu timeout" }
+    eof { fail "Process ended unexpectedly" }
+}
+
+# Exit backup menu with 'q' (choose_menu returns -1/back)
+send "q"
+sleep 0.3
+
+# Back at main menu, quit
+expect {
+    "Homelab Tools" { pass "Returned to main menu" }
+    timeout { fail "Main menu return timeout" }
+    eof { fail "Process ended unexpectedly" }
+}
+
+send "q"
+expect {
+    eof { pass "Clean exit" }
+    timeout { fail "Final quit timeout" }
+}
+
+puts "\[PASS\] backup-menu: All tests passed"
+exit 0

@@ -1,11 +1,11 @@
 # TODO: Homelab-Tools
 
-**Version:** 3.6.7-dev.02
+**Version:** 3.6.7-dev.03
 **Last Update:** 2026-01-03
-**Test Status:** 46/48 passing (96%) ✅ | Security: 20/20 Audit Issues + P1 + P2 COMPLETE
+**Test Status:** 50/50 passing (100%) ✅ | Security: 20/20 Audit Issues + P1 + P2 COMPLETE
 
 > 📋 **IMPORTANT:** Testing work moved to **[TESTING-TODO.md](TESTING-TODO.md)**
-> - Phase 1-3 complete: 48 core tests, 93+ total tests
+> - Phase 1-4 complete: 50 core tests, 94 sub-tests
 > - This file: Features, bugs, remaining audit items, product roadmap
 > - All CRITICAL + HIGH + MEDIUM priority security issues FIXED ✅
 > - AUDIT-11 t/m 16 FIXED ✅ + P1 + P2 COMPLETE ✅
@@ -16,10 +16,17 @@
 
 ## 🔄 CURRENT SESSION: 2026-01-03
 
-**Focus:** Testing Phase 4-6 + CI/CD Pipeline
+**Focus:** Testing Phase 4 + CI/CD Pipeline
 
-**Plan:**
-- [ ] Fase 4: P1 Test Cases (non-interactive, bulk ops, version check)
+**Completed Today:**
+- ✅ Fixed HLT_HLT_MENU_RESULT regression (dubbele prefix in 6 scripts)
+- ✅ Fase 4: P1 Test Cases
+  - test-non-interactive.sh: 12 tests for scripting use case
+  - test-version-consistency.sh: 32 tests for VERSION file validation
+  - test-bulk-operations.sh: Deploy/undeploy --all tests
+- ✅ Tests: 50/50 passing (was 45/48)
+
+**Remaining:**
 - [ ] Fase 5: P2 Test Cases (HLT markers, deploy log, edge cases)
 - [ ] AUDIT-3: CI/CD Pipeline (careful implementation)
 

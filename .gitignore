@@ -37,6 +37,8 @@ GESPREK.md
 # Test files and runners
 test-runner.sh
 TEST*
+!TESTING-TODO.md
+!TESTING_CHECKLIST.md
 test.sh
 test-*.sh
 test-motd.sh

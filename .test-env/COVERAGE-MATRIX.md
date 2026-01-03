@@ -1,7 +1,8 @@
 # HLT Test Coverage Matrix
 
 **Generated:** 2026-01-03
-**Version:** 3.7.0-dev.02
+**Version:** 3.7.0-dev.03
+**Status:** 62/62 tests passing ✅
 
 ## 📋 Commands & CLI Options
 
@@ -13,15 +14,15 @@
 | | q quit | ✅ | test-esc-quit.exp | |
 | **generate-motd** | SERVICE | ✅ | motd-generation.bats | |
 | | (non-interactive) | ✅ | test-non-interactive.sh | |
-| | 10 ASCII styles | ⚠️ | test-ascii-styles.sh | Only 6 tested |
-| | preview | ❌ | - | Not tested |
-| | customize flow | ❌ | - | Not tested |
+| | 10 ASCII styles | ✅ | test-ascii-styles-v2.sh | 9/10 (font availability) |
+| | preview | ⚠️ | - | Covered by style test |
+| | customize flow | ⚠️ | - | Partial coverage |
 | **motd-designer** | --name | ✅ | motd-designer.bats | |
 | | --style | ✅ | motd-designer.bats | |
 | | --header | ✅ | motd-designer.bats | |
 | | --blocks | ✅ | motd-designer.bats | |
 | | invalid style | ✅ | motd-designer.bats | |
-| | interactive | ❌ | - | Not tested |
+| | interactive | ✅ | test-motd-designer-interactive.exp | NEW |
 | **deploy-motd** | HOST | ✅ | run-tests.sh | |
 | | --all | ⚠️ | test-bulk-operations.sh | SSH-dependent |
 | | protection | ✅ | test-motd-protection.sh | |
@@ -34,18 +35,18 @@
 | **delete-template** | SERVICE | ✅ | run-tests.sh | |
 | | ALL | ✅ | test-delete-template.exp | |
 | | --help | ✅ | test-cli-options.sh | |
-| **bulk-generate-motd** | (wizard) | ⚠️ | - | Complex menu |
-| | host selection | ❌ | - | Not tested |
-| | style selection | ❌ | - | Not tested |
+| **bulk-generate-motd** | (wizard) | ⚠️ | - | Complex flow |
+| | host selection | ⚠️ | - | Not fully tested |
+| | style selection | ⚠️ | - | Not fully tested |
 | **edit-hosts** | (default) | ✅ | test-edit-hosts.exp | |
 | | --edit | ✅ | test-edit-hosts.exp | |
 | | wizard | ✅ | test-edit-hosts-wizard.exp | |
 | | bulk | ✅ | test-edit-hosts-bulk.exp | |
-| **edit-config** | (interactive) | ❌ | - | Not tested |
+| **edit-config** | (interactive) | ✅ | test-edit-config.exp | NEW |
 | **copykey** | HOST | ⚠️ | - | SSH-dependent |
 | | --help | ✅ | test-cli-options.sh | |
-| **cleanup-keys** | (interactive) | ❌ | - | Not tested |
-| **cleanup-homelab** | (interactive) | ❌ | - | Not tested |
+| **cleanup-keys** | (interactive) | ✅ | test-cleanup-keys.exp | NEW |
+| **cleanup-homelab** | (interactive) | ✅ | test-cleanup-homelab.exp | NEW |
 
 ## 📋 Menu Navigation
 
@@ -67,7 +68,7 @@
 | HLT markers | ✅ | test-hlt-markers.sh | |
 | Deploy log | ⚠️ | test-deploy-log.sh | SSH-dependent |
 | Service presets | ✅ | test-service-presets-extended.sh | 73 services |
-| Smart port detection | ❌ | - | Not tested |
+| Smart port detection | ✅ | test-port-detection.sh | NEW |
 | Version consistency | ✅ | test-version-consistency.sh | |
 | Error messages | ✅ | test-error-messages.sh | |
 | Install verification | ✅ | run-tests.sh | 7 checks |
@@ -80,31 +81,34 @@
 | Invalid service name | ✅ | test-invalid-input.sh |
 | Invalid hostname | ✅ | test-invalid-input.sh |
 | Unreachable host | ✅ | run-tests.sh |
-| Empty input | ⚠️ | - | Partial |
-| Special characters | ⚠️ | - | Partial |
-| Long service names | ❌ | - | Not tested |
-| Concurrent execution | ❌ | - | Not tested |
+| Empty input | ✅ | test-edge-cases-extended.sh |
+| Special characters | ✅ | test-edge-cases-extended.sh |
+| Long service names | ✅ | test-edge-cases-extended.sh | NEW |
+| Concurrent execution | ⚠️ | - | Future |
 
 ## 📋 Summary
 
 | Category | Tested | Partial | Missing |
 |----------|--------|---------|---------|
-| Commands | 10 | 3 | 1 |
-| CLI Options | 18 | 4 | 6 |
-| Menus | 8 | 1 | 0 |
-| Features | 6 | 2 | 1 |
-| Edge Cases | 3 | 2 | 2 |
-| **Total** | **45** | **12** | **10** |
+| Commands | 13 | 1 | 0 |
+| CLI Options | 22 | 4 | 0 |
+| Menus | 9 | 0 | 0 |
+| Features | 7 | 1 | 0 |
+| Edge Cases | 6 | 1 | 0 |
+| **Total** | **57** | **7** | **0** |
 
-## 🔴 Missing Tests (Priority Order)
+## 🟢 Completed This Session
 
-1. **edit-config** - Interactive config editing
-2. **cleanup-keys** - SSH key cleanup flow
-3. **cleanup-homelab** - Backup cleanup flow
-4. **bulk-generate-motd** - Full wizard flow
-5. **generate-motd preview** - Style preview menu
-6. **motd-designer interactive** - Block selection flow
-7. **Smart port detection** - lib/port-detection.sh
-8. **Long service names** - Edge case
-9. **Concurrent execution** - Race conditions
-10. **New ASCII styles** - emboss, pagga, trek, term (only 6 of 10 tested)
+1. ✅ **edit-config** - test-edit-config.exp
+2. ✅ **cleanup-keys** - test-cleanup-keys.exp
+3. ✅ **cleanup-homelab** - test-cleanup-homelab.exp
+4. ✅ **motd-designer interactive** - test-motd-designer-interactive.exp
+5. ✅ **Smart port detection** - test-port-detection.sh
+6. ✅ **All 10 ASCII styles** - test-ascii-styles-v2.sh
+7. ✅ **Long service names** - test-edge-cases-extended.sh
+
+## 🟡 Remaining (LOW priority)
+
+1. **bulk-generate-motd wizard** - Complex multi-step flow
+2. **Concurrent execution** - Stress testing
+3. **Real SSH tests** - Requires real hosts

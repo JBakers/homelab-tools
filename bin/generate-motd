@@ -326,7 +326,7 @@ choose_menu "Continue with these settings?" \
     "Customize|Edit service name, description, Web UI" \
     "Cancel|Abort generation"
 
-case $HLT_HLT_MENU_RESULT in
+case $HLT_MENU_RESULT in
     0)
         # Continue with defaults
         ;;
@@ -346,7 +346,7 @@ case $HLT_HLT_MENU_RESULT in
             "Yes|Service has a web interface" \
             "No|No web interface"
         
-        if [[ $HLT_HLT_MENU_RESULT -eq 0 ]]; then
+        if [[ $HLT_MENU_RESULT -eq 0 ]]; then
             has_webui="y"
             read -r -p "$(echo -e "${CYAN}Port or URL [${webui_port:-8080}]:${RESET} ")" custom_port
             [[ -n "$custom_port" ]] && webui_port="$custom_port"
@@ -400,7 +400,7 @@ if command -v toilet &> /dev/null; then
             "Small/Smblock|Small, compact" \
             "PREVIEW|Show all styles"
         
-        choice_idx=$HLT_HLT_MENU_RESULT
+        choice_idx=$HLT_MENU_RESULT
         
         # Check if cancelled
         if [[ $choice_idx -eq -1 ]]; then
@@ -688,7 +688,7 @@ choose_menu "Deploy now?" \
     "Yes, deploy via SSH|Deploy template to $SERVICE" \
     "No, later|Save template, deploy manually later"
 
-case $HLT_HLT_MENU_RESULT in
+case $HLT_MENU_RESULT in
     0)
         # Deploy now
         echo ""

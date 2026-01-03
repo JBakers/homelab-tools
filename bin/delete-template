@@ -80,7 +80,7 @@ interactive_delete() {
     menu_opts+=("Delete ALL|Remove all templates")
     
     choose_menu "Select Template" "${menu_opts[@]}"
-    choice=$HLT_HLT_MENU_RESULT
+    choice=$HLT_MENU_RESULT
 
     # Check if cancelled
     if [[ $choice -eq -1 ]]; then

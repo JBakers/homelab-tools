@@ -363,7 +363,7 @@ backup_management_menu() {
             "Delete all|Remove all backup files" \
             "Delete by type|Remove specific backup types" \
             "BACK"
-        local choice="$HLT_HLT_MENU_RESULT"
+        local choice="$HLT_MENU_RESULT"
         
         case "$choice" in
             0)
@@ -506,7 +506,7 @@ backup_management_menu() {
                     "HLT install backups|/opt/*.backup* ($install_count folders)" \
                     "Home backups|~/homelab-tools.backup* ($home_count folders)" \
                     "BACK"
-                local type_choice="$HLT_HLT_MENU_RESULT"
+                local type_choice="$HLT_MENU_RESULT"
                 
                 local type_to_delete=""
                 case "$type_choice" in
@@ -612,7 +612,7 @@ while true; do
         "🖥️  Configuration|Hosts, SSH keys & settings" \
         "💾 Backups|View & manage backup files" \
         "HELP" "QUIT"
-    result="$HLT_HLT_MENU_RESULT"
+    result="$HLT_MENU_RESULT"
 
     case "$result" in
         0)
@@ -626,7 +626,7 @@ while true; do
                     "📋 List Templates|View & preview templates" \
                     "❌ Delete Templates|Remove template files" \
                     "HELP" "BACK"
-                submenu_result="$HLT_HLT_MENU_RESULT"
+                submenu_result="$HLT_MENU_RESULT"
 
                 case "$submenu_result" in
                     0)
@@ -659,7 +659,7 @@ while true; do
                                 host_options+=("BACK")
                                 
                                 choose_menu "Select Host" "${host_options[@]}"
-                                host_idx="$HLT_HLT_MENU_RESULT"
+                                host_idx="$HLT_MENU_RESULT"
                                 
                                 if [[ $host_idx -ge 0 ]] && [[ $host_idx -lt ${#hosts[@]} ]]; then
                                     selected_host="${hosts[$host_idx]}"
@@ -759,7 +759,7 @@ while true; do
                     "⚙️  Settings|Domain suffix & IP detection" \
                     "🗑️  Uninstall|Remove homelab-tools" \
                     "HELP" "BACK"
-                submenu_result="$HLT_HLT_MENU_RESULT"
+                submenu_result="$HLT_MENU_RESULT"
 
                 case "$submenu_result" in
                     0)

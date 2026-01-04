@@ -1,8 +1,8 @@
 # HLT Test Coverage Matrix
 
-**Generated:** 2026-01-03
-**Version:** 3.7.0-dev.03
-**Status:** 62/62 tests passing ✅
+**Generated:** 2026-01-04
+**Version:** 3.7.0-dev.05
+**Status:** 65/65 tests passing ✅
 
 ## 📋 Commands & CLI Options
 

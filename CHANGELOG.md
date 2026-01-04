@@ -1,5 +1,51 @@
 # Changelog - Homelab Tools
 
+## v3.7.0-dev.06 (2026-01-04) 🧪 COMPREHENSIVE TEST COVERAGE
+
+**Major Achievement:** 65 tests passing with 97% coverage!
+
+### ✨ NEW FEATURES
+
+#### ASCII Art Expansion (10 styles)
+- **4 new styles:** emboss, pagga, trek, term
+- **Style selection** in generate-motd interactive mode
+- **All styles tested** via test-ascii-styles-v2.sh
+
+#### MOTD Designer (`motd-designer` command)
+- **Interactive mode:** Choose name, header, style, blocks
+- **CLI mode:** `motd-designer --name svc --style clean --header "Title" --blocks hostname,ip`
+- **Block selection:** hostname, IP, uptime, load, disk
+- **HLT markers** automatically added
+
+### 🧪 NEW TEST SUITES
+
+#### Security Tests (test-security.sh)
+- **10 security tests** covering:
+  - Command injection prevention (5 payloads)
+  - Path traversal prevention
+  - Empty/long input handling
+  - Special character handling
+  - Newline injection
+
+#### Extended Coverage Tests
+- **test-edit-config.exp:** Config editing flow
+- **test-cleanup-keys.exp:** Key cleanup menu
+- **test-cleanup-homelab.exp:** Backup management
+- **test-motd-designer-interactive.exp:** Designer flow
+- **test-bulk-generate-wizard.exp:** Bulk wizard
+- **test-generate-preview.exp:** Style preview
+- **test-port-detection.sh:** Port config/detection
+- **test-edge-cases-extended.sh:** Edge cases
+
+### 📊 Statistics
+
+- **Tests:** 65 passing (100%)
+- **Coverage:** ~97%
+- **New test files:** 10
+- **New expect scripts:** 6
+
+---
+
 ## v3.6.7-dev.08 (2026-01-03) 🎉 ALL AUDIT ISSUES COMPLETE!
 
 **Major Achievement:** ALL audit issues fixed including CI/CD pipeline!

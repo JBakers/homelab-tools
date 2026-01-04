@@ -91,11 +91,12 @@ Streamline your homelab management with auto-detecting MOTD generators, bulk ope
 - **Input Validation** - Protection against command injection attacks
 - **Non-Interactive Mode** - `install.sh --non-interactive` for automated setups
 - **Optional toilet install** - Installer prompts to install ASCII art support
-- **Test Suite** - 42 automated tests with 98% coverage in Docker environment
+- **Test Suite** - 65 automated tests with 97% coverage in Docker environment
   - Static tests (syntax, ShellCheck, help formatting)
   - Functional tests (generate, deploy, list, delete)
   - Menu navigation tests (expect scripts)
   - SSH deployment tests (mock servers)
+  - Security tests (injection prevention)
   - Edge case handling
 
 ## 📦 Installation

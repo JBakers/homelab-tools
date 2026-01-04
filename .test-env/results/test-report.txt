@@ -1,7 +1,7 @@
 ═══════════════════════════════════════════════════════════════════════════════
   HOMELAB-TOOLS TEST REPORT
-  Date: 2026-01-03 15:43:23
-  Version: 3.7.0-dev.03
+  Date: 2026-01-04 10:52:34
+  Version: 3.7.0-dev.04
   Environment: Docker (isolated)
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -13,7 +13,7 @@
   [0;32m[PASS][0m ShellCheck: All scripts pass
   Testing: Help output formatting...
   [0;32m[PASS][0m Help output: No raw escape codes
-  [0;32m[PASS][0m VERSION file valid: 3.7.0-dev.03
+  [0;32m[PASS][0m VERSION file valid: 3.7.0-dev.04
 
 [1m[0;36mINSTALL TEST[0m
 ────────────────────────────────────────
@@ -29,6 +29,8 @@
   [0;32m[PASS][0m test-arrow-navigation
   Testing: test-backup-menu...
   [0;32m[PASS][0m test-backup-menu
+  Testing: test-bulk-generate-wizard...
+  [0;32m[PASS][0m test-bulk-generate-wizard
   Testing: test-cleanup-homelab...
   [0;32m[PASS][0m test-cleanup-homelab
   Testing: test-cleanup-keys...
@@ -49,6 +51,8 @@
   [0;32m[PASS][0m test-edit-hosts
   Testing: test-esc-quit...
   [0;32m[PASS][0m test-esc-quit
+  Testing: test-generate-preview...
+  [0;32m[PASS][0m test-generate-preview
   Testing: test-homelab-menu...
   [0;32m[PASS][0m test-homelab-menu
   Testing: test-list-templates-view...
@@ -105,7 +109,7 @@
   Testing: Generate multiple templates...
   [0;32m[PASS][0m Multiple templates generated: test1, test2, test3
   Testing: list-templates with multiple templates...
-  [0;32m[PASS][0m list-templates shows 6 templates
+  [0;32m[PASS][0m list-templates shows 7 templates
   Testing: delete-template removes templates...
   [0;32m[PASS][0m delete-template removes template
   Testing: deploy-motd protection scenarios...
@@ -207,15 +211,17 @@
   [0;32m[PASS][0m Extended edge cases
   Testing: All ASCII styles...
   [0;32m[PASS][0m ASCII styles (10 variants)
+  Testing: Security...
+  [0;32m[PASS][0m Security tests
 
 ═══════════════════════════════════════════════════════════════════════════════
   SUMMARY
 ═══════════════════════════════════════════════════════════════════════════════
 
-  [0;32mPASSED:[0m  62
+  [0;32mPASSED:[0m  65
   [0;31mFAILED:[0m  0
   [1;33mSKIPPED:[0m 0
-  [1mTOTAL:[0m   62 tests
+  [1mTOTAL:[0m   65 tests
 
   [0;32m[1m✓✓✓ ALL TESTS PASSED! 🎉[0m
   [0;32mReady for commit and merge![0m

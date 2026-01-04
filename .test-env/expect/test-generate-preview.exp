@@ -1,0 +1,53 @@
+#!/usr/bin/expect -f
+# Test generate-motd preview and customize flow
+# Tests: style preview, customization options
+
+set timeout 15
+
+# Start generate-motd with a test service
+spawn /opt/homelab-tools/bin/generate-motd preview-test
+
+# Wait for style menu or settings prompt
+expect {
+    -re "style|Style|Choose" { 
+        puts "Style menu shown"
+    }
+    -re "Continue|settings|customize" {
+        puts "Settings prompt shown"
+        send "\r"
+        expect -re "style|Style"
+        puts "Style menu shown after settings"
+    }
+    timeout { 
+        puts "Initial prompt timeout"
+        exit 1 
+    }
+}
+
+# Navigate through styles (down arrow)
+send "\033\[B"
+after 200
+send "\033\[B"
+after 200
+
+# Select a style
+send "\r"
+
+# Wait for completion or next prompt
+expect {
+    -re "created|Template|saved|successfully" { 
+        puts "Template created"
+    }
+    -re "Deploy|deploy" {
+        puts "Deploy prompt shown"
+        send "n\r"
+    }
+    eof { puts "Completed" }
+    timeout { 
+        puts "Completion timeout"
+        exit 1 
+    }
+}
+
+puts "\n\[PASS\] generate-motd: Preview/customize flow works"
+exit 0

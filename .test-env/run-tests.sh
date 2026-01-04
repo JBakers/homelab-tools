@@ -947,6 +947,16 @@ if [[ -f "$SCRIPT_DIR/test-ascii-styles-v2.sh" ]]; then
     fi
 fi
 
+# Security tests
+if [[ -f "$SCRIPT_DIR/test-security.sh" ]]; then
+    log "  Testing: Security..."
+    if bash "$SCRIPT_DIR/test-security.sh" > "$LOG_DIR/security.log" 2>&1; then
+        pass "Security tests"
+    else
+        fail "Security tests (see logs)"
+    fi
+fi
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # REPORT SUMMARY
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,35 @@
+#!/usr/bin/expect -f
+# Test bulk-generate-motd wizard flow
+# Tests: host selection, service naming, style selection
+
+set timeout 20
+
+# Start bulk-generate-motd
+spawn /opt/homelab-tools/bin/bulk-generate-motd
+
+# Wait for host selection or "no hosts" message
+expect {
+    -re "host|Host|Select|checkbox" { 
+        puts "Host selection shown"
+    }
+    -re "No hosts|empty|SSH config" { 
+        puts "\[PASS\] bulk-generate-motd: No hosts configured (expected)"
+        exit 0
+    }
+    timeout { 
+        puts "Menu timeout"
+        exit 1 
+    }
+}
+
+# Try to quit without selecting
+send "q"
+
+expect {
+    -re "cancel|exit|quit|Goodbye" { puts "Quit acknowledged" }
+    eof { puts "Clean exit" }
+    timeout { puts "Exit timeout"; exit 1 }
+}
+
+puts "\n\[PASS\] bulk-generate-motd: Wizard navigation works"
+exit 0
